@@ -108,7 +108,7 @@ export function TeacherBalanceDialog({ open, onOpenChange, teacherId }: TeacherB
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="bg-gradient-to-br from-primary/10 to-primary/5 rounded-lg p-6 border border-primary/20">
+            <div className="bg-secondary/30 rounded-lg p-6 border border-border">
               <div className="text-center">
                 <p className="text-sm text-muted-foreground mb-2">Toplam İşlenen Süre</p>
                 <p className="text-3xl font-bold text-primary">
