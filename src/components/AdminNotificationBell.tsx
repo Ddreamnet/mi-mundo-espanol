@@ -132,7 +132,7 @@ export function AdminNotificationBell({ adminId }: AdminNotificationBellProps) {
       </PopoverTrigger>
       <PopoverContent className="w-96 p-0" align="end">
         <Card className="border-0 shadow-lg">
-          <CardHeader className="border-b bg-gradient-to-r from-amber-500/10 to-orange-500/10 pb-4">
+          <CardHeader className="border-b bg-gradient-to-r from-secondary/30 to-secondary/50 pb-4">
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle className="text-lg font-semibold">Admin Bildirimleri</CardTitle>
@@ -143,7 +143,7 @@ export function AdminNotificationBell({ adminId }: AdminNotificationBellProps) {
                 </CardDescription>
               </div>
               {unreadCount > 0 && (
-                <Badge className="bg-amber-500 text-white">
+                <Badge className="bg-primary text-primary-foreground">
                   {unreadCount}
                 </Badge>
               )}
@@ -168,21 +168,17 @@ export function AdminNotificationBell({ adminId }: AdminNotificationBellProps) {
                       key={notification.id}
                       className={`p-4 transition-colors ${
                         !notification.is_read 
-                          ? 'bg-amber-500/5 border-l-4 border-l-amber-500' 
+                          ? 'bg-secondary/20 border-l-4 border-l-primary' 
                           : ''
                       }`}
                     >
                       <div className="flex items-start gap-3">
                         <div className={`mt-0.5 rounded-full p-2 ${
                           !notification.is_read 
-                            ? 'bg-amber-500/10' 
-                            : 'bg-muted'
+                            ? 'bg-secondary/50' 
+                            : 'bg-secondary/30'
                         }`}>
-                          <Users className={`h-4 w-4 ${
-                            !notification.is_read 
-                              ? 'text-amber-600' 
-                              : 'text-muted-foreground'
-                          }`} />
+                          <Users className="h-4 w-4" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className={`text-sm ${
@@ -200,7 +196,7 @@ export function AdminNotificationBell({ adminId }: AdminNotificationBellProps) {
                           </div>
                         </div>
                         {!notification.is_read && (
-                          <div className="h-2 w-2 rounded-full bg-amber-500 mt-2" />
+                          <div className="h-2 w-2 rounded-full bg-primary mt-2" />
                         )}
                       </div>
                     </div>

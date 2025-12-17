@@ -261,7 +261,7 @@ export function TeacherDashboard() {
                                 }}
                                 title="Öğrenci hakkında"
                               >
-                                <FileUser className="h-4 w-4 text-muted-foreground" />
+                                <FileUser className="h-4 w-4" />
                               </Button>
                             </div>
                             <p className="text-sm text-muted-foreground">{student.profiles.email}</p>
@@ -270,9 +270,9 @@ export function TeacherDashboard() {
                                 {student.lessons.map((lesson, index) => {
                           const status = getLessonStatus(lesson.dayOfWeek, lesson.startTime);
                           return <div key={index} className="flex items-center gap-1">
-                                      <Clock className="h-3 w-3 text-muted-foreground" />
+                                      <Clock className="h-3 w-3" />
                                       <span className={`
-                    ${status === "past" ? "text-[10px] text-green-600 line-through" : status === "upcoming" ? "text-sm text-red-600 font-medium" : "text-xs text-muted-foreground"}
+                    ${status === "past" ? "text-[10px] line-through opacity-60" : status === "upcoming" ? "text-sm font-semibold" : "text-xs opacity-70"}
                   `}>
                                         {getDayName(lesson.dayOfWeek)} {formatTime(lesson.startTime)}-
                                         {formatTime(lesson.endTime)}

@@ -324,7 +324,7 @@ export function StudentDashboard() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <BookOpen className="h-8 w-8 text-primary" />
+                <BookOpen className="h-8 w-8" />
                 <div>
                   <p className="text-2xl font-bold">{allActiveTopics.length}</p>
                   <p className="text-sm text-muted-foreground">İşlenen Konular</p>
@@ -337,7 +337,7 @@ export function StudentDashboard() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <CheckCircle className="h-8 w-8 text-green-600" />
+                <CheckCircle className="h-8 w-8" />
                 <div>
                   <p className="text-2xl font-bold">
                     {topics.reduce((acc, topic) => acc + getVisibleResources(topic).length, 0)}
@@ -360,7 +360,7 @@ export function StudentDashboard() {
                   className="h-full flex flex-col items-center justify-center gap-2 min-h-[80px]"
                   onClick={() => setUploadDialogOpen(true)}
                 >
-                  <Upload className="h-6 w-6 text-primary" />
+                  <Upload className="h-6 w-6" />
                   <span className="text-sm font-medium">Yükle</span>
                 </Button>
                 <Button
@@ -368,7 +368,7 @@ export function StudentDashboard() {
                   className="h-full flex flex-col items-center justify-center gap-2 min-h-[80px]"
                   onClick={() => setListDialogOpen(true)}
                 >
-                  <ClipboardList className="h-6 w-6 text-primary" />
+                  <ClipboardList className="h-6 w-6" />
                   <span className="text-sm font-medium">Ödevler</span>
                 </Button>
               </div>
@@ -382,7 +382,7 @@ export function StudentDashboard() {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5 text-primary" />
+                  <BookOpen className="h-5 w-5" />
                   Öğrendiklerimiz
                 </CardTitle>
                 <CardDescription>Öğrenme materyallerin</CardDescription>
@@ -432,12 +432,12 @@ export function StudentDashboard() {
                                   {visibleResources.map((resource: any) => (
                                     <div
                                       key={resource.id}
-                                      className="flex items-center gap-3 p-2 bg-accent/30 rounded-md"
+                                      className="flex items-center gap-3 p-2 bg-secondary/30 rounded-md"
                                     >
                                       {resource.is_completed ? (
-                                        <CheckCircle className="h-4 w-4 text-green-600" />
+                                        <CheckCircle className="h-4 w-4" />
                                       ) : (
-                                        <Clock className="h-4 w-4 text-muted-foreground" />
+                                        <Clock className="h-4 w-4 opacity-60" />
                                       )}
                                       {getResourceIcon(resource.resource_type)}
                                       <div className="flex-1">
