@@ -291,7 +291,7 @@ export function StudentDashboard() {
   // ============================================================================
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/5 to-secondary/5">
+    <div className="min-h-screen bg-background">
       {/* Header */}
       <Header
         rightActions={

@@ -62,103 +62,105 @@
   text-decoration: underline;
 }
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
+/* Professional dark red theme */
 
 @layer base {
   :root {
-    /* Kid-friendly pastel color scheme */
-    --background: 1, 85%, 24%;
-    --foreground: 240 10% 20%;
+    /* Main background - deep burgundy */
+    --background: 1 85% 24%;
+    --foreground: 42 42% 94%;
 
-    --card: 320 100% 99%;
-    --card-foreground: 240 10% 20%;
+    /* Card - slightly lighter burgundy */
+    --card: 1 70% 28%;
+    --card-foreground: 42 42% 94%;
 
-    --popover: 320 100% 99%;
-    --popover-foreground: 240 10% 20%;
+    /* Popover */
+    --popover: 1 70% 28%;
+    --popover-foreground: 42 42% 94%;
 
-    /* Soft lavender purple as primary */
-    --primary: 280 60% 70%;
-    --primary-foreground: 0 0% 100%;
+    /* Primary - warm gold accent */
+    --primary: 42 70% 55%;
+    --primary-foreground: 1 85% 15%;
 
-    /* Gentle pink as secondary */
-    --secondary: 340 85% 85%;
-    --secondary-foreground: 240 10% 25%;
+    /* Secondary - muted burgundy */
+    --secondary: 1 50% 35%;
+    --secondary-foreground: 42 42% 94%;
 
-    /* Very light pastel for muted elements */
-    --muted: 320 40% 95%;
-    --muted-foreground: 240 10% 50%;
+    /* Muted elements */
+    --muted: 1 40% 30%;
+    --muted-foreground: 42 30% 70%;
 
-    /* Warm peach as accent */
-    --accent: 20 85% 80%;
-    --accent-foreground: 240 10% 25%;
+    /* Accent - warm terracotta */
+    --accent: 15 60% 45%;
+    --accent-foreground: 42 42% 94%;
 
-    /* Soft coral for destructive actions */
-    --destructive: 0 70% 75%;
-    --destructive-foreground: 0 0% 100%;
+    /* Destructive - coral red */
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 42 42% 94%;
 
-    /* Very light pastel borders */
-    --border: 320 30% 90%;
-    --input: 320 30% 90%;
-    --ring: 280 60% 70%;
+    /* Borders and inputs */
+    --border: 1 40% 35%;
+    --input: 1 40% 35%;
+    --ring: 42 70% 55%;
 
-    --radius: 0.75rem;
+    --radius: 0.5rem;
 
-    /* Sidebar with soft mint green */
-    --sidebar-background: 160 60% 95%;
-    --sidebar-foreground: 240 10% 25%;
-    --sidebar-primary: 160 50% 60%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 160 40% 90%;
-    --sidebar-accent-foreground: 240 10% 25%;
-    --sidebar-border: 160 30% 85%;
-    --sidebar-ring: 160 50% 60%;
+    /* Sidebar - darker burgundy */
+    --sidebar-background: 1 85% 18%;
+    --sidebar-foreground: 42 42% 94%;
+    --sidebar-primary: 42 70% 55%;
+    --sidebar-primary-foreground: 1 85% 15%;
+    --sidebar-accent: 1 60% 25%;
+    --sidebar-accent-foreground: 42 42% 94%;
+    --sidebar-border: 1 50% 28%;
+    --sidebar-ring: 42 70% 55%;
+
+    /* Chart colors */
+    --chart-1: 42 70% 55%;
+    --chart-2: 15 60% 45%;
+    --chart-3: 1 50% 40%;
+    --chart-4: 30 50% 50%;
+    --chart-5: 350 45% 45%;
   }
 
   .dark {
-    /* Dark mode with deeper pastels */
-    --background: 280 15% 8%;
-    --foreground: 320 20% 90%;
+    /* Dark mode - even deeper tones */
+    --background: 1 85% 12%;
+    --foreground: 42 42% 94%;
 
-    --card: 280 15% 10%;
-    --card-foreground: 320 20% 90%;
+    --card: 1 70% 16%;
+    --card-foreground: 42 42% 94%;
 
-    --popover: 280 15% 10%;
-    --popover-foreground: 320 20% 90%;
+    --popover: 1 70% 16%;
+    --popover-foreground: 42 42% 94%;
 
-    /* Brighter lavender for dark mode */
-    --primary: 280 70% 75%;
-    --primary-foreground: 280 15% 8%;
+    --primary: 42 70% 60%;
+    --primary-foreground: 1 85% 10%;
 
-    /* Muted pink for secondary */
-    --secondary: 340 30% 25%;
-    --secondary-foreground: 320 20% 90%;
+    --secondary: 1 50% 22%;
+    --secondary-foreground: 42 42% 94%;
 
-    --muted: 280 10% 15%;
-    --muted-foreground: 320 10% 70%;
+    --muted: 1 40% 18%;
+    --muted-foreground: 42 30% 65%;
 
-    /* Warmer accent in dark mode */
-    --accent: 20 60% 40%;
-    --accent-foreground: 320 20% 90%;
+    --accent: 15 55% 40%;
+    --accent-foreground: 42 42% 94%;
 
-    /* Soft red for destructive */
-    --destructive: 0 50% 50%;
-    --destructive-foreground: 320 20% 90%;
+    --destructive: 0 60% 45%;
+    --destructive-foreground: 42 42% 94%;
 
-    --border: 280 10% 20%;
-    --input: 280 10% 20%;
-    --ring: 280 70% 75%;
+    --border: 1 40% 22%;
+    --input: 1 40% 22%;
+    --ring: 42 70% 60%;
 
-    /* Dark mode sidebar with deep teal */
-    --sidebar-background: 180 15% 12%;
-    --sidebar-foreground: 180 10% 80%;
-    --sidebar-primary: 180 50% 60%;
-    --sidebar-primary-foreground: 180 15% 12%;
-    --sidebar-accent: 180 10% 18%;
-    --sidebar-accent-foreground: 180 10% 80%;
-    --sidebar-border: 180 10% 18%;
-    --sidebar-ring: 180 50% 60%;
+    --sidebar-background: 1 85% 10%;
+    --sidebar-foreground: 42 42% 94%;
+    --sidebar-primary: 42 70% 60%;
+    --sidebar-primary-foreground: 1 85% 10%;
+    --sidebar-accent: 1 60% 15%;
+    --sidebar-accent-foreground: 42 42% 94%;
+    --sidebar-border: 1 50% 18%;
+    --sidebar-ring: 42 70% 60%;
   }
 }
 
@@ -168,6 +170,6 @@ All colors MUST be HSL.
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground antialiased;
   }
 }
