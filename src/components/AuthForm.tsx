@@ -78,7 +78,7 @@ export function AuthForm() {
 
         <Card className="w-full border-border bg-card shadow-xl">
           <CardHeader className="text-center pb-2">
-            <h2 className="text-xl font-semibold text-foreground">
+            <h2 className="text-xl font-semibold text-card-foreground">
               {isSignUp ? "Kayıt Ol" : "Giriş Yap"}
             </h2>
           </CardHeader>
@@ -86,7 +86,7 @@ export function AuthForm() {
             {!isSignUp ? (
               <form onSubmit={handleSignIn} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signin-email" className="text-foreground">E-posta</Label>
+                  <Label htmlFor="signin-email" className="text-card-foreground">E-posta</Label>
                   <Input
                     id="signin-email"
                     type="email"
@@ -94,11 +94,11 @@ export function AuthForm() {
                     value={signInData.email}
                     onChange={(e) => setSignInData({ ...signInData, email: e.target.value })}
                     required
-                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
+                    className="bg-card border-border text-card-foreground placeholder:text-card-foreground/50"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signin-password" className="text-foreground">Şifre</Label>
+                  <Label htmlFor="signin-password" className="text-card-foreground">Şifre</Label>
                   <Input
                     id="signin-password"
                     type="password"
@@ -106,7 +106,7 @@ export function AuthForm() {
                     value={signInData.password}
                     onChange={(e) => setSignInData({ ...signInData, password: e.target.value })}
                     required
-                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
+                    className="bg-card border-border text-card-foreground placeholder:text-card-foreground/50"
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={isLoading}>
@@ -117,7 +117,7 @@ export function AuthForm() {
             ) : (
               <form onSubmit={handleSignUp} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-name" className="text-foreground">Ad Soyad</Label>
+                  <Label htmlFor="signup-name" className="text-card-foreground">Ad Soyad</Label>
                   <Input
                     id="signup-name"
                     type="text"
@@ -125,11 +125,11 @@ export function AuthForm() {
                     value={signUpData.fullName}
                     onChange={(e) => setSignUpData({ ...signUpData, fullName: e.target.value })}
                     required
-                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
+                    className="bg-card border-border text-card-foreground placeholder:text-card-foreground/50"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email" className="text-foreground">E-posta</Label>
+                  <Label htmlFor="signup-email" className="text-card-foreground">E-posta</Label>
                   <Input
                     id="signup-email"
                     type="email"
@@ -137,31 +137,31 @@ export function AuthForm() {
                     value={signUpData.email}
                     onChange={(e) => setSignUpData({ ...signUpData, email: e.target.value })}
                     required
-                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
+                    className="bg-card border-border text-card-foreground placeholder:text-card-foreground/50"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password" className="text-foreground">Şifre</Label>
+                  <Label htmlFor="signup-password" className="text-card-foreground">Şifre</Label>
                   <Input
                     id="signup-password"
                     type="password"
                     placeholder="Şifrenizi girin"
                     value={signUpData.password}
-                    onChange={(e) => setSignUpData({ ...signUpData, password: e.target.value })}
+                    onChange={(e) => setSignUpData({ ...signUpData, email: e.target.value })}
                     required
-                    className="bg-muted border-border text-foreground placeholder:text-muted-foreground"
+                    className="bg-card border-border text-card-foreground placeholder:text-card-foreground/50"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="role" className="text-foreground">Ben bir...</Label>
+                  <Label htmlFor="role" className="text-card-foreground">Ben bir...</Label>
                   <Select
                     value={signUpData.role}
                     onValueChange={(value: "teacher" | "student") => setSignUpData({ ...signUpData, role: value })}
                   >
-                    <SelectTrigger className="bg-muted border-border text-foreground">
+                    <SelectTrigger className="bg-card border-border text-card-foreground">
                       <SelectValue placeholder="Rolünüzü seçin" />
                     </SelectTrigger>
-                    <SelectContent className="bg-popover border-border">
+                    <SelectContent className="bg-card border-border text-card-foreground">
                       <SelectItem value="student">Öğrenci</SelectItem>
                       <SelectItem value="teacher">Öğretmen</SelectItem>
                     </SelectContent>
