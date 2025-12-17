@@ -585,8 +585,8 @@ export function AdminDashboard() {
           </>
         }
       >
-        <div className="text-center">
-          <h1 className="text-xl sm:text-2xl font-bold">Admin Paneli</h1>
+        <div className="text-center text-card-foreground">
+          <h1 className="text-xl sm:text-2xl font-bold text-card-foreground">Admin Paneli</h1>
           <p className="text-sm sm:text-lg text-muted-foreground hidden sm:block">Hoş geldin, {profile?.full_name}</p>
         </div>
       </Header>
@@ -599,7 +599,7 @@ export function AdminDashboard() {
               <CardHeader>
                 <div className="flex justify-between items-center">
                   <div>
-                    <CardTitle className="flex items-center gap-2">
+                    <CardTitle className="flex items-center gap-2 text-card-foreground">
                       <Users className="h-5 w-5" />
                       Öğretmenler
                     </CardTitle>
