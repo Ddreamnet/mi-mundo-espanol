@@ -479,7 +479,7 @@ export function StudentTopics({ student, teacherId }: StudentTopicsProps) {
                       className="flex flex-col items-center justify-center gap-1 h-16"
                       onClick={() => setUploadDialogOpen(true)}
                     >
-                      <Upload className="h-4 w-4 text-primary" />
+                      <Upload className="h-4 w-4" />
                       <span className="text-xs font-medium">Yükle</span>
                     </Button>
                     <Button
@@ -488,7 +488,7 @@ export function StudentTopics({ student, teacherId }: StudentTopicsProps) {
                       className="flex flex-col items-center justify-center gap-1 h-16"
                       onClick={() => setListDialogOpen(true)}
                     >
-                      <ClipboardList className="h-4 w-4 text-primary" />
+                      <ClipboardList className="h-4 w-4" />
                       <span className="text-xs font-medium">Ödevler</span>
                     </Button>
                   </div>

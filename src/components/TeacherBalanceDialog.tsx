@@ -118,20 +118,20 @@ export function TeacherBalanceDialog({ open, onOpenChange, teacherId }: TeacherB
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="bg-card border rounded-lg p-4">
+              <div className="bg-secondary/20 border rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <CheckCircle2 className="h-4 w-4 text-blue-500" />
-                  <p className="text-xs text-muted-foreground">Normal Dersler</p>
+                  <CheckCircle2 className="h-4 w-4" />
+                  <p className="text-xs opacity-70">Normal Dersler</p>
                 </div>
                 <p className="text-2xl font-semibold">
                   {balance?.completed_regular_lessons || 0} ders ({formatMinutes(balance?.regular_lessons_minutes || 0)})
                 </p>
               </div>
 
-              <div className="bg-card border rounded-lg p-4">
+              <div className="bg-secondary/20 border rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
-                  <Calendar className="h-4 w-4 text-purple-500" />
-                  <p className="text-xs text-muted-foreground">Deneme Dersleri</p>
+                  <Calendar className="h-4 w-4" />
+                  <p className="text-xs opacity-70">Deneme Dersleri</p>
                 </div>
                 <p className="text-2xl font-semibold">
                   {balance?.completed_trial_lessons || 0} ders ({formatMinutes(balance?.trial_lessons_minutes || 0)})
@@ -155,18 +155,18 @@ export function TeacherBalanceDialog({ open, onOpenChange, teacherId }: TeacherB
                     <Card key={payment.id} className="border-l-4 border-l-primary">
                       <CardContent className="p-3">
                         <div className="flex items-start justify-between">
-                          <div className="space-y-1">
+                        <div className="space-y-1">
                             <div className="flex items-center gap-2">
-                              <Clock className="h-3 w-3 text-primary" />
+                              <Clock className="h-3 w-3" />
                               <p className="font-semibold text-sm">{formatMinutes(payment.amount_minutes)}</p>
                             </div>
-                            <div className="flex gap-3 text-xs text-muted-foreground">
+                            <div className="flex gap-3 text-xs opacity-70">
                               <span className="flex items-center gap-1">
-                                <CheckCircle2 className="h-3 w-3 text-blue-500" />
+                                <CheckCircle2 className="h-3 w-3" />
                                 {payment.completed_regular_lessons} ders
                               </span>
                               <span className="flex items-center gap-1">
-                                <Calendar className="h-3 w-3 text-purple-500" />
+                                <Calendar className="h-3 w-3" />
                                 {payment.completed_trial_lessons} ders
                               </span>
                             </div>

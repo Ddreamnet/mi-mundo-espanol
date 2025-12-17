@@ -242,8 +242,8 @@ export function HomeworkListDialog({
                 {groupedHomeworks.map((group) => {
                   const uploadedByStudent = isUploadedByStudent(group);
                   const cardColorClass = uploadedByStudent 
-                    ? "border-l-4 border-l-red-500 bg-red-50 dark:bg-red-950/20" 
-                    : "border-l-4 border-l-blue-500 bg-blue-50 dark:bg-blue-950/20";
+                    ? "border-l-4 border-l-card-foreground/50" 
+                    : "border-l-4 border-l-card-foreground/20";
                   
                   return (
                     <Card key={group.batch_id} className={cardColorClass}>
@@ -342,7 +342,7 @@ export function HomeworkListDialog({
 
                         <Badge 
                           variant="outline" 
-                          className={`absolute bottom-2 right-2 text-xs ${uploadedByStudent ? "text-red-700 border-red-300" : "text-blue-700 border-blue-300"}`}
+                          className={`absolute bottom-2 right-2 text-xs ${uploadedByStudent ? "opacity-100 font-semibold" : "opacity-70"}`}
                         >
                           {uploadedByStudent ? "Öğrenci" : "Öğretmen"}
                         </Badge>

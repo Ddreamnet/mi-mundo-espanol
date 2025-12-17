@@ -214,7 +214,7 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
       <CardContent className="p-4">
         <div className="flex items-center gap-3">
           <div className="flex items-center gap-3 min-w-[100px]">
-            <BookCheck className="h-8 w-8 text-primary flex-shrink-0" />
+            <BookCheck className="h-8 w-8 flex-shrink-0" />
             <div>
               <p className="text-2x1 font-bold">
                 {completedLessons.length}/{totalLessonsPerMonth}
@@ -252,7 +252,7 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
                       </div>
                       {displayDate && (
                         <span className={`text-[10px] whitespace-nowrap ${
-                          isOverridden ? "text-amber-600 font-medium" : "text-muted-foreground"
+                          isOverridden ? "font-semibold" : "opacity-70"
                         }`}>
                           {format(new Date(displayDate), "dd.MM")}
                         </span>

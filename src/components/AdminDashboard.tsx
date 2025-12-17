@@ -810,8 +810,8 @@ export function AdminDashboard() {
                                                         key={topic.id} 
                                                         className={`border-l-4 ${
                                                           isFullyCompleted 
-                                                            ? "border-l-green-500 bg-green-50/50 dark:bg-green-950/20" 
-                                                            : "border-l-amber-500 bg-amber-50/50 dark:bg-amber-950/20"
+                                                            ? "border-l-card-foreground/50" 
+                                                            : "border-l-card-foreground/20"
                                                         }`}
                                                       >
                                                         <Collapsible>
