@@ -69,7 +69,7 @@ All colors MUST be HSL.
 @layer base {
   :root {
     /* Kid-friendly pastel color scheme */
-    --background: 324 100% 98%;
+    --background: 1, 85%, 24%;
     --foreground: 240 10% 20%;
 
     --card: 320 100% 99%;
