@@ -335,7 +335,7 @@ export function StudentAboutDialog({
           >
             {isReadOnly && (!aboutText || aboutText === "<p></p>") ? (
               <div className="min-h-[150px] p-4 flex items-center justify-center">
-                <span className="text-muted-foreground italic">Henüz bilgi eklenmemiş</span>
+                <span className="opacity-70 italic">Henüz bilgi eklenmemiş</span>
               </div>
             ) : (
               <EditorContent editor={editor} />

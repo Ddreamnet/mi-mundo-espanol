@@ -447,7 +447,7 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
                           flex items-center justify-center shadow-sm relative
                           ${
                             isCancelled
-                              ? "bg-muted text-muted-foreground border-muted-foreground/30 opacity-50 cursor-not-allowed"
+                              ? "bg-muted opacity-50 border-border cursor-not-allowed"
                               : isCompleted
                                 ? "bg-primary text-primary-foreground border-primary scale-95 shadow-md"
                                 : "bg-background border-primary/30 hover:bg-primary/10 hover:scale-105 hover:shadow-md cursor-pointer hover:border-primary"

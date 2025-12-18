@@ -154,10 +154,10 @@ export function AdminNotificationBell({ adminId }: AdminNotificationBellProps) {
               {notifications.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-12 px-4">
                   <div className="rounded-full bg-muted p-4 mb-4">
-                    <Bell className="h-8 w-8 text-muted-foreground" />
+                    <Bell className="h-8 w-8 opacity-50" />
                   </div>
-                  <p className="text-sm font-medium text-muted-foreground">Henüz bildirim yok</p>
-                  <p className="text-xs text-muted-foreground mt-1 text-center">
+                  <p className="text-sm font-medium opacity-70">Henüz bildirim yok</p>
+                  <p className="text-xs opacity-60 mt-1 text-center">
                     Öğrencilerin son dersleri yaklaştığında burada görünecek
                   </p>
                 </div>
@@ -183,14 +183,14 @@ export function AdminNotificationBell({ adminId }: AdminNotificationBellProps) {
                         <div className="flex-1 min-w-0">
                           <p className={`text-sm ${
                             !notification.is_read 
-                              ? 'font-semibold text-foreground' 
-                              : 'font-medium text-muted-foreground'
+                              ? 'font-semibold' 
+                              : 'font-medium opacity-70'
                           }`}>
                             {notification.message}
                           </p>
                           <div className="flex items-center gap-1.5 mt-2">
-                            <Clock className="h-3 w-3 text-muted-foreground" />
-                            <p className="text-xs text-muted-foreground">
+                            <Clock className="h-3 w-3 opacity-50" />
+                            <p className="text-xs opacity-60">
                               {format(new Date(notification.created_at), "dd MMM yyyy, HH:mm", { locale: tr })}
                             </p>
                           </div>

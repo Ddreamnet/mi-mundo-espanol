@@ -727,15 +727,15 @@ export function AdminDashboard() {
                                               <div className="mt-1 space-y-1">
                                                 {student.lessons.slice(0, 2).map((lesson, index) => (
                                                   <div key={index} className="flex items-center gap-1">
-                                                    <Clock className="h-3 w-3 text-muted-foreground" />
-                                                    <span className="text-xs text-muted-foreground">
+                                                    <Clock className="h-3 w-3 opacity-50" />
+                                                    <span className="text-xs opacity-70">
                                                       {getDayName(lesson.dayOfWeek)} {formatTime(lesson.startTime)}-
                                                       {formatTime(lesson.endTime)}
                                                     </span>
                                                   </div>
                                                 ))}
                                                 {student.lessons.length > 2 && (
-                                                  <span className="text-xs text-muted-foreground">
+                                                  <span className="text-xs opacity-70">
                                                     +{student.lessons.length - 2} ders daha
                                                   </span>
                                                 )}
@@ -871,7 +871,7 @@ export function AdminDashboard() {
                                             </div>
 
                                             {(studentTopics.get(student.id) || []).length === 0 ? (
-                                              <p className="text-sm text-muted-foreground py-2">
+                                              <p className="text-sm opacity-70 py-2">
                                                 Bu öğrenciye özel konu henüz eklenmemiş.
                                               </p>
                                             ) : (

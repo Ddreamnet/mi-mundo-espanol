@@ -327,7 +327,7 @@ export function StudentDashboard() {
                 <BookOpen className="h-8 w-8" />
                 <div>
                   <p className="text-2xl font-bold">{allActiveTopics.length}</p>
-                  <p className="text-sm text-muted-foreground">İşlenen Konular</p>
+                  <p className="text-sm opacity-70">İşlenen Konular</p>
                 </div>
               </div>
             </CardContent>
@@ -342,7 +342,7 @@ export function StudentDashboard() {
                   <p className="text-2xl font-bold">
                     {topics.reduce((acc, topic) => acc + getVisibleResources(topic).length, 0)}
                   </p>
-                  <p className="text-sm text-muted-foreground">Toplam Kaynak</p>
+                  <p className="text-sm opacity-70">Toplam Kaynak</p>
                 </div>
               </div>
             </CardContent>
@@ -410,7 +410,7 @@ export function StudentDashboard() {
                               <div className="flex-1">
                                 <h4 className="font-medium">{topic.title}</h4>
                                 {topic.description && (
-                                  <p className="text-sm text-muted-foreground">{topic.description}</p>
+                                  <p className="text-sm opacity-70">{topic.description}</p>
                                 )}
                               </div>
                             </CollapsibleTrigger>
@@ -424,7 +424,7 @@ export function StudentDashboard() {
                             <div className="pl-6 space-y-2">
                               <h5 className="font-medium text-sm">Kaynaklar</h5>
                               {visibleResources.length === 0 ? (
-                                <p className="text-sm text-muted-foreground">
+                                <p className="text-sm opacity-70">
                                   Bu konu için henüz gösterilecek kaynak bulunmuyor.
                                 </p>
                               ) : (
@@ -448,7 +448,7 @@ export function StudentDashboard() {
                                           {resource.title}
                                         </button>
                                         {resource.description && (
-                                          <p className="text-xs text-muted-foreground">{resource.description}</p>
+                                          <p className="text-xs opacity-70">{resource.description}</p>
                                         )}
                                       </div>
                                       <Button
@@ -474,9 +474,9 @@ export function StudentDashboard() {
           ) : (
             <Card className="text-center py-12">
               <CardContent>
-                <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <BookOpen className="h-12 w-12 mx-auto opacity-50 mb-4" />
                 <h3 className="text-lg font-medium mb-2">Henüz Öğrenme Aktivitesi Yok</h3>
-                <p className="text-muted-foreground">
+                <p className="opacity-70">
                   Öğretmeniniz size keşfetmeniz için konular ve kaynaklar atayacak.
                 </p>
               </CardContent>

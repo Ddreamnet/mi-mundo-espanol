@@ -167,7 +167,7 @@ export function AddStudentDialog({ open, onOpenChange, onAddStudent }: AddStuden
               </div>
             ))}
 
-            <p className="text-sm text-muted-foreground">Haftada en fazla 6 ders ekleyebilirsiniz.</p>
+            <p className="text-sm opacity-70">Haftada en fazla 6 ders ekleyebilirsiniz.</p>
           </div>
 
           <div className="flex justify-end gap-2">
