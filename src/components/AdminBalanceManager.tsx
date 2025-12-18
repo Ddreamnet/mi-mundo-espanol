@@ -281,7 +281,7 @@ export function AdminBalanceManager({ teacherId }: AdminBalanceManagerProps) {
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <CheckCircle2 className="h-5 w-5 text-blue-500" />
+                <CheckCircle2 className="h-5 w-5 text-primary" />
                 <p className="text-sm font-medium text-muted-foreground">Normal Dersler</p>
               </div>
               <p className="text-3xl font-bold">{balance?.completed_regular_lessons || 0} ders ({formatMinutes(balance?.regular_lessons_minutes || 0)})</p>
@@ -293,7 +293,7 @@ export function AdminBalanceManager({ teacherId }: AdminBalanceManagerProps) {
           <CardContent className="pt-6">
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
-                <Calendar className="h-5 w-5 text-purple-500" />
+                <Calendar className="h-5 w-5 text-accent" />
                 <p className="text-sm font-medium text-muted-foreground">Deneme Dersleri</p>
               </div>
               <p className="text-3xl font-bold">{balance?.completed_trial_lessons || 0} ders ({formatMinutes(balance?.trial_lessons_minutes || 0)})</p>
@@ -385,11 +385,11 @@ export function AdminBalanceManager({ teacherId }: AdminBalanceManagerProps) {
                         </div>
                         <div className="flex gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
-                            <CheckCircle2 className="h-3 w-3 text-blue-500" />
+                            <CheckCircle2 className="h-3 w-3 text-primary" />
                             {payment.completed_regular_lessons} ders
                           </span>
                           <span className="flex items-center gap-1">
-                            <Calendar className="h-3 w-3 text-purple-500" />
+                            <Calendar className="h-3 w-3 text-accent" />
                             {payment.completed_trial_lessons} ders
                           </span>
                         </div>
