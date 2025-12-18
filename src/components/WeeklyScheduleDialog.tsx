@@ -403,7 +403,7 @@ export function WeeklyScheduleDialog({
 
         {loading ? <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-          </div> : lessons.length === 0 ? <div className="text-center py-8 text-muted-foreground">
+          </div> : lessons.length === 0 ? <div className="text-center py-8 opacity-70">
             Henüz planlanmış ders yok
           </div> : <div className="overflow-x-auto">
             <table className="w-full border-collapse min-w-[900px]">

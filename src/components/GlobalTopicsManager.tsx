@@ -453,7 +453,7 @@ export function GlobalTopicsManager({ open, onOpenChange, isAdmin = false }: Glo
             <div className="space-y-4">
               {/* Header Actions */}
               <div className="flex justify-between items-center">
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm opacity-70">
                   {isAdmin 
                     ? "Herhangi bir öğrenciye atanabilecek global konuları yönetin" 
                     : "Global konular ve kaynaklar"}
@@ -491,9 +491,9 @@ export function GlobalTopicsManager({ open, onOpenChange, isAdmin = false }: Glo
               {!loading && globalTopics.length === 0 && (
                 <Card className="text-center py-8">
                   <CardContent>
-                    <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <BookOpen className="h-12 w-12 mx-auto opacity-50 mb-4" />
                     <h3 className="text-lg font-medium mb-2">Henüz Global Konu Yok</h3>
-                    <p className="text-muted-foreground mb-4">
+                    <p className="opacity-70 mb-4">
                       {isAdmin 
                         ? "Herhangi bir öğrenciye atanabilecek yeniden kullanılabilir konular oluşturun." 
                         : "Henüz hiç global konu eklenmemiş."}

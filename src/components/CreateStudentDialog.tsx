@@ -258,7 +258,7 @@ export function CreateStudentDialog({ open, onOpenChange, onStudentCreated, teac
           </div>
 
           <div className="bg-muted/50 p-3 rounded-lg">
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm opacity-70">
               <strong>Not:</strong> Öğrenci bu geçici şifre ile oluşturulacak. Lütfen bu bilgileri öğrenci ile güvenli
               şekilde paylaşın.
             </p>

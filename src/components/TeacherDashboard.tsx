@@ -292,9 +292,9 @@ export function TeacherDashboard() {
           <div className="lg:col-span-2">
             {selectedStudent ? <StudentTopics student={selectedStudent} teacherId={profile?.user_id || ""} /> : <Card className="h-96 flex items-center justify-center">
                 <div className="text-center">
-                  <BookOpen className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                  <BookOpen className="h-12 w-12 mx-auto opacity-50 mb-4" />
                   <h3 className="text-lg font-medium mb-2">Bir Öğrenci Seç</h3>
-                  <p className="text-muted-foreground">
+                  <p className="opacity-70">
                     Konuları görüntülemek ve yönetmek için listeden bir öğrenci seçin
                   </p>
                 </div>

@@ -278,9 +278,9 @@ export function AddResourceDialog({
                   </div>
                 ) : (
                   <>
-                    <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
+                    <Upload className="mx-auto h-12 w-12 opacity-50 mb-4" />
                     <div className="space-y-2">
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm opacity-70">
                         Dosyanızı buraya sürükleyip bırakın veya göz atmak için tıklayın
                       </p>
                       <input

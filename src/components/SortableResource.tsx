@@ -46,7 +46,7 @@ export function SortableResource({
     >
       {isAdmin && (
         <button
-          className="cursor-grab active:cursor-grabbing text-muted-foreground hover:text-foreground transition-colors"
+          className="cursor-grab active:cursor-grabbing opacity-50 hover:opacity-100 transition-opacity"
           {...attributes}
           {...listeners}
         >
@@ -62,7 +62,7 @@ export function SortableResource({
           {resource.title}
         </p>
         {resource.description && (
-          <p className="text-xs text-muted-foreground">{resource.description}</p>
+          <p className="text-xs opacity-70">{resource.description}</p>
         )}
       </div>
       <div className="flex items-center gap-1">

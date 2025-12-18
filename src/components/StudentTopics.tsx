@@ -396,7 +396,7 @@ export function StudentTopics({ student, teacherId }: StudentTopicsProps) {
                         </Badge>
                       )}
                     </h4>
-                    {topic.description && <p className="text-sm text-muted-foreground">{topic.description}</p>}
+                    {topic.description && <p className="text-sm opacity-70">{topic.description}</p>}
                   </div>
                 </CollapsibleTrigger>
 
@@ -434,7 +434,7 @@ export function StudentTopics({ student, teacherId }: StudentTopicsProps) {
                         >
                           <p className="font-medium text-sm hover:text-primary transition-colors">{resource.title}</p>
                           {resource.description && (
-                            <p className="text-xs text-muted-foreground">{resource.description}</p>
+                            <p className="text-xs opacity-70">{resource.description}</p>
                           )}
                         </div>
                         <Button size="sm" variant="ghost" onClick={() => window.open(resource.resource_url, "_blank")}>
@@ -507,7 +507,7 @@ export function StudentTopics({ student, teacherId }: StudentTopicsProps) {
         <CardContent className="space-y-4">
           {topics.length === 0 ? (
             <div className="text-center py-8">
-              <p className="text-muted-foreground">Henüz konu yok.</p>
+              <p className="opacity-70">Henüz konu yok.</p>
             </div>
           ) : (
             topics.map((topic) => <TopicCard key={topic.id} topic={topic} />)

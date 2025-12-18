@@ -173,7 +173,7 @@ export function AuthForm() {
                 </Button>
 
                 <div className="mt-4 text-center">
-                  <p className="text-sm text-muted-foreground">
+                  <p className="text-sm opacity-70">
                     Zaten hesabınız var mı?{" "}
                     <button
                       type="button"

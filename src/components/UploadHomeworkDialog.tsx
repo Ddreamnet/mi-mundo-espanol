@@ -197,7 +197,7 @@ export function UploadHomeworkDialog({
             {files.length > 0 && (
               <div className="space-y-2">
                 {files.map((file, index) => (
-                  <div key={index} className="flex items-center gap-2 text-sm text-muted-foreground bg-muted/50 p-2 rounded">
+                  <div key={index} className="flex items-center gap-2 text-sm opacity-70 bg-muted/50 p-2 rounded">
                     <span className="flex-1 truncate">{file.name}</span>
                     <Button
                       type="button"
@@ -213,7 +213,7 @@ export function UploadHomeworkDialog({
                 ))}
               </div>
             )}
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs opacity-60">
               Desteklenen formatlar: JPG, PNG, WEBP, PDF, DOCX (Maks. 10MB)
             </p>
           </div>

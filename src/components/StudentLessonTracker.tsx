@@ -219,7 +219,7 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
               <p className="text-2x1 font-bold">
                 {completedLessons.length}/{totalLessonsPerMonth}
               </p>
-              <p className="text-sm text-muted-foreground">İşlenen Dersler</p>
+              <p className="text-sm opacity-70">İşlenen Dersler</p>
             </div>
           </div>
           <div className="flex flex-col gap-1.5 flex-1">
@@ -241,10 +241,10 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
                         flex items-center justify-center text-xs font-semibold shadow-sm
                         ${
                           isCancelled
-                            ? "bg-muted text-muted-foreground border-muted-foreground/30 opacity-50"
+                            ? "bg-muted border-border opacity-50"
                             : isCompleted
                               ? "bg-primary text-primary-foreground border-primary scale-95 shadow-md"
-                              : "bg-muted/50 border-muted-foreground/20"
+                              : "bg-muted/50 border-border/50"
                         }
                       `}
                       >

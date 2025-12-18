@@ -96,7 +96,7 @@ export function SortableTopic({
             <div className="flex justify-between items-start gap-3">
               {isAdmin && (
                 <button
-                  className="cursor-grab active:cursor-grabbing mt-1 text-muted-foreground hover:text-foreground transition-colors"
+                  className="cursor-grab active:cursor-grabbing mt-1 opacity-50 hover:opacity-100 transition-opacity"
                   onClick={(e) => e.stopPropagation()}
                   {...attributes}
                   {...listeners}

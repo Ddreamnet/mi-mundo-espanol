@@ -234,8 +234,8 @@ export function HomeworkListDialog({
               </div>
             ) : groupedHomeworks.length === 0 ? (
               <div className="text-center py-8">
-                <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-2" />
-                <p className="text-muted-foreground">Henüz ödev yok</p>
+                <FileText className="h-12 w-12 mx-auto opacity-50 mb-2" />
+                <p className="opacity-70">Henüz ödev yok</p>
               </div>
             ) : (
               <div className="flex flex-col gap-3">
