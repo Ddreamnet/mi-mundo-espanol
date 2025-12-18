@@ -616,17 +616,17 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
                               variant="outline"
                               className={`w-full justify-center py-2 cursor-pointer relative ${
                                 (lesson as any)._isPostponed 
-                                  ? "opacity-40 bg-gray-100 text-gray-500 border-gray-300 hover:opacity-60" 
-                                  : studentColors.get(lesson.student_id) || "bg-gray-100 text-gray-800"
-                              } ${(lesson as any)._isOverride ? "ring-2 ring-amber-400 ring-offset-1" : ""}`}
+                                  ? "opacity-40 bg-muted text-muted-foreground border-border hover:opacity-60" 
+                                  : studentColors.get(lesson.student_id) || "bg-muted text-muted-foreground"
+                              } ${(lesson as any)._isOverride ? "ring-2 ring-warning ring-offset-1" : ""}`}
                               onClick={() => handleLessonClick(lesson as any)}
                             >
                               {(lesson as any)._isPostponed && (
-                                <X className="absolute top-1 right-1 h-4 w-4 text-red-500" />
+                                <X className="absolute top-1 right-1 h-4 w-4 text-destructive" />
                               )}
                               <div className="text-center">
                                 <div className="font-medium flex items-center justify-center gap-1">
-                                  {(lesson as any)._isOverride && <Calendar className="h-3 w-3 text-amber-600" />}
+                                  {(lesson as any)._isOverride && <Calendar className="h-3 w-3 text-warning" />}
                                   {lesson.note ? `${lesson.student_name} - ${lesson.note}` : lesson.student_name}
                                 </div>
                                 <div className="text-xs mt-1">
@@ -640,8 +640,8 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
                               variant="outline"
                               className={`w-full py-2 border-2 transition-all ${
                                 trialLesson.is_completed
-                                  ? "bg-red-50/30 text-red-300 border-red-100 hover:bg-red-50/50 opacity-40"
-                                  : "bg-red-100 text-red-800 border-red-300 hover:bg-red-200"
+                                  ? "bg-destructive/10 text-destructive/40 border-destructive/20 hover:bg-destructive/15 opacity-40"
+                                  : "bg-destructive/20 text-destructive border-destructive/50 hover:bg-destructive/30"
                               }`}
                               onClick={() => handleTrialLessonClick(trialLesson)}
                             >
@@ -690,7 +690,7 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
                   setShowUnmarkAlert(true);
                 }}
               >
-                <Undo2 className="h-5 w-5 text-orange-500" />
+                <Undo2 className="h-5 w-5 text-warning" />
                 İşlendiyi Geri Al
               </Button>
             ) : (
@@ -702,7 +702,7 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
                   setShowMarkAlert(true);
                 }}
               >
-                <CheckCircle className="h-5 w-5 text-green-500" />
+                <CheckCircle className="h-5 w-5 text-success" />
                 İşlendi Olarak İşaretle
               </Button>
             )}
