@@ -2,13 +2,12 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { AuthForm } from "@/components/AuthForm";
+import { LandingPage } from "@/components/landing/LandingPage";
 import { TeacherDashboard } from "@/components/TeacherDashboard";
 import { StudentDashboard } from "@/components/StudentDashboard";
 import { AdminDashboard } from "@/components/AdminDashboard";
-import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -18,32 +17,53 @@ function AppRoutes() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
+  // If user is logged in, show appropriate dashboard
+  if (user && profile) {
+    if (profile.roles?.includes('admin')) {
+      return (
+        <Routes>
+          <Route path="/" element={<AdminDashboard />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      );
+    }
+    
+    if (profile.role === 'teacher') {
+      return (
+        <Routes>
+          <Route path="/" element={<TeacherDashboard />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      );
+    }
+    
+    if (profile.role === 'student') {
+      return (
+        <Routes>
+          <Route path="/" element={<StudentDashboard />} />
+          <Route path="*" element={<NotFound />} />
+        </Routes>
+      );
+    }
+
+    // Profile still loading
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <p className="text-foreground">Profil yükleniyor...</p>
+      </div>
+    );
+  }
+
+  // If user is not logged in, show landing page
   return (
     <Routes>
-      <Route 
-        path="/" 
-        element={
-          !user ? (
-            <AuthForm />
-          ) : profile?.roles?.includes('admin') ? (
-            <AdminDashboard />
-          ) : profile?.role === 'teacher' ? (
-            <TeacherDashboard />
-          ) : profile?.role === 'student' ? (
-            <StudentDashboard />
-          ) : (
-            <div className="min-h-screen flex items-center justify-center">
-              <p>Profil yükleniyor...</p>
-            </div>
-          )
-        } 
-      />
+      <Route path="/" element={<LandingPage />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );

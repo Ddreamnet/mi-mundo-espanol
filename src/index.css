@@ -75,8 +75,8 @@
     --card-foreground: 1 85% 15%;
 
     /* Popover */
-    --popover: 1 70% 28%;
-    --popover-foreground: 42 42% 94%;
+    --popover: 49 100% 97%;
+    --popover-foreground: 1 85% 15%;
 
     /* Primary - warm gold accent */
     --primary: 42 70% 55%;
@@ -129,6 +129,12 @@
     --chart-3: 1 50% 40%;
     --chart-4: 30 50% 50%;
     --chart-5: 350 45% 45%;
+
+    /* Landing page specific */
+    --landing-header: 49 100% 97%;
+    --landing-header-foreground: 1 85% 15%;
+    --landing-footer: 49 100% 97%;
+    --landing-footer-foreground: 1 85% 15%;
   }
 
   .dark {
