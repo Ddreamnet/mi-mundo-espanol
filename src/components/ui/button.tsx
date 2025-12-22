@@ -9,12 +9,22 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/85 active:bg-primary/75 shadow-sm",
+        // Primary button - uses centralized btn-primary colors
+        default: "bg-btn-primary text-btn-primary-foreground hover:bg-btn-primary-hover active:opacity-90 shadow-sm",
+        // Destructive button
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/85 active:bg-destructive/75 shadow-sm",
-        outline: "border border-current/30 bg-transparent hover:bg-current/10",
-        secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 active:bg-secondary/70 shadow-sm",
-        ghost: "text-foreground hover:bg-muted hover:text-foreground",
+        // Outline button - uses centralized btn-outline colors
+        outline: "border border-btn-outline-border bg-transparent text-btn-outline-foreground hover:bg-btn-outline-hover",
+        // Secondary button - uses centralized btn-secondary colors
+        secondary: "bg-btn-secondary text-btn-secondary-foreground hover:bg-btn-secondary-hover active:opacity-90 shadow-sm",
+        // Ghost button - uses centralized btn-ghost colors
+        ghost: "text-btn-ghost-foreground hover:bg-btn-ghost-hover",
+        // Link button
         link: "text-primary underline-offset-4 hover:underline",
+        // Card variant - for buttons on light card backgrounds
+        card: "bg-card-foreground/10 text-card-foreground hover:bg-card-foreground/20 border border-card-foreground/20",
+        // Card ghost variant - for ghost buttons on card backgrounds
+        "card-ghost": "text-card-foreground hover:bg-card-foreground/10",
       },
       size: {
         default: "h-10 px-5 py-2 rounded-md",
