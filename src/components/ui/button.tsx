@@ -25,6 +25,14 @@ const buttonVariants = cva(
         card: "bg-card-foreground/10 text-card-foreground hover:bg-card-foreground/20 border border-card-foreground/20",
         // Card ghost variant - for ghost buttons on card backgrounds
         "card-ghost": "text-card-foreground hover:bg-card-foreground/10",
+        // Landing page primary button - gold background
+        "landing-primary": "bg-btn-landing-primary-DEFAULT text-btn-landing-primary-foreground hover:bg-btn-landing-primary-hover active:opacity-90 shadow-lg font-semibold",
+        // Landing page secondary button - cream background
+        "landing-secondary": "bg-btn-landing-secondary-DEFAULT text-btn-landing-secondary-foreground hover:bg-btn-landing-secondary-hover active:opacity-90 shadow-md font-semibold",
+        // Landing page outline button - transparent with cream border
+        "landing-outline": "border-2 border-btn-landing-outline-border bg-transparent text-btn-landing-outline-foreground hover:bg-btn-landing-outline-hover font-semibold",
+        // Landing page header button - dark burgundy background
+        "landing-header": "bg-btn-landing-header-DEFAULT text-btn-landing-header-foreground hover:bg-btn-landing-header-hover shadow-md font-semibold",
       },
       size: {
         default: "h-10 px-5 py-2 rounded-md",

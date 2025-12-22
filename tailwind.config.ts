@@ -86,6 +86,26 @@ export default {
             foreground: "hsl(var(--btn-outline-foreground))",
             hover: "hsl(var(--btn-outline-hover))",
           },
+          "landing-primary": {
+            DEFAULT: "hsl(var(--btn-landing-primary))",
+            foreground: "hsl(var(--btn-landing-primary-foreground))",
+            hover: "hsl(var(--btn-landing-primary-hover))",
+          },
+          "landing-secondary": {
+            DEFAULT: "hsl(var(--btn-landing-secondary))",
+            foreground: "hsl(var(--btn-landing-secondary-foreground))",
+            hover: "hsl(var(--btn-landing-secondary-hover))",
+          },
+          "landing-outline": {
+            border: "hsl(var(--btn-landing-outline-border))",
+            foreground: "hsl(var(--btn-landing-outline-foreground))",
+            hover: "hsl(var(--btn-landing-outline-hover))",
+          },
+          "landing-header": {
+            DEFAULT: "hsl(var(--btn-landing-header))",
+            foreground: "hsl(var(--btn-landing-header-foreground))",
+            hover: "hsl(var(--btn-landing-header-hover))",
+          },
         },
         // Icon colors - centralized for easy theming
         icon: {
