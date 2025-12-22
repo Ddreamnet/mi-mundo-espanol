@@ -19,7 +19,7 @@ export function LandingHeader() {
 
   const navLinks = [
     { label: "Ana Sayfa", href: "#hero", isRoute: false },
-    { label: "Dersler", href: "#dersler", isRoute: false },
+    { label: "Dersler", href: "/dersler", isRoute: true },
     { label: "İletişim", href: "/iletisim", isRoute: true },
   ];
 

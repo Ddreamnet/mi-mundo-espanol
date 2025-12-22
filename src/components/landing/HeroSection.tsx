@@ -20,12 +20,12 @@ export function HeroSection() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Button variant="landing-primary" size="lg" asChild>
-                <a href="#iletisim">
+                <a href="/iletisim">
                   Hemen Başla
                 </a>
               </Button>
               <Button variant="landing-secondary" size="lg" asChild>
-                <a href="#dersler">
+                <a href="/dersler">
                   Dersler Hakkında
                 </a>
               </Button>
