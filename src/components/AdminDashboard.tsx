@@ -626,15 +626,16 @@ export function AdminDashboard() {
                       <CardContent className="p-3">
                         <div className="flex justify-between items-start">
                           <div className="flex-1">
-                            <h4 className="font-medium">{teacher.full_name}</h4>
-                            <p className="text-sm text-muted-foreground">{teacher.email}</p>
-                          <Badge variant="outline" className="mt-1">
+                            <h4 className="font-medium text-card-foreground">{teacher.full_name}</h4>
+                            <p className="text-sm text-card-foreground/70">{teacher.email}</p>
+                          <Badge variant="outline" className="mt-1 text-card-foreground border-card-foreground/30">
                               {teacher.students.filter(s => !s.is_archived).length} öğrenci
                             </Badge>
                           </div>
                           <Button
                             variant="ghost"
                             size="sm"
+                            className="text-card-foreground hover:text-card-foreground hover:bg-card-foreground/10"
                             onClick={(e) => {
                               e.stopPropagation();
                               openTeacherSettings(teacher);
@@ -715,27 +716,27 @@ export function AdminDashboard() {
                                           onClick={() => toggleStudent(student.id, student)}
                                         >
                                           {expandedStudents.has(student.id) ? (
-                                            <ChevronDown className="h-4 w-4" />
+                                            <ChevronDown className="h-4 w-4 text-card-foreground" />
                                           ) : (
-                                            <ChevronRight className="h-4 w-4" />
+                                            <ChevronRight className="h-4 w-4 text-card-foreground" />
                                           )}
                                           <div className="flex-1">
-                                            <h4 className="font-medium">{student.profiles.full_name}</h4>
-                                            <p className="text-sm text-muted-foreground">{student.profiles.email}</p>
+                                            <h4 className="font-medium text-card-foreground">{student.profiles.full_name}</h4>
+                                            <p className="text-sm text-card-foreground/70">{student.profiles.email}</p>
 
                                             {student.lessons.length > 0 && (
                                               <div className="mt-1 space-y-1">
                                                 {student.lessons.slice(0, 2).map((lesson, index) => (
                                                   <div key={index} className="flex items-center gap-1">
-                                                    <Clock className="h-3 w-3 opacity-50" />
-                                                    <span className="text-xs opacity-70">
+                                                    <Clock className="h-3 w-3 text-card-foreground/50" />
+                                                    <span className="text-xs text-card-foreground/70">
                                                       {getDayName(lesson.dayOfWeek)} {formatTime(lesson.startTime)}-
                                                       {formatTime(lesson.endTime)}
                                                     </span>
                                                   </div>
                                                 ))}
                                                 {student.lessons.length > 2 && (
-                                                  <span className="text-xs opacity-70">
+                                                  <span className="text-xs text-card-foreground/70">
                                                     +{student.lessons.length - 2} ders daha
                                                   </span>
                                                 )}
@@ -748,6 +749,7 @@ export function AdminDashboard() {
                                           <Button 
                                             variant="ghost" 
                                             size="sm" 
+                                            className="text-card-foreground hover:text-card-foreground hover:bg-card-foreground/10"
                                             onClick={(e) => {
                                               e.stopPropagation();
                                               setStudentAboutData({
@@ -761,7 +763,7 @@ export function AdminDashboard() {
                                           >
                                             <FileUser className="h-4 w-4" />
                                           </Button>
-                                          <Button variant="ghost" size="sm" onClick={() => openStudentSettings(student)}>
+                                          <Button variant="ghost" size="sm" className="text-card-foreground hover:text-card-foreground hover:bg-card-foreground/10" onClick={() => openStudentSettings(student)}>
                                             <Settings className="h-4 w-4" />
                                           </Button>
                                         </div>
