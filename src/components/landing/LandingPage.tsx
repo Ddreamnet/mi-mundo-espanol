@@ -3,7 +3,8 @@ import { LandingFooter } from "./LandingFooter";
 import { HeroSection } from "./HeroSection";
 import { ZigzagSection } from "./ZigzagSection";
 import { CTASection } from "./CTASection";
-import placeholderImage from "@/assets/placeholder-4-3.jpeg";
+import zigzag1Image from "@/assets/zigzag-1.png";
+import zigzag2Image from "@/assets/zigzag-2.png";
 
 export function LandingPage() {
   return (
@@ -23,7 +24,7 @@ export function LandingPage() {
             "DELE sınavlarına hazırlık programları",
           ]}
           imageOnLeft={false}
-          imageSrc={placeholderImage}
+          imageSrc={zigzag1Image}
         />
 
         <ZigzagSection
@@ -35,7 +36,7 @@ export function LandingPage() {
             "Kültürel bilgi ve dil içi nüanslar",
           ]}
           imageOnLeft={true}
-          imageSrc={placeholderImage}
+          imageSrc={zigzag2Image}
         />
 
         <CTASection />
