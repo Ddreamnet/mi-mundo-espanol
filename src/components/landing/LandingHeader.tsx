@@ -41,7 +41,7 @@ export function LandingHeader() {
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo & Brand */}
             <a href="#">
-              <Logo size="md" />
+              <Logo size="sm" />
             </a>
 
             {/* Desktop Navigation - Center */}
@@ -78,10 +78,7 @@ export function LandingHeader() {
               </DropdownMenu>
 
               {/* Login Button */}
-              <Button
-                variant="landing-header"
-                onClick={() => setLoginDialogOpen(true)}
-              >
+              <Button variant="landing-header" onClick={() => setLoginDialogOpen(true)}>
                 Giriş Yap
               </Button>
             </div>
