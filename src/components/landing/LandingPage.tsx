@@ -3,6 +3,7 @@ import { LandingFooter } from "./LandingFooter";
 import { HeroSection } from "./HeroSection";
 import { ZigzagSection } from "./ZigzagSection";
 import { CTASection } from "./CTASection";
+import placeholderImage from "@/assets/placeholder-4-3.jpeg";
 
 export function LandingPage() {
   return (
@@ -22,6 +23,7 @@ export function LandingPage() {
             "DELE sınavlarına hazırlık programları",
           ]}
           imageOnLeft={false}
+          imageSrc={placeholderImage}
         />
 
         <ZigzagSection
@@ -33,6 +35,7 @@ export function LandingPage() {
             "Kültürel bilgi ve dil içi nüanslar",
           ]}
           imageOnLeft={true}
+          imageSrc={placeholderImage}
         />
 
         <CTASection />
