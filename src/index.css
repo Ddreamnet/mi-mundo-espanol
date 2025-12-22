@@ -115,12 +115,12 @@
 
     /* ========== BUTTON COLORS ========== */
     /* Primary Button (default) */
-    --btn-primary: 42 70% 55%;
+    --btn-primary: 162 88% 52%;
     --btn-primary-foreground: 1 85% 15%;
     --btn-primary-hover: 42 70% 47%;
 
     /* Secondary Button */
-    --btn-secondary: 354 47% 20%;
+    --btn-secondary: 199 61% 17%;
     --btn-secondary-foreground: 42 42% 94%;
     --btn-secondary-hover: 1 50% 28%;
 
