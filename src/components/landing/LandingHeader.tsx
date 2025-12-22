@@ -27,7 +27,7 @@ export function LandingHeader() {
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo & Brand */}
             <a href="#">
-              <Logo size="xl" />
+              <Logo size="md" />
             </a>
 
             {/* Desktop Navigation - Center */}
@@ -100,11 +100,7 @@ export function LandingHeader() {
                 <div className="flex items-center gap-4 pt-4 border-t border-[hsl(var(--border))]">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="text-[hsl(var(--landing-header-foreground))]"
-                      >
+                      <Button variant="ghost" size="sm" className="text-[hsl(var(--landing-header-foreground))]">
                         <Globe className="w-4 h-4 mr-2" />
                         Dil
                       </Button>
