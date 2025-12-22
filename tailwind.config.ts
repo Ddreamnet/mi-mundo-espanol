@@ -65,6 +65,36 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
+        // Button colors - centralized for easy theming
+        btn: {
+          primary: {
+            DEFAULT: "hsl(var(--btn-primary))",
+            foreground: "hsl(var(--btn-primary-foreground))",
+            hover: "hsl(var(--btn-primary-hover))",
+          },
+          secondary: {
+            DEFAULT: "hsl(var(--btn-secondary))",
+            foreground: "hsl(var(--btn-secondary-foreground))",
+            hover: "hsl(var(--btn-secondary-hover))",
+          },
+          ghost: {
+            foreground: "hsl(var(--btn-ghost-foreground))",
+            hover: "hsl(var(--btn-ghost-hover))",
+          },
+          outline: {
+            border: "hsl(var(--btn-outline-border))",
+            foreground: "hsl(var(--btn-outline-foreground))",
+            hover: "hsl(var(--btn-outline-hover))",
+          },
+        },
+        // Icon colors - centralized for easy theming
+        icon: {
+          DEFAULT: "hsl(var(--icon-default))",
+          muted: "hsl(var(--icon-muted))",
+          primary: "hsl(var(--icon-primary))",
+          "on-card": "hsl(var(--icon-on-card))",
+          "on-card-muted": "hsl(var(--icon-on-card-muted))",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
