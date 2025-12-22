@@ -6,10 +6,7 @@ export function HeroSection() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           {/* Image - Left on desktop */}
           <div className="order-2 lg:order-1">
-            <div className="relative">
-              <div className="absolute -inset-4 bg-primary/20 rounded-2xl blur-xl"></div>
-              <img alt="Mi Mundo Español" src="/lovable-uploads/2da228c0-e8c3-4d4d-ae77-9eeca2c98996.png" className="relative w-full aspect-[4/3] rounded-2xl shadow-2xl object-contain" />
-            </div>
+            <img alt="Mi Mundo Español" src="/lovable-uploads/2da228c0-e8c3-4d4d-ae77-9eeca2c98996.png" className="w-full aspect-[4/3] object-contain" />
           </div>
 
           {/* Text Content - Right on desktop */}
