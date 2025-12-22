@@ -114,44 +114,50 @@
     --radius: 0.5rem;
 
     /* ========== BUTTON COLORS ========== */
-    /* Primary Button (default) */
-    --btn-primary: 162 88% 52%;
-    --btn-primary-foreground: 1 85% 15%;
-    --btn-primary-hover: 42 70% 47%;
+    /* Primary Button (default) - for light backgrounds (cards) */
+    /* Dark burgundy bg with light cream text */
+    --btn-primary: 354 47% 20%;
+    --btn-primary-foreground: 42 42% 94%;
+    --btn-primary-hover: 354 47% 15%;
 
-    /* Secondary Button */
-    --btn-secondary: 199 61% 17%;
+    /* Secondary Button - for cancel/neutral actions */
+    --btn-secondary: 1 30% 45%;
     --btn-secondary-foreground: 42 42% 94%;
-    --btn-secondary-hover: 1 50% 28%;
+    --btn-secondary-hover: 1 30% 38%;
 
-    /* Ghost Button */
+    /* Ghost Button - for dark backgrounds */
     --btn-ghost-foreground: 42 42% 94%;
     --btn-ghost-hover: 1 40% 30%;
 
-    /* Outline Button */
-    --btn-outline-border: 42 42% 60%;
-    --btn-outline-foreground: 42 42% 94%;
-    --btn-outline-hover: 42 42% 20%;
+    /* Outline Button - for dark backgrounds (panel header) */
+    /* Light cream bg with dark text */
+    --btn-outline: 42 42% 94%;
+    --btn-outline-foreground: 1 85% 24%;
+    --btn-outline-border: 42 42% 80%;
+    --btn-outline-hover: 42 42% 88%;
 
-    /* Landing Primary Button */
-    --btn-landing-primary: 42 70% 55%;
-    --btn-landing-primary-foreground: 1 85% 15%;
-    --btn-landing-primary-hover: 42 70% 47%;
+    /* Landing Primary Button - for dark backgrounds */
+    /* Light cream bg with dark text */
+    --btn-landing-primary: 42 42% 94%;
+    --btn-landing-primary-foreground: 1 85% 24%;
+    --btn-landing-primary-hover: 42 42% 88%;
 
-    /* Landing Secondary Button */
-    --btn-landing-secondary: 42 42% 94%;
-    --btn-landing-secondary-foreground: 1 85% 15%;
-    --btn-landing-secondary-hover: 42 42% 88%;
+    /* Landing Secondary Button - for dark backgrounds */
+    /* Dark burgundy bg with light text */
+    --btn-landing-secondary: 354 47% 20%;
+    --btn-landing-secondary-foreground: 42 42% 94%;
+    --btn-landing-secondary-hover: 354 47% 15%;
 
     /* Landing Outline Button */
     --btn-landing-outline-border: 42 42% 94%;
     --btn-landing-outline-foreground: 42 42% 94%;
     --btn-landing-outline-hover: 42 42% 94% / 0.15;
 
-    /* Landing Header Button */
-    --btn-landing-header: 1 85% 24%;
+    /* Landing Header Button - for light header */
+    /* Dark burgundy bg with light text */
+    --btn-landing-header: 354 47% 20%;
     --btn-landing-header-foreground: 42 42% 94%;
-    --btn-landing-header-hover: 1 85% 20%;
+    --btn-landing-header-hover: 354 47% 15%;
 
     /* ========== ICON COLORS ========== */
     /* Icons on dark background */
@@ -226,37 +232,41 @@
     --ring: 42 70% 60%;
 
     /* ========== BUTTON COLORS (Dark Mode) ========== */
-    --btn-primary: 42 70% 60%;
-    --btn-primary-foreground: 1 85% 10%;
-    --btn-primary-hover: 42 70% 52%;
+    /* Primary Button - for light card backgrounds */
+    --btn-primary: 354 47% 20%;
+    --btn-primary-foreground: 42 42% 94%;
+    --btn-primary-hover: 354 47% 15%;
 
-    --btn-secondary: 1 50% 22%;
+    /* Secondary Button */
+    --btn-secondary: 1 30% 35%;
     --btn-secondary-foreground: 42 42% 94%;
-    --btn-secondary-hover: 1 50% 18%;
+    --btn-secondary-hover: 1 30% 28%;
 
     --btn-ghost-foreground: 42 42% 94%;
     --btn-ghost-hover: 1 40% 18%;
 
-    --btn-outline-border: 42 42% 50%;
-    --btn-outline-foreground: 42 42% 94%;
-    --btn-outline-hover: 42 42% 15%;
+    /* Outline Button - for dark backgrounds */
+    --btn-outline: 42 42% 94%;
+    --btn-outline-foreground: 1 85% 12%;
+    --btn-outline-border: 42 42% 75%;
+    --btn-outline-hover: 42 42% 85%;
 
-    /* Landing buttons - same in dark mode for landing page */
-    --btn-landing-primary: 42 70% 55%;
-    --btn-landing-primary-foreground: 1 85% 15%;
-    --btn-landing-primary-hover: 42 70% 47%;
+    /* Landing buttons */
+    --btn-landing-primary: 42 42% 94%;
+    --btn-landing-primary-foreground: 1 85% 12%;
+    --btn-landing-primary-hover: 42 42% 88%;
 
-    --btn-landing-secondary: 42 42% 94%;
-    --btn-landing-secondary-foreground: 1 85% 15%;
-    --btn-landing-secondary-hover: 42 42% 88%;
+    --btn-landing-secondary: 354 47% 20%;
+    --btn-landing-secondary-foreground: 42 42% 94%;
+    --btn-landing-secondary-hover: 354 47% 15%;
 
     --btn-landing-outline-border: 42 42% 94%;
     --btn-landing-outline-foreground: 42 42% 94%;
     --btn-landing-outline-hover: 42 42% 94% / 0.15;
 
-    --btn-landing-header: 1 85% 12%;
+    --btn-landing-header: 354 47% 20%;
     --btn-landing-header-foreground: 42 42% 94%;
-    --btn-landing-header-hover: 1 85% 8%;
+    --btn-landing-header-hover: 354 47% 15%;
 
     /* ========== ICON COLORS (Dark Mode) ========== */
     --icon-default: 42 42% 94%;
