@@ -115,19 +115,19 @@
 
     /* ========== BUTTON COLORS ========== */
     /* Primary Button (default) */
-    --btn-primary: 42 70% 55%;
+    --btn-primary: 354 47% 20%;
     --btn-primary-foreground: 1 85% 15%;
     --btn-primary-hover: 42 70% 47%;
-    
+
     /* Secondary Button */
     --btn-secondary: 1 50% 35%;
     --btn-secondary-foreground: 42 42% 94%;
     --btn-secondary-hover: 1 50% 28%;
-    
+
     /* Ghost Button */
     --btn-ghost-foreground: 42 42% 94%;
     --btn-ghost-hover: 1 40% 30%;
-    
+
     /* Outline Button */
     --btn-outline-border: 42 42% 60%;
     --btn-outline-foreground: 42 42% 94%;
@@ -138,7 +138,7 @@
     --icon-default: 42 42% 94%;
     --icon-muted: 42 30% 70%;
     --icon-primary: 42 70% 55%;
-    
+
     /* Icons on light/card background */
     --icon-on-card: 1 85% 25%;
     --icon-on-card-muted: 1 50% 40%;
@@ -209,14 +209,14 @@
     --btn-primary: 42 70% 60%;
     --btn-primary-foreground: 1 85% 10%;
     --btn-primary-hover: 42 70% 52%;
-    
+
     --btn-secondary: 1 50% 22%;
     --btn-secondary-foreground: 42 42% 94%;
     --btn-secondary-hover: 1 50% 18%;
-    
+
     --btn-ghost-foreground: 42 42% 94%;
     --btn-ghost-hover: 1 40% 18%;
-    
+
     --btn-outline-border: 42 42% 50%;
     --btn-outline-foreground: 42 42% 94%;
     --btn-outline-hover: 42 42% 15%;
@@ -225,7 +225,7 @@
     --icon-default: 42 42% 94%;
     --icon-muted: 42 30% 65%;
     --icon-primary: 42 70% 60%;
-    
+
     --icon-on-card: 42 42% 94%;
     --icon-on-card-muted: 42 30% 70%;
 
