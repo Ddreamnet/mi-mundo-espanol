@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Globe, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -13,12 +14,25 @@ import { Logo } from "@/components/Logo";
 export function LandingHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   const navLinks = [
-    { label: "Ana Sayfa", href: "#hero" },
-    { label: "Dersler", href: "#dersler" },
-    { label: "İletişim", href: "#iletisim" },
+    { label: "Ana Sayfa", href: "#hero", isRoute: false },
+    { label: "Dersler", href: "#dersler", isRoute: false },
+    { label: "İletişim", href: "/iletisim", isRoute: true },
   ];
+
+  const handleNavClick = (link: { href: string; isRoute: boolean }) => {
+    if (link.isRoute) {
+      navigate(link.href);
+    } else if (location.pathname !== "/") {
+      navigate("/" + link.href);
+    } else {
+      const element = document.querySelector(link.href);
+      element?.scrollIntoView({ behavior: "smooth" });
+    }
+  };
 
   return (
     <>
@@ -33,13 +47,13 @@ export function LandingHeader() {
             {/* Desktop Navigation - Center */}
             <nav className="hidden lg:flex items-center gap-8">
               {navLinks.map((link) => (
-                <a
+                <button
                   key={link.href}
-                  href={link.href}
-                  className="text-[hsl(var(--landing-header-foreground))] hover:text-primary transition-colors font-medium"
+                  onClick={() => handleNavClick(link)}
+                  className="text-[hsl(var(--landing-header-foreground))] hover:text-primary transition-colors font-medium bg-transparent border-none cursor-pointer"
                 >
                   {link.label}
-                </a>
+                </button>
               ))}
             </nav>
 
@@ -88,14 +102,16 @@ export function LandingHeader() {
             <div className="container mx-auto px-4 py-4">
               <nav className="flex flex-col gap-4">
                 {navLinks.map((link) => (
-                  <a
+                  <button
                     key={link.href}
-                    href={link.href}
-                    onClick={() => setMobileMenuOpen(false)}
-                    className="text-[hsl(var(--landing-header-foreground))] hover:text-primary transition-colors font-medium py-2"
+                    onClick={() => {
+                      setMobileMenuOpen(false);
+                      handleNavClick(link);
+                    }}
+                    className="text-[hsl(var(--landing-header-foreground))] hover:text-primary transition-colors font-medium py-2 text-left bg-transparent border-none cursor-pointer"
                   >
                     {link.label}
-                  </a>
+                  </button>
                 ))}
                 <div className="flex items-center gap-4 pt-4 border-t border-border">
                   <DropdownMenu>

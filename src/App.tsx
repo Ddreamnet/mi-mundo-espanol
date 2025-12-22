@@ -8,6 +8,7 @@ import { LandingPage } from "@/components/landing/LandingPage";
 import { TeacherDashboard } from "@/components/TeacherDashboard";
 import { StudentDashboard } from "@/components/StudentDashboard";
 import { AdminDashboard } from "@/components/AdminDashboard";
+import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -64,6 +65,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/iletisim" element={<Contact />} />
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
