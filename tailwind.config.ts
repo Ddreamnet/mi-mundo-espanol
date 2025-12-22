@@ -82,6 +82,7 @@ export default {
             hover: "hsl(var(--btn-ghost-hover))",
           },
           outline: {
+            DEFAULT: "hsl(var(--btn-outline))",
             border: "hsl(var(--btn-outline-border))",
             foreground: "hsl(var(--btn-outline-foreground))",
             hover: "hsl(var(--btn-outline-hover))",
