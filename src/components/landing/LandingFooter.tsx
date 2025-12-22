@@ -1,5 +1,6 @@
-import { Globe, Instagram, Facebook } from "lucide-react";
+import { Instagram, Facebook } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/Logo";
 
 // WhatsApp icon component
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -41,31 +42,20 @@ export function LandingFooter() {
 
   return (
     <footer className="bg-[hsl(var(--landing-footer))] text-[hsl(var(--landing-footer-foreground))]">
-      <div className="container mx-auto px-4 lg:px-8 py-12 lg:py-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-12">
+      <div className="container mx-auto px-4 lg:px-8 py-6 lg:py-8">
+        <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Logo & Brand */}
-          <div className="flex flex-col items-center md:items-start gap-3">
-            <a href="#" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-[hsl(var(--background))] flex items-center justify-center">
-                <Globe className="w-6 h-6 text-[hsl(var(--foreground))]" />
-              </div>
-              <span className="font-bold text-xl">
-                Mi Mundo Español
-              </span>
-            </a>
-            <p className="text-sm text-[hsl(var(--landing-footer-foreground)/0.7)] text-center md:text-left mt-2">
-              Senin İspanyolca Dünyan
-            </p>
-          </div>
+          <a href="#">
+            <Logo size="lg" />
+          </a>
 
           {/* Links */}
-          <div className="flex flex-col items-center gap-4">
-            <h4 className="font-semibold text-lg mb-2">Bağlantılar</h4>
+          <div className="flex items-center gap-6">
             {footerLinks.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
-                className="text-[hsl(var(--landing-footer-foreground)/0.8)] hover:text-[hsl(var(--primary))] transition-colors"
+                className="text-sm text-[hsl(var(--landing-footer-foreground)/0.8)] hover:text-[hsl(var(--primary))] transition-colors"
               >
                 {link.label}
               </a>
@@ -73,34 +63,31 @@ export function LandingFooter() {
           </div>
 
           {/* Social Icons */}
-          <div className="flex flex-col items-center md:items-end gap-4">
-            <h4 className="font-semibold text-lg mb-2">Bizi Takip Edin</h4>
-            <div className="flex items-center gap-3">
-              {socialLinks.map((social) => (
-                <Button
-                  key={social.label}
-                  variant="outline"
-                  size="icon"
-                  asChild
-                  className="border-[hsl(var(--background))] text-[hsl(var(--landing-footer-foreground))] hover:bg-[hsl(var(--background))] hover:text-[hsl(var(--foreground))] transition-colors"
+          <div className="flex items-center gap-2">
+            {socialLinks.map((social) => (
+              <Button
+                key={social.label}
+                variant="ghost"
+                size="icon"
+                asChild
+                className="h-9 w-9 text-[hsl(var(--landing-footer-foreground))] hover:bg-[hsl(var(--background)/0.1)] hover:text-[hsl(var(--primary))]"
+              >
+                <a 
+                  href={social.href} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  aria-label={social.label}
                 >
-                  <a 
-                    href={social.href} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    aria-label={social.label}
-                  >
-                    <social.icon className="w-5 h-5" />
-                  </a>
-                </Button>
-              ))}
-            </div>
+                  <social.icon className="w-5 h-5" />
+                </a>
+              </Button>
+            ))}
           </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-12 pt-8 border-t border-[hsl(var(--background)/0.2)]">
-          <p className="text-center text-sm text-[hsl(var(--landing-footer-foreground)/0.6)]">
+        <div className="mt-6 pt-4 border-t border-[hsl(var(--background)/0.15)]">
+          <p className="text-center text-xs text-[hsl(var(--landing-footer-foreground)/0.5)]">
             © {new Date().getFullYear()} Mi Mundo Español. Tüm hakları saklıdır.
           </p>
         </div>
