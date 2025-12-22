@@ -36,7 +36,7 @@ export function LandingHeader() {
                 <a
                   key={link.href}
                   href={link.href}
-                  className="text-[hsl(var(--landing-header-foreground))] hover:text-[hsl(var(--primary))] transition-colors font-medium"
+                  className="text-[hsl(var(--landing-header-foreground))] hover:text-primary transition-colors font-medium"
                 >
                   {link.label}
                 </a>
@@ -51,7 +51,7 @@ export function LandingHeader() {
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="text-[hsl(var(--landing-header-foreground))] hover:bg-[hsl(var(--background)/0.1)]"
+                    className="text-[hsl(var(--landing-header-foreground))] hover:bg-muted/20"
                   >
                     <Globe className="w-5 h-5" />
                   </Button>
@@ -65,8 +65,8 @@ export function LandingHeader() {
 
               {/* Login Button */}
               <Button
+                variant="landing-header"
                 onClick={() => setLoginDialogOpen(true)}
-                className="bg-[hsl(var(--background))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--background)/0.9)]"
               >
                 Giriş Yap
               </Button>
@@ -84,7 +84,7 @@ export function LandingHeader() {
 
         {/* Mobile Menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden bg-[hsl(var(--landing-header))] border-t border-[hsl(var(--border))]">
+          <div className="lg:hidden bg-[hsl(var(--landing-header))] border-t border-border">
             <div className="container mx-auto px-4 py-4">
               <nav className="flex flex-col gap-4">
                 {navLinks.map((link) => (
@@ -92,12 +92,12 @@ export function LandingHeader() {
                     key={link.href}
                     href={link.href}
                     onClick={() => setMobileMenuOpen(false)}
-                    className="text-[hsl(var(--landing-header-foreground))] hover:text-[hsl(var(--primary))] transition-colors font-medium py-2"
+                    className="text-[hsl(var(--landing-header-foreground))] hover:text-primary transition-colors font-medium py-2"
                   >
                     {link.label}
                   </a>
                 ))}
-                <div className="flex items-center gap-4 pt-4 border-t border-[hsl(var(--border))]">
+                <div className="flex items-center gap-4 pt-4 border-t border-border">
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm" className="text-[hsl(var(--landing-header-foreground))]">
@@ -112,11 +112,12 @@ export function LandingHeader() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <Button
+                    variant="landing-header"
+                    className="flex-1"
                     onClick={() => {
                       setMobileMenuOpen(false);
                       setLoginDialogOpen(true);
                     }}
-                    className="flex-1 bg-[hsl(var(--background))] text-[hsl(var(--foreground))] hover:bg-[hsl(var(--background)/0.9)]"
                   >
                     Giriş Yap
                   </Button>

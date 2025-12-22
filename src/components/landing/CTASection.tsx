@@ -1,3 +1,5 @@
+import { Button } from "@/components/ui/button";
+
 export function CTASection() {
   return (
     <section id="iletisim" className="py-16 lg:py-24">
@@ -9,14 +11,19 @@ export function CTASection() {
           <p className="text-card-foreground/70 text-lg mb-8 max-w-2xl mx-auto">
             İspanyolca öğrenme yolculuğuna bugün başla. Sana özel ders planları ve birebir eğitim ile hedeflerine ulaş.
           </p>
-          <a
-            href="https://wa.me/+905304721875"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center px-10 py-4 bg-[hsl(var(--background))] text-foreground font-semibold rounded-lg hover:bg-[hsl(var(--background)/0.9)] transition-all shadow-lg hover:shadow-xl hover:scale-105"
+          <Button
+            variant="landing-header"
+            size="lg"
+            asChild
           >
-            İletişim
-          </a>
+            <a
+              href="https://wa.me/+905304721875"
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              İletişim
+            </a>
+          </Button>
         </div>
       </div>
     </section>
