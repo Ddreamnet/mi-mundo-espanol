@@ -8,6 +8,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { LoginDialog } from "./LoginDialog";
+import { Logo } from "@/components/Logo";
 
 export function LandingHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -25,13 +26,8 @@ export function LandingHeader() {
         <div className="container mx-auto px-4 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo & Brand */}
-            <a href="#" className="flex items-center gap-2 lg:gap-3">
-              <div className="w-8 h-8 lg:w-10 lg:h-10 rounded-full bg-[hsl(var(--background))] flex items-center justify-center">
-                <Globe className="w-5 h-5 lg:w-6 lg:h-6 text-[hsl(var(--foreground))]" />
-              </div>
-              <span className="font-bold text-lg lg:text-xl text-[hsl(var(--landing-header-foreground))]">
-                Mi Mundo Español
-              </span>
+            <a href="#">
+              <Logo size="xl" />
             </a>
 
             {/* Desktop Navigation - Center */}

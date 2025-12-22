@@ -1,39 +1,25 @@
-import logoImg from "@/assets/logo.png";
-import brandNameImg from "@/assets/brand-name.png";
+import logoFullImg from "@/assets/logo-full.png";
 
 interface LogoProps {
   className?: string;
-  size?: "sm" | "md" | "lg";
-  showBrandName?: boolean;
+  size?: "sm" | "md" | "lg" | "xl";
 }
 
-export function Logo({ className = "", size = "md", showBrandName = true }: LogoProps) {
+export function Logo({ className = "", size = "md" }: LogoProps) {
   const sizeClasses = {
     sm: "h-8",
     md: "h-10",
     lg: "h-12",
-  };
-
-  const brandSizeClasses = {
-    sm: "h-5",
-    md: "h-6",
-    lg: "h-8",
+    xl: "h-14",
   };
 
   return (
-    <div className={`flex items-center gap-2 ${className}`}>
+    <div className={`flex items-center ${className}`}>
       <img 
-        src={logoImg} 
-        alt="Logo" 
+        src={logoFullImg} 
+        alt="Mi Mundo Español" 
         className={`${sizeClasses[size]} w-auto object-contain`} 
       />
-      {showBrandName && (
-        <img 
-          src={brandNameImg} 
-          alt="Mi Mundo Español" 
-          className={`${brandSizeClasses[size]} w-auto object-contain`} 
-        />
-      )}
     </div>
   );
 }

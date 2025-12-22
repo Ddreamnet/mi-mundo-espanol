@@ -73,7 +73,7 @@ export function AuthForm() {
       <div className="w-full max-w-sm space-y-8">
         {/* Logo centered above card */}
         <div className="flex justify-center">
-          <Logo size="lg" showBrandName={true} />
+          <Logo size="lg" />
         </div>
 
         <Card className="w-full border-border bg-card shadow-xl">
