@@ -48,8 +48,8 @@ export default function Contact() {
       <LandingHeader />
       
       <main className="flex-1 pt-20 lg:pt-24">
-        <div className="container mx-auto px-4 lg:px-8 py-12 lg:py-20">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+        <div className="container mx-auto px-4 lg:px-8 py-12 lg:py-20 max-w-5xl">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-16 items-center">
             {/* Left Column - Contact Info */}
             <div>
               {/* Header */}
