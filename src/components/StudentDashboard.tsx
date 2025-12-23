@@ -28,7 +28,7 @@ import {
 import { Header } from "./Header";
 import { StudentLessonTracker } from "./StudentLessonTracker";
 import { HomeworkSection } from "./HomeworkSection";
-import { ContactDialog } from "./ContactDialog";
+import { JoinLessonCard } from "./JoinLessonCard";
 import { NotificationBell } from "./NotificationBell";
 
 // ============================================================================
@@ -270,7 +270,6 @@ export function StudentDashboard() {
               isStudent={true}
               onNotificationClick={() => setActiveTab("homework")}
             />
-            <ContactDialog />
             <Button onClick={signOut} variant="outline" size="sm" disabled={signingOut}>
               <LogOut className="h-4 w-4" />
               <span className="hidden sm:inline ml-2">{signingOut ? "Çıkış..." : "Çıkış"}</span>
@@ -317,6 +316,9 @@ export function StudentDashboard() {
 
           {/* İşlenen Dersler */}
           <StudentLessonTracker studentId={profile?.user_id || ""} />
+
+          {/* Derse Katıl */}
+          <JoinLessonCard studentId={profile?.user_id || ""} />
         </div>
 
         {/* Tabs: Konular ve Ödevler */}
