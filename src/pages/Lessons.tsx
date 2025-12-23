@@ -34,7 +34,7 @@ const groupFeatures = [
 
 export default function Lessons() {
   return (
-    <div className="min-h-screen" style={{ backgroundColor: 'hsl(228, 43%, 29%)' }}>
+    <div className="min-h-screen bg-page-lessons">
       <LandingHeader />
 
       <main className="pt-24 lg:pt-28 pb-16">

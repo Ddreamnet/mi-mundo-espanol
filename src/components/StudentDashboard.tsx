@@ -291,7 +291,7 @@ export function StudentDashboard() {
   // ============================================================================
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background" data-dashboard="student">
       {/* Header */}
       <Header
         rightActions={

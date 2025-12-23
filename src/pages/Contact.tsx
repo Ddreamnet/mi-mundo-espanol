@@ -44,7 +44,7 @@ const contactInfo = [
 
 export default function Contact() {
   return (
-    <div className="min-h-screen flex flex-col" style={{ backgroundColor: 'hsl(214, 26%, 31%)' }}>
+    <div className="min-h-screen flex flex-col bg-page-contact">
       <LandingHeader />
       
       <main className="flex-1 pt-20 lg:pt-24">
