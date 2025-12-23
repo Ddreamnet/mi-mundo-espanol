@@ -127,8 +127,11 @@
     --warning-foreground: 1 85% 15%;
 
     /* ========================================================================
-       FORM ELEMENTS
+       OVERLAY & FORM ELEMENTS
        ======================================================================== */
+    
+    /* Modal/Dialog overlay */
+    --overlay: 0 0% 0% / 0.8;
     
     --border: 1 40% 35%;
     --input: 1 40% 35%;
@@ -224,6 +227,18 @@
     /* Page-specific backgrounds */
     --page-lessons: 228 43% 29%;
     --page-contact: 214 26% 31%;
+
+    /* ========================================================================
+       NOTIFICATION HEADER TOKENS
+       ======================================================================== */
+    
+    /* Primary notification header gradient */
+    --notification-header-from: var(--primary);
+    --notification-header-to: var(--primary);
+    
+    /* Admin notification header gradient */
+    --notification-admin-header-from: var(--secondary);
+    --notification-admin-header-to: var(--secondary);
 
     /* ========================================================================
        ROLE ACCENT TOKENS - Default (Admin)
