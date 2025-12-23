@@ -55,19 +55,17 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        // Header colors
-        header: {
-          DEFAULT: "hsl(var(--header-bg))",
-          foreground: "hsl(var(--header-foreground))",
-          border: "hsl(var(--header-border))",
+        sidebar: {
+          DEFAULT: "hsl(var(--sidebar-background))",
+          foreground: "hsl(var(--sidebar-foreground))",
+          primary: "hsl(var(--sidebar-primary))",
+          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
+          accent: "hsl(var(--sidebar-accent))",
+          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
+          border: "hsl(var(--sidebar-border))",
+          ring: "hsl(var(--sidebar-ring))",
         },
-        // Tab colors
-        tab: {
-          inactive: "hsl(var(--tab-inactive))",
-          "active-bg": "hsl(var(--tab-active-bg))",
-          "active-fg": "hsl(var(--tab-active-fg))",
-        },
-        // Button colors
+        // Button colors - centralized for easy theming
         btn: {
           primary: {
             DEFAULT: "hsl(var(--btn-primary))",
@@ -84,65 +82,67 @@ export default {
             hover: "hsl(var(--btn-ghost-hover))",
           },
           outline: {
+            DEFAULT: "hsl(var(--btn-outline))",
             border: "hsl(var(--btn-outline-border))",
             foreground: "hsl(var(--btn-outline-foreground))",
             hover: "hsl(var(--btn-outline-hover))",
           },
+          "landing-primary": {
+            DEFAULT: "hsl(var(--btn-landing-primary))",
+            foreground: "hsl(var(--btn-landing-primary-foreground))",
+            hover: "hsl(var(--btn-landing-primary-hover))",
+          },
+          "landing-secondary": {
+            DEFAULT: "hsl(var(--btn-landing-secondary))",
+            foreground: "hsl(var(--btn-landing-secondary-foreground))",
+            hover: "hsl(var(--btn-landing-secondary-hover))",
+          },
+          "landing-outline": {
+            border: "hsl(var(--btn-landing-outline-border))",
+            foreground: "hsl(var(--btn-landing-outline-foreground))",
+            hover: "hsl(var(--btn-landing-outline-hover))",
+          },
+          "landing-header": {
+            DEFAULT: "hsl(var(--btn-landing-header))",
+            foreground: "hsl(var(--btn-landing-header-foreground))",
+            hover: "hsl(var(--btn-landing-header-hover))",
+          },
         },
-        // Icon colors
+        // Icon colors - centralized for easy theming
         icon: {
           DEFAULT: "hsl(var(--icon-default))",
           muted: "hsl(var(--icon-muted))",
-          "on-dark": "hsl(var(--icon-on-dark))",
-        },
-        // Sidebar legacy support
-        sidebar: {
-          DEFAULT: "hsl(var(--sidebar-background))",
-          foreground: "hsl(var(--sidebar-foreground))",
-          primary: "hsl(var(--sidebar-primary))",
-          "primary-foreground": "hsl(var(--sidebar-primary-foreground))",
-          accent: "hsl(var(--sidebar-accent))",
-          "accent-foreground": "hsl(var(--sidebar-accent-foreground))",
-          border: "hsl(var(--sidebar-border))",
-          ring: "hsl(var(--sidebar-ring))",
+          primary: "hsl(var(--icon-primary))",
+          "on-card": "hsl(var(--icon-on-card))",
+          "on-card-muted": "hsl(var(--icon-on-card-muted))",
         },
       },
       borderRadius: {
         lg: "var(--radius)",
         md: "calc(var(--radius) - 2px)",
         sm: "calc(var(--radius) - 4px)",
-        xl: "calc(var(--radius) + 4px)",
-        "2xl": "calc(var(--radius) + 8px)",
-      },
-      boxShadow: {
-        "soft": "0 2px 8px -2px rgba(0, 0, 0, 0.08)",
-        "card": "0 4px 12px -4px rgba(0, 0, 0, 0.1)",
-        "card-hover": "0 8px 24px -8px rgba(0, 0, 0, 0.15)",
-        "dialog": "0 16px 48px -12px rgba(0, 0, 0, 0.25)",
       },
       keyframes: {
         "accordion-down": {
-          from: { height: "0" },
-          to: { height: "var(--radix-accordion-content-height)" },
+          from: {
+            height: "0",
+          },
+          to: {
+            height: "var(--radix-accordion-content-height)",
+          },
         },
         "accordion-up": {
-          from: { height: "var(--radix-accordion-content-height)" },
-          to: { height: "0" },
-        },
-        "fade-in": {
-          from: { opacity: "0" },
-          to: { opacity: "1" },
-        },
-        "slide-up": {
-          from: { opacity: "0", transform: "translateY(8px)" },
-          to: { opacity: "1", transform: "translateY(0)" },
+          from: {
+            height: "var(--radix-accordion-content-height)",
+          },
+          to: {
+            height: "0",
+          },
         },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
-        "fade-in": "fade-in 0.3s ease-out",
-        "slide-up": "slide-up 0.3s ease-out",
       },
     },
   },

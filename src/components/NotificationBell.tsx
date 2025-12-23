@@ -23,9 +23,9 @@ interface Notification {
 }
 
 interface NotificationBellProps {
-  userId: string;
-  teacherId: string;
-  studentId?: string;
+  userId: string; // Current user's ID (either teacher or student)
+  teacherId: string; // Teacher ID for the relationship
+  studentId?: string; // Student ID for the relationship (needed for student panel)
   isStudent?: boolean;
   onNotificationClick?: () => void;
 }
@@ -37,6 +37,7 @@ export function NotificationBell({ userId, teacherId, studentId, isStudent = fal
   const { toast } = useToast();
 
   useEffect(() => {
+    // Guard: Don't fetch if userId is missing or empty (e.g., during logout)
     if (!userId) return;
     
     fetchNotifications();
@@ -45,9 +46,11 @@ export function NotificationBell({ userId, teacherId, studentId, isStudent = fal
   }, [userId]);
 
   const fetchNotifications = async () => {
+    // Guard: Don't fetch if userId is missing
     if (!userId) return;
     
     try {
+      // Bildirimleri recipient_id ile filtrele (kullanıcının kendisine gelen bildirimler)
       const { data: notificationsData, error: notificationsError } = await supabase
         .from('notifications')
         .select('*')
@@ -57,10 +60,13 @@ export function NotificationBell({ userId, teacherId, studentId, isStudent = fal
 
       if (notificationsError) throw notificationsError;
 
+      // Fetch names based on whether user is student or teacher
+      // Öğrenci ise öğretmen adını, öğretmen ise öğrenci adını göster
       const userIds = isStudent 
         ? [...new Set(notificationsData?.map(n => n.teacher_id) || [])]
         : [...new Set(notificationsData?.map(n => n.student_id) || [])];
 
+      // Get user names
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('user_id, full_name')
@@ -68,10 +74,12 @@ export function NotificationBell({ userId, teacherId, studentId, isStudent = fal
 
       if (profilesError) throw profilesError;
 
+      // Convert profiles to map
       const profilesMap = new Map(
         profilesData?.map(p => [p.user_id, p.full_name]) || []
       );
 
+      // Enrich notifications with names
       const enrichedNotifications = notificationsData?.map(n => ({
         ...n,
         profiles: {
@@ -99,7 +107,7 @@ export function NotificationBell({ userId, teacherId, studentId, isStudent = fal
         },
         (payload) => {
           console.log('New notification received:', payload);
-          fetchNotifications();
+          fetchNotifications(); // Yeni bildirim geldiğinde listeyi güncelle
           
           toast({
             title: "Yeni Ödev",
@@ -129,6 +137,7 @@ export function NotificationBell({ userId, teacherId, studentId, isStudent = fal
 
       if (error) throw error;
 
+      // UI'yi güncelle
       setNotifications(prev => 
         prev.map(n => ({ ...n, is_read: true }))
       );
@@ -146,6 +155,7 @@ export function NotificationBell({ userId, teacherId, studentId, isStudent = fal
   const handleOpenChange = (newOpen: boolean) => {
     setOpen(newOpen);
     if (newOpen && unreadCount > 0) {
+      // Popup açıldığında bildirimleri okundu olarak işaretle
       markAllAsRead();
     }
   };
@@ -158,83 +168,95 @@ export function NotificationBell({ userId, teacherId, studentId, isStudent = fal
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative text-icon-default">
-          <Bell className="h-5 w-5" />
+        <Button variant="card-ghost" size="icon" className="relative">
+          <Bell className="h-5 w-5 text-card-foreground" />
           {unreadCount > 0 && (
-            <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs font-bold">
+            <Badge 
+              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-destructive text-destructive-foreground text-xs"
+            >
               {unreadCount > 9 ? '9+' : unreadCount}
-            </span>
+            </Badge>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
-        <div className="p-4 border-b border-border">
-          <div className="flex items-center justify-between">
-            <div>
-              <h4 className="font-semibold text-card-foreground">Bildirimler</h4>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                {unreadCount > 0 
-                  ? `${unreadCount} okunmamış bildirim` 
-                  : "Tüm bildirimler okundu"}
-              </p>
-            </div>
-            {unreadCount > 0 && (
-              <Badge variant="default" className="text-xs">
-                {unreadCount}
-              </Badge>
-            )}
-          </div>
-        </div>
-        <ScrollArea className="h-[320px]">
-          {notifications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 px-4">
-              <div className="rounded-full bg-muted p-3 mb-3">
-                <Bell className="h-6 w-6 text-muted-foreground" />
+      <PopoverContent className="w-96 p-0" align="end">
+        <Card className="border-0 shadow-lg">
+          <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-primary/10 pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-lg font-semibold">Bildirimler</CardTitle>
+                <CardDescription className="mt-1">
+                  {unreadCount > 0 
+                    ? `${unreadCount} okunmamış bildirim` 
+                    : "Tüm bildirimler okundu"}
+                </CardDescription>
               </div>
-              <p className="text-sm font-medium text-card-foreground">Henüz bildirim yok</p>
-              <p className="text-xs text-muted-foreground mt-1 text-center">
-                Yeni ödev yüklendiğinde burada görünecek
-              </p>
+              {unreadCount > 0 && (
+                <Badge className="bg-primary text-primary-foreground">
+                  {unreadCount}
+                </Badge>
+              )}
             </div>
-          ) : (
-            <div className="divide-y divide-border">
-              {notifications.map((notification) => (
-                <div
-                  key={notification.id}
-                  className={`p-4 transition-colors hover:bg-muted/50 cursor-pointer ${
-                    !notification.is_read ? 'bg-primary/5' : ''
-                  }`}
-                  onClick={handleNotificationClick}
-                >
-                  <div className="flex items-start gap-3">
-                    <div className="rounded-full bg-secondary p-2">
-                      <FileText className="h-4 w-4 text-secondary-foreground" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm text-card-foreground ${
-                        !notification.is_read ? 'font-semibold' : 'font-medium'
-                      }`}>
-                        {notification.profiles?.full_name || (isStudent ? 'Öğretmen' : 'Öğrenci')}
-                      </p>
-                      <p className="text-sm text-muted-foreground mt-0.5">
-                        {isStudent ? "Yeni bir dosya yükledi" : "Yeni bir ödev yükledi"}
-                      </p>
-                      <div className="flex items-center gap-1.5 mt-2">
-                        <Calendar className="h-3 w-3 text-muted-foreground" />
-                        <p className="text-xs text-muted-foreground">
-                          {format(new Date(notification.created_at), "dd MMM yyyy, HH:mm", { locale: tr })}
-                        </p>
+          </CardHeader>
+          <CardContent className="p-0">
+            <ScrollArea className="h-[400px]">
+              {notifications.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 px-4">
+                  <div className="rounded-full bg-muted p-4 mb-4">
+                    <Bell className="h-8 w-8 opacity-50" />
+                  </div>
+                  <p className="text-sm font-medium opacity-70">Henüz bildirim yok</p>
+                  <p className="text-xs opacity-60 mt-1">Yeni ödev yüklendiğinde burada görünecek</p>
+                </div>
+              ) : (
+                <div className="divide-y">
+                  {notifications.map((notification) => (
+                    <div
+                      key={notification.id}
+                      className={`p-4 transition-colors hover:bg-accent/50 cursor-pointer ${
+                        !notification.is_read 
+                          ? 'bg-primary/5 border-l-4 border-l-primary' 
+                          : ''
+                      }`}
+                      onClick={handleNotificationClick}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`mt-0.5 rounded-full p-2 ${
+                          !notification.is_read 
+                            ? 'bg-secondary/50' 
+                            : 'bg-secondary/30'
+                        }`}>
+                          <FileText className="h-4 w-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm ${
+                            !notification.is_read 
+                              ? 'font-semibold' 
+                              : 'font-medium opacity-70'
+                          }`}>
+                            {notification.profiles?.full_name || (isStudent ? 'Öğretmen' : 'Öğrenci')}
+                          </p>
+                          <p className="text-sm opacity-70 mt-0.5">
+                            {isStudent ? "Yeni bir dosya yükledi" : "Yeni bir ödev yükledi"}
+                          </p>
+                          <div className="flex items-center gap-1.5 mt-2">
+                            <Calendar className="h-3 w-3 opacity-50" />
+                            <p className="text-xs opacity-60">
+                              {format(new Date(notification.created_at), "dd MMM yyyy, HH:mm", { locale: tr })}
+                            </p>
+                          </div>
+                        </div>
+                        {!notification.is_read && (
+                          <div className="h-2 w-2 rounded-full bg-primary mt-2" />
+                        )}
                       </div>
                     </div>
-                    {!notification.is_read && (
-                      <div className="h-2 w-2 rounded-full bg-primary mt-2" />
-                    )}
-                  </div>
+                  ))}
                 </div>
-              ))}
-            </div>
-          )}
-        </ScrollArea>
+              )}
+            </ScrollArea>
+          </CardContent>
+        </Card>
       </PopoverContent>
     </Popover>
   );

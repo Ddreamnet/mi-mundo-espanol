@@ -62,102 +62,117 @@
   text-decoration: underline;
 }
 
-/* ============================================================================
-   MODERN ADULT EDUCATION PLATFORM - DESIGN SYSTEM
-   
-   Design Philosophy:
-   - Clean, minimal, professional
-   - High contrast for readability
-   - Warm burgundy & cream palette
-   - No sidebar - header-based navigation
-   ============================================================================ */
+/* Professional dark red theme */
 
 @layer base {
   :root {
-    /* ========== CORE PALETTE ========== */
-    /* Deep burgundy background */
+    /* Main background - deep burgundy */
     --background: 1 85% 24%;
     --foreground: 42 42% 94%;
 
-    /* Warm cream surfaces - HIGH CONTRAST */
-    --card: 42 35% 96%;
-    --card-foreground: 1 70% 18%;
+    /* Card - light cream */
+    --card: 42 42% 94%;
+    --card-foreground: 1 85% 15%;
 
-    /* Popover - slightly elevated */
-    --popover: 42 35% 98%;
-    --popover-foreground: 1 70% 18%;
+    /* Popover */
+    --popover: 49 100% 97%;
+    --popover-foreground: 1 85% 15%;
 
-    /* Primary - burgundy accent */
-    --primary: 1 75% 28%;
-    --primary-foreground: 42 42% 96%;
+    /* Primary - warm gold accent */
+    --primary: 42 70% 55%;
+    --primary-foreground: 1 85% 15%;
 
-    /* Secondary - light muted surface */
-    --secondary: 42 25% 92%;
-    --secondary-foreground: 1 65% 22%;
+    /* Secondary - muted burgundy */
+    --secondary: 1 50% 35%;
+    --secondary-foreground: 42 42% 94%;
 
-    /* Muted - subtle backgrounds and text */
-    --muted: 42 20% 88%;
-    --muted-foreground: 1 40% 40%;
+    /* Muted elements */
+    --muted: 1 40% 30%;
+    --muted-foreground: 42 30% 65%;
+
+    /* Muted foreground for card/light backgrounds */
+    --muted-foreground-on-card: 1 30% 40%;
 
     /* Accent - warm terracotta */
-    --accent: 15 55% 50%;
-    --accent-foreground: 42 42% 96%;
+    --accent: 15 60% 45%;
+    --accent-foreground: 42 42% 94%;
 
-    /* Destructive */
-    --destructive: 0 72% 51%;
-    --destructive-foreground: 0 0% 100%;
+    /* Destructive - coral red */
+    --destructive: 0 65% 50%;
+    --destructive-foreground: 42 42% 94%;
 
-    /* Success */
-    --success: 142 70% 35%;
-    --success-foreground: 0 0% 100%;
+    /* Success - green */
+    --success: 142 70% 40%;
+    --success-foreground: 42 42% 94%;
 
-    /* Warning */
-    --warning: 38 92% 50%;
+    /* Warning - amber */
+    --warning: 38 90% 50%;
     --warning-foreground: 1 85% 15%;
 
-    /* Borders - visible but subtle */
-    --border: 42 20% 80%;
-    --input: 42 20% 80%;
-    --ring: 1 75% 35%;
+    /* Borders and inputs */
+    --border: 1 40% 35%;
+    --input: 1 40% 35%;
+    --ring: 42 70% 55%;
 
     --radius: 0.5rem;
 
-    /* ========== HEADER TOKENS ========== */
-    --header-bg: 42 35% 96%;
-    --header-foreground: 1 70% 18%;
-    --header-border: 42 20% 85%;
+    /* ========== BUTTON COLORS ========== */
+    /* Primary Button (default) - for light backgrounds (cards) */
+    /* Dark burgundy bg with light cream text */
+    --btn-primary: 354 47% 20%;
+    --btn-primary-foreground: 42 42% 94%;
+    --btn-primary-hover: 354 47% 15%;
 
-    /* ========== BUTTON TOKENS ========== */
-    /* Primary button - dark burgundy */
-    --btn-primary: 1 85% 24%;
-    --btn-primary-foreground: 42 42% 96%;
-    --btn-primary-hover: 1 85% 18%;
+    /* Secondary Button - for cancel/neutral actions */
+    --btn-secondary: 1 30% 45%;
+    --btn-secondary-foreground: 42 42% 94%;
+    --btn-secondary-hover: 1 30% 38%;
 
-    /* Secondary button */
-    --btn-secondary: 42 25% 90%;
-    --btn-secondary-foreground: 1 65% 22%;
-    --btn-secondary-hover: 42 25% 85%;
+    /* Ghost Button - for dark backgrounds */
+    --btn-ghost-foreground: 42 42% 94%;
+    --btn-ghost-hover: 1 40% 30%;
 
-    /* Ghost button */
-    --btn-ghost-foreground: 1 65% 25%;
-    --btn-ghost-hover: 42 20% 90%;
+    /* Outline Button - for dark backgrounds (panel header) */
+    /* Light cream bg with dark text */
+    --btn-outline: 42 42% 94%;
+    --btn-outline-foreground: 1 85% 24%;
+    --btn-outline-border: 42 42% 80%;
+    --btn-outline-hover: 42 42% 88%;
 
-    /* Outline button */
-    --btn-outline-border: 1 50% 50%;
-    --btn-outline-foreground: 1 65% 25%;
-    --btn-outline-hover: 42 25% 92%;
+    /* Landing Primary Button - for dark backgrounds */
+    /* Light cream bg with dark text */
+    --btn-landing-primary: 42 42% 94%;
+    --btn-landing-primary-foreground: 1 85% 24%;
+    --btn-landing-primary-hover: 42 42% 88%;
 
-    /* ========== TAB TOKENS ========== */
-    --tab-inactive: 1 50% 40%;
-    --tab-active-bg: 1 85% 24%;
-    --tab-active-fg: 42 42% 96%;
+    /* Landing Secondary Button - for dark backgrounds */
+    /* Dark burgundy bg with light text */
+    --btn-landing-secondary: 354 47% 20%;
+    --btn-landing-secondary-foreground: 42 42% 94%;
+    --btn-landing-secondary-hover: 354 47% 15%;
 
-    /* ========== ICON TOKENS ========== */
-    --icon-default: 1 60% 30%;
-    --icon-muted: 1 40% 50%;
-    --icon-on-dark: 42 42% 94%;
+    /* Landing Outline Button */
+    --btn-landing-outline-border: 42 42% 94%;
+    --btn-landing-outline-foreground: 42 42% 94%;
+    --btn-landing-outline-hover: 42 42% 94% / 0.15;
 
-    /* ========== LEGACY SIDEBAR (not used but kept for compatibility) ========== */
+    /* Landing Header Button - for light header */
+    /* Dark burgundy bg with light text */
+    --btn-landing-header: 354 47% 20%;
+    --btn-landing-header-foreground: 42 42% 94%;
+    --btn-landing-header-hover: 354 47% 15%;
+
+    /* ========== ICON COLORS ========== */
+    /* Icons on dark background */
+    --icon-default: 42 42% 94%;
+    --icon-muted: 42 30% 70%;
+    --icon-primary: 42 70% 55%;
+
+    /* Icons on light/card background */
+    --icon-on-card: 1 85% 25%;
+    --icon-on-card-muted: 1 50% 40%;
+
+    /* Sidebar - darker burgundy */
     --sidebar-background: 1 85% 18%;
     --sidebar-foreground: 42 42% 94%;
     --sidebar-primary: 42 70% 55%;
@@ -168,88 +183,113 @@
     --sidebar-ring: 42 70% 55%;
 
     /* Chart colors */
-    --chart-1: 1 75% 30%;
-    --chart-2: 15 55% 50%;
-    --chart-3: 42 60% 50%;
+    --chart-1: 42 70% 55%;
+    --chart-2: 15 60% 45%;
+    --chart-3: 1 50% 40%;
     --chart-4: 30 50% 50%;
     --chart-5: 350 45% 45%;
 
-    /* Landing page */
-    --landing-header: 42 35% 96%;
-    --landing-header-foreground: 1 70% 18%;
+    /* Landing page specific */
+    --landing-header: 49 100% 97%;
+    --landing-header-foreground: 1 85% 15%;
+    --landing-footer: 49 100% 97%;
+    --landing-footer-foreground: 1 85% 15%;
   }
 
   .dark {
-    /* Dark mode uses deeper burgundy tones */
-    --background: 1 85% 10%;
+    /* Dark mode - even deeper tones */
+    --background: 1 85% 12%;
     --foreground: 42 42% 94%;
 
-    --card: 1 60% 14%;
+    --card: 1 70% 16%;
     --card-foreground: 42 42% 94%;
 
-    --popover: 1 60% 16%;
+    --popover: 1 70% 16%;
     --popover-foreground: 42 42% 94%;
 
-    --primary: 42 60% 55%;
+    --primary: 42 70% 60%;
     --primary-foreground: 1 85% 10%;
 
-    --secondary: 1 50% 18%;
-    --secondary-foreground: 42 42% 92%;
+    --secondary: 1 50% 22%;
+    --secondary-foreground: 42 42% 94%;
 
-    --muted: 1 40% 20%;
+    --muted: 1 40% 18%;
     --muted-foreground: 42 30% 65%;
 
-    --accent: 15 50% 45%;
+    /* Muted foreground for card/light backgrounds (dark mode cards are dark) */
+    --muted-foreground-on-card: 42 30% 70%;
+
+    --accent: 15 55% 40%;
     --accent-foreground: 42 42% 94%;
 
-    --destructive: 0 65% 50%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 60% 45%;
+    --destructive-foreground: 42 42% 94%;
 
-    --success: 142 60% 40%;
-    --success-foreground: 0 0% 100%;
+    /* Success - green */
+    --success: 142 65% 35%;
+    --success-foreground: 42 42% 94%;
 
-    --warning: 38 85% 50%;
-    --warning-foreground: 1 85% 10%;
+    /* Warning - amber */
+    --warning: 38 85% 45%;
+    --warning-foreground: 1 85% 15%;
 
-    --border: 1 40% 25%;
-    --input: 1 40% 25%;
-    --ring: 42 60% 55%;
+    --border: 1 40% 22%;
+    --input: 1 40% 22%;
+    --ring: 42 70% 60%;
 
-    /* Header - dark mode */
-    --header-bg: 1 60% 14%;
-    --header-foreground: 42 42% 94%;
-    --header-border: 1 50% 22%;
+    /* ========== BUTTON COLORS (Dark Mode) ========== */
+    /* Primary Button - for light card backgrounds */
+    --btn-primary: 354 47% 20%;
+    --btn-primary-foreground: 42 42% 94%;
+    --btn-primary-hover: 354 47% 15%;
 
-    /* Button tokens - dark mode */
-    --btn-primary: 42 60% 55%;
-    --btn-primary-foreground: 1 85% 10%;
-    --btn-primary-hover: 42 60% 48%;
+    /* Secondary Button */
+    --btn-secondary: 1 30% 35%;
+    --btn-secondary-foreground: 42 42% 94%;
+    --btn-secondary-hover: 1 30% 28%;
 
-    --btn-secondary: 1 50% 22%;
-    --btn-secondary-foreground: 42 42% 92%;
-    --btn-secondary-hover: 1 50% 28%;
+    --btn-ghost-foreground: 42 42% 94%;
+    --btn-ghost-hover: 1 40% 18%;
 
-    --btn-ghost-foreground: 42 42% 90%;
-    --btn-ghost-hover: 1 50% 18%;
+    /* Outline Button - for dark backgrounds */
+    --btn-outline: 42 42% 94%;
+    --btn-outline-foreground: 1 85% 12%;
+    --btn-outline-border: 42 42% 75%;
+    --btn-outline-hover: 42 42% 85%;
 
-    --btn-outline-border: 42 40% 50%;
-    --btn-outline-foreground: 42 42% 90%;
-    --btn-outline-hover: 1 50% 20%;
+    /* Landing buttons */
+    --btn-landing-primary: 42 42% 94%;
+    --btn-landing-primary-foreground: 1 85% 12%;
+    --btn-landing-primary-hover: 42 42% 88%;
 
-    /* Tab tokens - dark mode */
-    --tab-inactive: 42 30% 70%;
-    --tab-active-bg: 42 60% 55%;
-    --tab-active-fg: 1 85% 10%;
+    --btn-landing-secondary: 354 47% 20%;
+    --btn-landing-secondary-foreground: 42 42% 94%;
+    --btn-landing-secondary-hover: 354 47% 15%;
 
-    /* Icon tokens - dark mode */
-    --icon-default: 42 42% 90%;
+    --btn-landing-outline-border: 42 42% 94%;
+    --btn-landing-outline-foreground: 42 42% 94%;
+    --btn-landing-outline-hover: 42 42% 94% / 0.15;
+
+    --btn-landing-header: 354 47% 20%;
+    --btn-landing-header-foreground: 42 42% 94%;
+    --btn-landing-header-hover: 354 47% 15%;
+
+    /* ========== ICON COLORS (Dark Mode) ========== */
+    --icon-default: 42 42% 94%;
     --icon-muted: 42 30% 65%;
-    --icon-on-dark: 42 42% 94%;
+    --icon-primary: 42 70% 60%;
 
-    /* Legacy */
-    --sidebar-background: 1 85% 8%;
-    --sidebar-border: 1 50% 18%;
+    --icon-on-card: 42 42% 94%;
+    --icon-on-card-muted: 42 30% 70%;
+
+    --sidebar-background: 1 85% 10%;
+    --sidebar-foreground: 42 42% 94%;
+    --sidebar-primary: 42 70% 60%;
+    --sidebar-primary-foreground: 1 85% 10%;
     --sidebar-accent: 1 60% 15%;
+    --sidebar-accent-foreground: 42 42% 94%;
+    --sidebar-border: 1 50% 18%;
+    --sidebar-ring: 42 70% 60%;
   }
 }
 
@@ -260,63 +300,5 @@
 
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
-  }
-}
-
-/* ========== CUSTOM SCROLLBAR ========== */
-@layer utilities {
-  .scrollbar-thin {
-    scrollbar-width: thin;
-    scrollbar-color: hsl(var(--muted)) transparent;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-thumb {
-    background-color: hsl(var(--muted));
-    border-radius: 3px;
-  }
-
-  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-    background-color: hsl(var(--muted-foreground));
-  }
-}
-
-/* ========== ANIMATION UTILITIES ========== */
-@layer utilities {
-  .animate-fade-in {
-    animation: fadeIn 0.3s ease-out;
-  }
-
-  .animate-slide-up {
-    animation: slideUp 0.3s ease-out;
-  }
-
-  @keyframes fadeIn {
-    from {
-      opacity: 0;
-    }
-    to {
-      opacity: 1;
-    }
-  }
-
-  @keyframes slideUp {
-    from {
-      opacity: 0;
-      transform: translateY(8px);
-    }
-    to {
-      opacity: 1;
-      transform: translateY(0);
-    }
   }
 }

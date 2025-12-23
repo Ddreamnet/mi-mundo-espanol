@@ -5,65 +5,51 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { cn } from "@/lib/utils";
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-medium ring-offset-background transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap text-sm font-medium transition-all duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        // Primary - dark burgundy, for main actions on light surfaces
-        default:
-          "bg-btn-primary text-btn-primary-foreground hover:bg-btn-primary-hover shadow-sm active:scale-[0.98]",
-        
-        // Destructive - red for dangerous actions
-        destructive:
-          "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-sm",
-        
-        // Outline - bordered button for secondary actions
-        outline:
-          "border-2 border-btn-outline-border bg-transparent text-btn-outline-foreground hover:bg-btn-outline-hover",
-        
-        // Secondary - muted background
-        secondary:
-          "bg-btn-secondary text-btn-secondary-foreground hover:bg-btn-secondary-hover",
-        
-        // Ghost - no background, subtle hover
-        ghost:
-          "text-btn-ghost-foreground hover:bg-btn-ghost-hover",
-        
-        // Link - text only, underline on hover
-        link:
-          "text-primary underline-offset-4 hover:underline",
-
-        // Tab inactive - for tab navigation on light surfaces
-        "tab-inactive":
-          "bg-transparent text-tab-inactive hover:bg-muted hover:text-card-foreground font-medium",
-        
-        // Tab active - for active tab
-        "tab-active":
-          "bg-tab-active-bg text-tab-active-fg shadow-sm font-medium",
-
-        // Landing page variants
-        "landing-primary":
-          "bg-foreground text-background hover:bg-foreground/90 shadow-lg font-semibold",
-        
-        "landing-secondary":
-          "bg-primary text-primary-foreground hover:bg-primary/90 shadow-md font-semibold",
-        
-        "landing-header":
-          "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm font-medium",
+        // Primary button - uses centralized btn-primary colors
+        default: "bg-btn-primary text-btn-primary-foreground hover:bg-btn-primary-hover active:opacity-90 shadow-sm",
+        // Destructive button
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/85 active:bg-destructive/75 shadow-sm",
+        // Outline button - for dark backgrounds (header), light bg with dark text
+        outline: "bg-btn-outline border border-btn-outline-border text-btn-outline-foreground hover:bg-btn-outline-hover",
+        // Secondary button - uses centralized btn-secondary colors
+        secondary: "bg-btn-secondary text-btn-secondary-foreground hover:bg-btn-secondary-hover active:opacity-90 shadow-sm",
+        // Ghost button - uses centralized btn-ghost colors
+        ghost: "text-btn-ghost-foreground hover:bg-btn-ghost-hover",
+        // Link button
+        link: "text-primary underline-offset-4 hover:underline",
+        // Card variant - for buttons on light card backgrounds
+        card: "bg-card-foreground/10 text-card-foreground hover:bg-card-foreground/20 border border-card-foreground/20",
+        // Card ghost variant - for ghost buttons on card backgrounds
+        "card-ghost": "text-card-foreground hover:bg-card-foreground/10",
+        // Tab inactive variant - for inactive tabs on light card backgrounds
+        "tab-inactive": "text-card-foreground hover:bg-card-foreground/10",
+        // Tab active variant - for active tabs (same as default)
+        "tab-active": "bg-btn-primary text-btn-primary-foreground hover:bg-btn-primary-hover active:opacity-90 shadow-sm",
+        // Landing page primary button - light cream bg for dark background
+        "landing-primary": "bg-btn-landing-primary text-btn-landing-primary-foreground hover:bg-btn-landing-primary-hover active:opacity-90 shadow-lg font-semibold",
+        // Landing page secondary button - dark burgundy bg for dark background
+        "landing-secondary": "bg-btn-landing-secondary text-btn-landing-secondary-foreground hover:bg-btn-landing-secondary-hover active:opacity-90 shadow-md font-semibold",
+        // Landing page outline button - transparent with cream border
+        "landing-outline": "border-2 border-btn-landing-outline-border bg-transparent text-btn-landing-outline-foreground hover:bg-btn-landing-outline-hover font-semibold",
+        // Landing page header button - dark burgundy for light header
+        "landing-header": "bg-btn-landing-header text-btn-landing-header-foreground hover:bg-btn-landing-header-hover shadow-md font-semibold",
       },
       size: {
-        default: "h-10 px-5 py-2",
-        sm: "h-9 px-4 text-sm",
-        lg: "h-12 px-8 text-base",
-        icon: "h-10 w-10",
-        "icon-sm": "h-8 w-8",
+        default: "h-10 px-5 py-2 rounded-md",
+        sm: "h-9 px-4 rounded-md text-sm",
+        lg: "h-11 px-8 rounded-md",
+        icon: "h-10 w-10 rounded-md",
       },
     },
     defaultVariants: {
       variant: "default",
       size: "default",
     },
-  }
+  },
 );
 
 export interface ButtonProps
@@ -75,14 +61,8 @@ export interface ButtonProps
 const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
   ({ className, variant, size, asChild = false, ...props }, ref) => {
     const Comp = asChild ? Slot : "button";
-    return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        {...props}
-      />
-    );
-  }
+    return <Comp className={cn(buttonVariants({ variant, size, className }))} ref={ref} {...props} />;
+  },
 );
 Button.displayName = "Button";
 
