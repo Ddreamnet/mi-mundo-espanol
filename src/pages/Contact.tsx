@@ -98,14 +98,11 @@ export default function Contact() {
 
             {/* Right Column - Illustration */}
             <div className="flex items-center justify-center lg:justify-end order-first lg:order-last">
-              <div className="relative">
-                <div className="absolute -inset-4 bg-primary/5 rounded-3xl blur-2xl" />
-                <img
-                  src={contactIllustration}
-                  alt="İletişim İllüstrasyonu"
-                  className="relative w-full max-w-sm lg:max-w-md xl:max-w-lg object-contain"
-                />
-              </div>
+              <img
+                src={contactIllustration}
+                alt="İletişim İllüstrasyonu"
+                className="w-full max-w-sm lg:max-w-md xl:max-w-lg object-contain"
+              />
             </div>
           </div>
         </div>
