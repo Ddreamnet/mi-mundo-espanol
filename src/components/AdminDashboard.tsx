@@ -1,5 +1,4 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -7,8 +6,29 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, LogOut, FolderOpen, ChevronDown, ChevronRight, Settings, Clock, Plus, Trash2, ExternalLink, FileText, Video, Link as LinkIcon, Image, UserPlus, Archive, RotateCcw, FileUser } from "lucide-react";
-import { Header } from "./Header";
+import {
+  Users,
+  FolderOpen,
+  ChevronDown,
+  ChevronRight,
+  Settings,
+  Clock,
+  Plus,
+  Trash2,
+  ExternalLink,
+  FileText,
+  Video,
+  Link as LinkIcon,
+  Image,
+  UserPlus,
+  Archive,
+  RotateCcw,
+  FileUser,
+  Calendar,
+  Wallet,
+  GraduationCap,
+} from "lucide-react";
+import { PanelLayout, PanelCard, PanelCardHeader, PanelCardTitle, PanelCardDescription, PanelCardContent, type SidebarItem } from "./panel";
 import { GlobalTopicsManager } from "./GlobalTopicsManager";
 import { AdminNotificationBell } from "./AdminNotificationBell";
 import { CreateStudentDialog } from "./CreateStudentDialog";
@@ -98,13 +118,18 @@ export function AdminDashboard() {
   const { profile, signOut, signingOut } = useAuth();
   const { toast } = useToast();
 
+  // Sidebar items
+  const sidebarItems: SidebarItem[] = [
+    { id: "teachers", label: "Öğretmenler", icon: <GraduationCap className="w-5 h-5" /> },
+    { id: "topics", label: "Global Konular", icon: <FolderOpen className="w-5 h-5" /> },
+  ];
+
   useEffect(() => {
     fetchTeachers();
   }, []);
 
   const fetchTeachers = async () => {
     try {
-      // Fetch all teachers
       const { data: teachersData, error: teachersError } = await supabase
         .from("profiles")
         .select("user_id, full_name, email")
@@ -113,13 +138,11 @@ export function AdminDashboard() {
 
       if (teachersError) throw teachersError;
 
-      // For each teacher, fetch their students
       const teachersWithStudents = await Promise.all(
         (teachersData || []).map(async (teacher) => {
           const { data: studentsData, error: studentsError } = await supabase
             .from("students")
-            .select(
-              `
+            .select(`
               id,
               student_id,
               is_archived,
@@ -128,13 +151,11 @@ export function AdminDashboard() {
                 full_name,
                 email
               )
-            `
-            )
+            `)
             .eq("teacher_id", teacher.user_id);
 
           if (studentsError) throw studentsError;
 
-          // Fetch lessons for each student
           const { data: lessonsData, error: lessonsError } = await supabase
             .from("student_lessons")
             .select("*")
@@ -142,7 +163,6 @@ export function AdminDashboard() {
 
           if (lessonsError) throw lessonsError;
 
-          // Combine students with their lessons
           const studentsWithLessons = (studentsData || []).map((student) => ({
             ...student,
             is_archived: student.is_archived || false,
@@ -183,7 +203,6 @@ export function AdminDashboard() {
       newExpanded.delete(studentId);
     } else {
       newExpanded.add(studentId);
-      // Fetch topics if not already loaded
       if (!studentTopics.has(studentId)) {
         await fetchStudentTopics(student.student_id, studentId);
       }
@@ -193,22 +212,16 @@ export function AdminDashboard() {
 
   const fetchStudentTopics = async (studentUserId: string, studentId: string) => {
     try {
-      // Fetch all data in parallel
       const [studentTopicsResponse, globalTopicsResponse, completionResponse] = await Promise.all([
-        // 1) Student-specific topics
         supabase
           .from("topics")
           .select("*, resources (*)")
           .eq("student_id", studentUserId)
           .order("order_index"),
-        
-        // 2) Global topics
         supabase
           .from("global_topics")
           .select("*, global_topic_resources(*)")
           .order("order_index"),
-        
-        // 3) Completion data
         supabase
           .from("student_resource_completion")
           .select("*")
@@ -223,13 +236,11 @@ export function AdminDashboard() {
       const globalTopicsData = globalTopicsResponse.data || [];
       const completionData = completionResponse.data || [];
 
-      // Create completion map
       const completionMap = new Map();
       completionData.forEach((completion: any) => {
         completionMap.set(completion.resource_id, completion);
       });
 
-      // Process student-specific topics (for CRUD)
       const processedStudentTopics = studentTopicsData.map((topic) => ({
         ...topic,
         resources: (topic.resources || [])
@@ -246,7 +257,6 @@ export function AdminDashboard() {
 
       setStudentTopics((prev) => new Map(prev).set(studentId, processedStudentTopics));
 
-      // Process all topics for "İşlenen Konular" view (global + student-specific with completion)
       const studentTopicTitles = new Set(processedStudentTopics.map((t) => t.title));
       
       const processedGlobalTopics = globalTopicsData
@@ -281,7 +291,6 @@ export function AdminDashboard() {
           };
         });
 
-      // Combine all topics for completed topics view
       const allTopics = [...processedStudentTopics, ...processedGlobalTopics].sort((a, b) => {
         if (a.isGlobal && !b.isGlobal) return 1;
         if (!a.isGlobal && b.isGlobal) return -1;
@@ -395,7 +404,6 @@ export function AdminDashboard() {
         description: "Kaynak başarıyla eklendi",
       });
 
-      // Refresh topics for this student
       const studentId = Array.from(studentTopics.entries()).find(([_, topics]) => 
         topics.some((t) => t.id === selectedTopicForResource)
       )?.[0];
@@ -429,7 +437,6 @@ export function AdminDashboard() {
         description: "Konu güncellendi",
       });
 
-      // Refresh topics
       const studentId = Array.from(studentTopics.entries()).find(([_, topics]) => 
         topics.some((t) => t.id === id)
       )?.[0];
@@ -474,7 +481,6 @@ export function AdminDashboard() {
         description: "Kaynak güncellendi",
       });
 
-      // Refresh topics
       const studentId = Array.from(studentTopics.entries()).find(([_, topics]) =>
         topics.some((t) => t.resources.some((r) => r.id === id))
       )?.[0];
@@ -560,141 +566,152 @@ export function AdminDashboard() {
     }
   };
 
+  const handleSidebarClick = (id: string) => {
+    if (id === "topics") {
+      setShowGlobalTopics(true);
+    }
+  };
+
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Header
-        rightActions={
+    <>
+      <PanelLayout
+        sidebarItems={sidebarItems}
+        activeItem="teachers"
+        onItemClick={handleSidebarClick}
+        title="Admin Paneli"
+        subtitle={`${teachers.length} öğretmen kayıtlı`}
+        userName={profile?.full_name}
+        onLogout={signOut}
+        isLoggingOut={signingOut}
+        headerActions={
           <>
             <AdminNotificationBell adminId={profile?.user_id || ''} />
-            <Button onClick={() => setShowGlobalTopics(true)} variant="outline" size="sm">
-              <FolderOpen className="h-4 w-4" />
-              <span className="hidden sm:inline ml-2">Konular</span>
-            </Button>
-            <Button onClick={signOut} variant="outline" size="sm" disabled={signingOut}>
-              <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline ml-2">{signingOut ? "Çıkış..." : "Çıkış"}</span>
+            <Button onClick={() => setShowCreateTeacher(true)} size="sm">
+              <Plus className="h-4 w-4 mr-2" />
+              <span className="hidden sm:inline">Öğretmen Ekle</span>
             </Button>
           </>
         }
       >
-        <div className="text-center text-card-foreground">
-          <h1 className="text-xl sm:text-2xl font-bold text-card-foreground">Admin Paneli</h1>
-          <p className="text-sm sm:text-lg text-card-foreground/70 hidden sm:block">Hoş geldin, {profile?.full_name}</p>
-        </div>
-      </Header>
-
-      <div className="container mx-auto p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Teachers List */}
-          <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle className="flex items-center gap-2 text-card-foreground">
-                      <Users className="h-5 w-5" />
-                      Öğretmenler
-                    </CardTitle>
-                    <CardDescription>{teachers.length} öğretmen kayıtlı</CardDescription>
-                  </div>
-                  <Button onClick={() => setShowCreateTeacher(true)} size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Oluştur
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2">
+          <div className="lg:col-span-4 xl:col-span-3">
+            <PanelCard padding="none" className="overflow-hidden">
+              <div className="p-4 border-b border-card-foreground/10">
+                <PanelCardTitle icon={<GraduationCap className="w-5 h-5" />}>
+                  Öğretmenler
+                </PanelCardTitle>
+                <PanelCardDescription>{teachers.length} kayıtlı</PanelCardDescription>
+              </div>
+              <div className="p-2 max-h-[calc(100vh-240px)] overflow-y-auto scrollbar-thin space-y-1">
                 {teachers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">Henüz öğretmen yok.</p>
+                  <p className="text-sm text-card-foreground/60 text-center py-8">
+                    Henüz öğretmen yok.
+                  </p>
                 ) : (
                   teachers.map((teacher) => (
-                    <Card
+                    <button
                       key={teacher.user_id}
-                      className={`cursor-pointer transition-colors hover:bg-accent ${
-                        selectedTeacher?.user_id === teacher.user_id ? "ring-2 ring-primary" : ""
-                      }`}
                       onClick={() => setSelectedTeacher(teacher)}
+                      className={`w-full text-left p-3 rounded-lg transition-all duration-200 ${
+                        selectedTeacher?.user_id === teacher.user_id
+                          ? "bg-primary/10 ring-2 ring-primary/30"
+                          : "hover:bg-card-foreground/5"
+                      }`}
                     >
-                      <CardContent className="p-3">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h4 className="font-medium text-card-foreground">{teacher.full_name}</h4>
-                            <p className="text-sm text-card-foreground/70">{teacher.email}</p>
-                          <Badge variant="outline" className="mt-1 text-card-foreground border-card-foreground/30">
-                              {teacher.students.filter(s => !s.is_archived).length} öğrenci
-                            </Badge>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-card-foreground hover:text-card-foreground hover:bg-card-foreground/10"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openTeacherSettings(teacher);
-                            }}
-                          >
-                            <Settings className="h-4 w-4" />
-                          </Button>
+                      <div className="flex justify-between items-start">
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-card-foreground truncate">{teacher.full_name}</h4>
+                          <p className="text-sm text-card-foreground/60 truncate">{teacher.email}</p>
+                          <Badge variant="secondary" className="mt-1.5">
+                            {teacher.students.filter(s => !s.is_archived).length} öğrenci
+                          </Badge>
                         </div>
-                      </CardContent>
-                    </Card>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          className="text-card-foreground/60 hover:text-card-foreground"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            openTeacherSettings(teacher);
+                          }}
+                        >
+                          <Settings className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </button>
                   ))
                 )}
-              </CardContent>
-            </Card>
+              </div>
+            </PanelCard>
           </div>
 
           {/* Teacher Details */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-8 xl:col-span-9">
             {selectedTeacher ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle>{selectedTeacher.full_name}</CardTitle>
-                  <CardDescription>{selectedTeacher.email}</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="flex gap-2 border-b mb-4">
+              <PanelCard padding="none">
+                {/* Teacher Header */}
+                <div className="p-4 lg:p-5 border-b border-card-foreground/10">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h2 className="text-xl font-semibold text-card-foreground">{selectedTeacher.full_name}</h2>
+                      <p className="text-sm text-card-foreground/60">{selectedTeacher.email}</p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Tabs */}
+                <div className="border-b border-card-foreground/10">
+                  <div className="flex gap-1 p-2">
                     <Button
                       variant={activeTab === "students" ? "tab-active" : "tab-inactive"}
-                      className="rounded-b-none"
+                      size="sm"
                       onClick={() => setActiveTab("students")}
+                      className="rounded-lg"
                     >
+                      <Users className="h-4 w-4 mr-2" />
                       Öğrenciler
                     </Button>
                     <Button
                       variant={activeTab === "schedule" ? "tab-active" : "tab-inactive"}
-                      className="rounded-b-none"
+                      size="sm"
                       onClick={() => setActiveTab("schedule")}
+                      className="rounded-lg"
                     >
-                      Ders programı
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Ders Programı
                     </Button>
                     <Button
                       variant={activeTab === "payments" ? "tab-active" : "tab-inactive"}
-                      className="rounded-b-none"
+                      size="sm"
                       onClick={() => setActiveTab("payments")}
+                      className="rounded-lg"
                     >
+                      <Wallet className="h-4 w-4 mr-2" />
                       Ödemeler
                     </Button>
                   </div>
+                </div>
 
+                {/* Tab Content */}
+                <div className="p-4 lg:p-5">
                   {activeTab === "students" && (
-                    <div className="space-y-3">
-                      <div className="flex justify-end mb-3">
+                    <div className="space-y-4">
+                      <div className="flex justify-end">
                         <Button onClick={() => setShowCreateStudent(true)} size="sm">
                           <UserPlus className="h-4 w-4 mr-2" />
                           Öğrenci Oluştur
                         </Button>
                       </div>
                       
-                      {/* Active Students */}
                       {(() => {
                         const activeStudents = selectedTeacher.students.filter(s => !s.is_archived);
                         const archivedStudents = selectedTeacher.students.filter(s => s.is_archived);
@@ -702,87 +719,92 @@ export function AdminDashboard() {
                         return (
                           <>
                             {activeStudents.length === 0 ? (
-                              <p className="text-sm text-muted-foreground text-center py-8">
-                                Bu öğretmenin henüz aktif öğrencisi yok.
-                              </p>
+                              <div className="text-center py-12">
+                                <Users className="h-12 w-12 mx-auto text-card-foreground/30 mb-4" />
+                                <p className="text-card-foreground/60">Bu öğretmenin henüz aktif öğrencisi yok.</p>
+                              </div>
                             ) : (
-                              activeStudents.map((student) => (
-                                <Card key={student.id} className="border">
-                                  <Collapsible>
-                                    <CardContent className="p-3">
-                                      <div className="flex justify-between items-start">
-                                        <CollapsibleTrigger
-                                          className="flex items-center gap-2 flex-1 text-left"
-                                          onClick={() => toggleStudent(student.id, student)}
-                                        >
-                                          {expandedStudents.has(student.id) ? (
-                                            <ChevronDown className="h-4 w-4 text-card-foreground" />
-                                          ) : (
-                                            <ChevronRight className="h-4 w-4 text-card-foreground" />
-                                          )}
-                                          <div className="flex-1">
-                                            <h4 className="font-medium text-card-foreground">{student.profiles.full_name}</h4>
-                                            <p className="text-sm text-card-foreground/70">{student.profiles.email}</p>
-
-                                            {student.lessons.length > 0 && (
-                                              <div className="mt-1 space-y-1">
-                                                {student.lessons.slice(0, 2).map((lesson, index) => (
-                                                  <div key={index} className="flex items-center gap-1">
-                                                    <Clock className="h-3 w-3 text-card-foreground/50" />
-                                                    <span className="text-xs text-card-foreground/70">
-                                                      {getDayName(lesson.dayOfWeek)} {formatTime(lesson.startTime)}-
-                                                      {formatTime(lesson.endTime)}
-                                                    </span>
-                                                  </div>
-                                                ))}
-                                                {student.lessons.length > 2 && (
-                                                  <span className="text-xs text-card-foreground/70">
-                                                    +{student.lessons.length - 2} ders daha
-                                                  </span>
-                                                )}
-                                              </div>
-                                            )}
-                                          </div>
-                                        </CollapsibleTrigger>
-
-                                        <div className="flex items-center gap-1">
-                                          <Button 
-                                            variant="ghost" 
-                                            size="sm" 
-                                            className="text-card-foreground hover:text-card-foreground hover:bg-card-foreground/10"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setStudentAboutData({
-                                                studentId: student.student_id,
-                                                studentName: student.profiles.full_name,
-                                                aboutText: student.about_text
-                                              });
-                                              setShowStudentAbout(true);
-                                            }}
-                                            title="Öğrenci hakkında"
+                              <div className="space-y-3">
+                                {activeStudents.map((student) => (
+                                  <div
+                                    key={student.id}
+                                    className="border border-card-foreground/10 rounded-xl overflow-hidden transition-all duration-200 hover:shadow-md"
+                                  >
+                                    <Collapsible>
+                                      <div className="p-4 bg-card-foreground/[0.02]">
+                                        <div className="flex justify-between items-start gap-3">
+                                          <CollapsibleTrigger
+                                            className="flex items-center gap-3 flex-1 text-left"
+                                            onClick={() => toggleStudent(student.id, student)}
                                           >
-                                            <FileUser className="h-4 w-4" />
-                                          </Button>
-                                          <Button variant="ghost" size="sm" className="text-card-foreground hover:text-card-foreground hover:bg-card-foreground/10" onClick={() => openStudentSettings(student)}>
-                                            <Settings className="h-4 w-4" />
-                                          </Button>
+                                            {expandedStudents.has(student.id) ? (
+                                              <ChevronDown className="h-4 w-4 text-card-foreground/60 flex-shrink-0" />
+                                            ) : (
+                                              <ChevronRight className="h-4 w-4 text-card-foreground/60 flex-shrink-0" />
+                                            )}
+                                            <div className="flex-1 min-w-0">
+                                              <h4 className="font-medium text-card-foreground">{student.profiles.full_name}</h4>
+                                              <p className="text-sm text-card-foreground/60">{student.profiles.email}</p>
+                                              {student.lessons.length > 0 && (
+                                                <div className="mt-2 flex flex-wrap gap-2">
+                                                  {student.lessons.slice(0, 3).map((lesson, index) => (
+                                                    <Badge key={index} variant="outline" className="text-xs">
+                                                      <Clock className="h-3 w-3 mr-1" />
+                                                      {getDayName(lesson.dayOfWeek)} {formatTime(lesson.startTime)}
+                                                    </Badge>
+                                                  ))}
+                                                  {student.lessons.length > 3 && (
+                                                    <Badge variant="muted" className="text-xs">
+                                                      +{student.lessons.length - 3} ders
+                                                    </Badge>
+                                                  )}
+                                                </div>
+                                              )}
+                                            </div>
+                                          </CollapsibleTrigger>
+
+                                          <div className="flex items-center gap-1 flex-shrink-0">
+                                            <Button 
+                                              variant="ghost" 
+                                              size="icon-sm"
+                                              className="text-card-foreground/60 hover:text-card-foreground"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                setStudentAboutData({
+                                                  studentId: student.student_id,
+                                                  studentName: student.profiles.full_name,
+                                                  aboutText: student.about_text
+                                                });
+                                                setShowStudentAbout(true);
+                                              }}
+                                            >
+                                              <FileUser className="h-4 w-4" />
+                                            </Button>
+                                            <Button 
+                                              variant="ghost" 
+                                              size="icon-sm"
+                                              className="text-card-foreground/60 hover:text-card-foreground"
+                                              onClick={() => openStudentSettings(student)}
+                                            >
+                                              <Settings className="h-4 w-4" />
+                                            </Button>
+                                          </div>
                                         </div>
                                       </div>
 
-                                      <CollapsibleContent className="mt-4">
-                                        <div className="pl-6 border-t pt-3 space-y-6">
-                                          {/* İşlenen Konular Bölümü - En az bir kaynağı tamamlanmış konular */}
+                                      <CollapsibleContent>
+                                        <div className="p-4 border-t border-card-foreground/10 space-y-6 bg-card-foreground/[0.01]">
+                                          {/* İşlenen Konular */}
                                           <div className="space-y-3">
                                             <div className="flex justify-between items-center">
-                                              <h5 className="font-medium text-sm">İşlenen Konular</h5>
+                                              <h5 className="font-medium text-sm text-card-foreground">İşlenen Konular</h5>
                                               {(() => {
                                                 const allTopics = studentCompletedTopics.get(student.id) || [];
                                                 const topicsWithCompletedResources = allTopics.filter(t => t.resources.some(r => r.is_completed));
-                                                const fullyCompletedCount = topicsWithCompletedResources.filter(t => t.is_completed).length;
                                                 const totalCompletedResources = topicsWithCompletedResources.reduce((sum, t) => sum + t.resources.filter(r => r.is_completed).length, 0);
                                                 return (
                                                   <Badge variant="secondary">
-                                                    {totalCompletedResources} kaynak işlendi ({fullyCompletedCount} konu tam)
+                                                    {totalCompletedResources} kaynak işlendi
                                                   </Badge>
                                                 );
                                               })()}
@@ -795,59 +817,55 @@ export function AdminDashboard() {
                                               
                                               if (topicsWithCompletedResources.length === 0) {
                                                 return (
-                                                  <p className="text-sm text-muted-foreground py-2">
+                                                  <p className="text-sm text-card-foreground/60 py-2">
                                                     Henüz işlenmiş kaynak yok.
                                                   </p>
                                                 );
                                               }
                                               return (
-                                                <div className="space-y-2 max-h-80 overflow-y-auto">
+                                                <div className="space-y-2 max-h-60 overflow-y-auto scrollbar-thin">
                                                   {topicsWithCompletedResources.map((topic) => {
                                                     const completedResourcesCount = topic.resources.filter(r => r.is_completed).length;
                                                     const totalResourcesCount = topic.resources.length;
                                                     const isFullyCompleted = topic.is_completed || completedResourcesCount === totalResourcesCount;
                                                     
                                                     return (
-                                                      <Card 
+                                                      <div 
                                                         key={topic.id} 
-                                                        className={`border-l-4 ${
+                                                        className={`p-3 rounded-lg border ${
                                                           isFullyCompleted 
-                                                            ? "border-l-card-foreground/50" 
-                                                            : "border-l-card-foreground/20"
+                                                            ? "border-success/30 bg-success/5" 
+                                                            : "border-card-foreground/10 bg-card-foreground/[0.02]"
                                                         }`}
                                                       >
                                                         <Collapsible>
-                                                          <CardContent className="p-3">
-                                                            <CollapsibleTrigger className="flex items-center gap-2 w-full text-left">
-                                                              <Checkbox checked={isFullyCompleted} className="h-4 w-4" disabled />
-                                                              <div className="flex-1">
-                                                                <span className="text-sm font-medium">{topic.title}</span>
-                                                                {topic.isGlobal && (
-                                                                  <Badge variant="outline" className="ml-2 text-xs">Global</Badge>
-                                                                )}
+                                                          <CollapsibleTrigger className="flex items-center gap-2 w-full text-left">
+                                                            <Checkbox checked={isFullyCompleted} className="h-4 w-4" disabled />
+                                                            <span className="text-sm font-medium flex-1">{topic.title}</span>
+                                                            {topic.isGlobal && (
+                                                              <Badge variant="outline" className="text-xs">Global</Badge>
+                                                            )}
+                                                            <Badge variant="secondary" className="text-xs">
+                                                              {completedResourcesCount}/{totalResourcesCount}
+                                                            </Badge>
+                                                            <ChevronRight className="h-4 w-4 text-card-foreground/40" />
+                                                          </CollapsibleTrigger>
+                                                          <CollapsibleContent className="mt-2 pl-6 space-y-1">
+                                                            {topic.resources.filter(r => r.is_completed).map((resource) => (
+                                                              <div key={resource.id} className="flex items-center gap-2 py-1">
+                                                                <Checkbox checked={true} className="h-3 w-3" disabled />
+                                                                {getResourceIcon(resource.resource_type)}
+                                                                <span
+                                                                  className="text-xs flex-1 cursor-pointer hover:text-primary"
+                                                                  onClick={() => window.open(resource.resource_url, "_blank")}
+                                                                >
+                                                                  {resource.title}
+                                                                </span>
                                                               </div>
-                                                              <Badge variant="secondary" className="text-xs">
-                                                                {completedResourcesCount}/{totalResourcesCount} kaynak
-                                                              </Badge>
-                                                              <ChevronRight className="h-4 w-4" />
-                                                            </CollapsibleTrigger>
-                                                            <CollapsibleContent className="mt-2 pl-6 space-y-1">
-                                                              {topic.resources.filter(r => r.is_completed).map((resource) => (
-                                                                <div key={resource.id} className="flex items-center gap-2 py-1">
-                                                                  <Checkbox checked={true} className="h-3 w-3" disabled />
-                                                                  {getResourceIcon(resource.resource_type)}
-                                                                  <span
-                                                                    className="text-xs flex-1 cursor-pointer hover:text-primary"
-                                                                    onClick={() => window.open(resource.resource_url, "_blank")}
-                                                                  >
-                                                                    {resource.title}
-                                                                  </span>
-                                                                </div>
-                                                              ))}
-                                                            </CollapsibleContent>
-                                                          </CardContent>
+                                                            ))}
+                                                          </CollapsibleContent>
                                                         </Collapsible>
-                                                      </Card>
+                                                      </div>
                                                     );
                                                   })}
                                                 </div>
@@ -855,10 +873,10 @@ export function AdminDashboard() {
                                             })()}
                                           </div>
 
-                                          {/* Öğrenciye Özel Konular Bölümü (CRUD) */}
-                                          <div className="space-y-3 border-t pt-3">
+                                          {/* Öğrenciye Özel Konular */}
+                                          <div className="space-y-3 border-t border-card-foreground/10 pt-4">
                                             <div className="flex justify-between items-center">
-                                              <h5 className="font-medium text-sm">Öğrenciye Özel Konular</h5>
+                                              <h5 className="font-medium text-sm text-card-foreground">Öğrenciye Özel Konular</h5>
                                               <Button
                                                 variant="outline"
                                                 size="sm"
@@ -873,134 +891,131 @@ export function AdminDashboard() {
                                             </div>
 
                                             {(studentTopics.get(student.id) || []).length === 0 ? (
-                                              <p className="text-sm opacity-70 py-2">
+                                              <p className="text-sm text-card-foreground/60 py-2">
                                                 Bu öğrenciye özel konu henüz eklenmemiş.
                                               </p>
                                             ) : (
                                               <div className="space-y-2">
                                                 {(studentTopics.get(student.id) || []).map((topic) => (
-                                                  <Card key={topic.id} className="border">
+                                                  <div key={topic.id} className="p-3 rounded-lg border border-card-foreground/10 bg-card-foreground/[0.02]">
                                                     <Collapsible>
-                                                      <CardContent className="p-2">
-                                                        <div className="flex items-center gap-2">
-                                                          <CollapsibleTrigger className="flex items-center gap-1">
-                                                            <ChevronRight className="h-3 w-3" />
-                                                          </CollapsibleTrigger>
-                                                          <Checkbox checked={topic.is_completed} className="h-4 w-4" disabled />
-                                                          <span className="text-sm flex-1">{topic.title}</span>
-                                                          <Badge variant="secondary" className="text-xs">
-                                                            {topic.resources.length} kaynak
-                                                          </Badge>
-                                                          <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => {
-                                                              setSelectedTopicForResource(topic.id);
-                                                              setShowAddResource(true);
-                                                            }}
-                                                          >
-                                                            <Plus className="h-3 w-3" />
-                                                          </Button>
-                                                          <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => {
-                                                              setEditingTopic(topic);
-                                                              setShowEditTopic(true);
-                                                            }}
-                                                          >
-                                                            <Settings className="h-3 w-3" />
-                                                          </Button>
-                                                          <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() =>
-                                                              handleDeleteTopic(topic.id, student.id, student.student_id)
-                                                            }
-                                                          >
-                                                            <Trash2 className="h-3 w-3 text-destructive" />
-                                                          </Button>
-                                                        </div>
+                                                      <div className="flex items-center gap-2">
+                                                        <CollapsibleTrigger className="flex items-center gap-1">
+                                                          <ChevronRight className="h-3 w-3" />
+                                                        </CollapsibleTrigger>
+                                                        <Checkbox checked={topic.is_completed} className="h-4 w-4" disabled />
+                                                        <span className="text-sm flex-1">{topic.title}</span>
+                                                        <Badge variant="secondary" className="text-xs">
+                                                          {topic.resources.length} kaynak
+                                                        </Badge>
+                                                        <Button
+                                                          variant="ghost"
+                                                          size="icon-sm"
+                                                          onClick={() => {
+                                                            setSelectedTopicForResource(topic.id);
+                                                            setShowAddResource(true);
+                                                          }}
+                                                        >
+                                                          <Plus className="h-3 w-3" />
+                                                        </Button>
+                                                        <Button
+                                                          variant="ghost"
+                                                          size="icon-sm"
+                                                          onClick={() => {
+                                                            setEditingTopic(topic);
+                                                            setShowEditTopic(true);
+                                                          }}
+                                                        >
+                                                          <Settings className="h-3 w-3" />
+                                                        </Button>
+                                                        <Button
+                                                          variant="ghost"
+                                                          size="icon-sm"
+                                                          onClick={() =>
+                                                            handleDeleteTopic(topic.id, student.id, student.student_id)
+                                                          }
+                                                        >
+                                                          <Trash2 className="h-3 w-3 text-destructive" />
+                                                        </Button>
+                                                      </div>
 
-                                                        <CollapsibleContent className="mt-2 space-y-1">
-                                                          {topic.resources.map((resource) => (
-                                                            <div key={resource.id} className="flex items-center gap-2 pl-8">
-                                                              <Checkbox checked={resource.is_completed} className="h-3 w-3" disabled />
-                                                              {getResourceIcon(resource.resource_type)}
-                                                              <span
-                                                                className="text-xs flex-1 cursor-pointer hover:text-primary"
-                                                                onClick={() => window.open(resource.resource_url, "_blank")}
-                                                              >
-                                                                {resource.title}
-                                                              </span>
-                                                              <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={() => {
-                                                                  setEditingResource(resource);
-                                                                  setShowEditResource(true);
-                                                                }}
-                                                              >
-                                                                <Settings className="h-3 w-3" />
-                                                              </Button>
-                                                              <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={() =>
-                                                                  handleDeleteResource(resource.id, student.id, student.student_id)
-                                                                }
-                                                              >
-                                                                <Trash2 className="h-3 w-3 text-destructive" />
-                                                              </Button>
-                                                            </div>
-                                                          ))}
-                                                        </CollapsibleContent>
-                                                      </CardContent>
+                                                      <CollapsibleContent className="mt-2 space-y-1">
+                                                        {topic.resources.map((resource) => (
+                                                          <div key={resource.id} className="flex items-center gap-2 pl-8">
+                                                            <Checkbox checked={resource.is_completed} className="h-3 w-3" disabled />
+                                                            {getResourceIcon(resource.resource_type)}
+                                                            <span
+                                                              className="text-xs flex-1 cursor-pointer hover:text-primary"
+                                                              onClick={() => window.open(resource.resource_url, "_blank")}
+                                                            >
+                                                              {resource.title}
+                                                            </span>
+                                                            <Button
+                                                              variant="ghost"
+                                                              size="icon-sm"
+                                                              onClick={() => {
+                                                                setEditingResource(resource);
+                                                                setShowEditResource(true);
+                                                              }}
+                                                            >
+                                                              <Settings className="h-3 w-3" />
+                                                            </Button>
+                                                            <Button
+                                                              variant="ghost"
+                                                              size="icon-sm"
+                                                              onClick={() =>
+                                                                handleDeleteResource(resource.id, student.id, student.student_id)
+                                                              }
+                                                            >
+                                                              <Trash2 className="h-3 w-3 text-destructive" />
+                                                            </Button>
+                                                          </div>
+                                                        ))}
+                                                      </CollapsibleContent>
                                                     </Collapsible>
-                                                  </Card>
+                                                  </div>
                                                 ))}
                                               </div>
                                             )}
                                           </div>
                                         </div>
                                       </CollapsibleContent>
-                                    </CardContent>
-                                  </Collapsible>
-                                </Card>
-                              ))
+                                    </Collapsible>
+                                  </div>
+                                ))}
+                              </div>
                             )}
 
                             {/* Arşivlenmiş Öğrenciler */}
                             {archivedStudents.length > 0 && (
-                              <div className="mt-6 pt-4 border-t">
+                              <div className="mt-6 pt-4 border-t border-card-foreground/10">
                                 <div className="flex items-center gap-2 mb-3">
-                                  <Archive className="h-4 w-4 text-muted-foreground" />
-                                  <h4 className="font-medium text-sm text-muted-foreground">Arşivlenmiş Öğrenciler</h4>
-                                  <Badge variant="secondary" className="text-xs">{archivedStudents.length}</Badge>
+                                  <Archive className="h-4 w-4 text-card-foreground/40" />
+                                  <h4 className="font-medium text-sm text-card-foreground/60">Arşivlenmiş Öğrenciler</h4>
+                                  <Badge variant="muted">{archivedStudents.length}</Badge>
                                 </div>
                                 <div className="space-y-2">
                                   {archivedStudents.map((student) => (
-                                    <Card key={student.id} className="border bg-muted/30 opacity-70">
-                                      <CardContent className="p-3">
-                                        <div className="flex justify-between items-center">
-                                          <div className="flex items-center gap-2">
-                                            <Archive className="h-4 w-4 text-muted-foreground" />
-                                            <div>
-                                              <h4 className="font-medium text-sm">{student.profiles.full_name}</h4>
-                                              <p className="text-xs text-muted-foreground">{student.profiles.email}</p>
-                                            </div>
-                                          </div>
-                                          <Button 
-                                            variant="outline" 
-                                            size="sm"
-                                            onClick={() => handleRestoreStudent(student.id)}
-                                          >
-                                            <RotateCcw className="h-3 w-3 mr-1" />
-                                            Geri Al
-                                          </Button>
+                                    <div 
+                                      key={student.id} 
+                                      className="flex justify-between items-center p-3 rounded-lg border border-card-foreground/10 bg-card-foreground/[0.02] opacity-70"
+                                    >
+                                      <div className="flex items-center gap-2">
+                                        <Archive className="h-4 w-4 text-card-foreground/40" />
+                                        <div>
+                                          <h4 className="font-medium text-sm">{student.profiles.full_name}</h4>
+                                          <p className="text-xs text-card-foreground/60">{student.profiles.email}</p>
                                         </div>
-                                      </CardContent>
-                                    </Card>
+                                      </div>
+                                      <Button 
+                                        variant="outline" 
+                                        size="sm"
+                                        onClick={() => handleRestoreStudent(student.id)}
+                                      >
+                                        <RotateCcw className="h-3 w-3 mr-1" />
+                                        Geri Al
+                                      </Button>
+                                    </div>
                                   ))}
                                 </div>
                               </div>
@@ -1014,23 +1029,24 @@ export function AdminDashboard() {
                   {activeTab === "schedule" && <AdminWeeklySchedule teacherId={selectedTeacher.user_id} />}
 
                   {activeTab === "payments" && <AdminBalanceManager teacherId={selectedTeacher.user_id} />}
-                </CardContent>
-              </Card>
+                </div>
+              </PanelCard>
             ) : (
-              <Card className="h-96 flex items-center justify-center">
+              <PanelCard className="h-96 flex items-center justify-center">
                 <div className="text-center">
-                  <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Bir Öğretmen Seç</h3>
-                  <p className="text-muted-foreground">
-                    Öğretmen detaylarını görüntülemek için listeden bir öğretmen seçin
+                  <Users className="h-12 w-12 mx-auto text-card-foreground/30 mb-4" />
+                  <h3 className="text-lg font-medium text-card-foreground mb-2">Bir Öğretmen Seç</h3>
+                  <p className="text-card-foreground/60">
+                    Detayları görüntülemek için listeden bir öğretmen seçin
                   </p>
                 </div>
-              </Card>
+              </PanelCard>
             )}
           </div>
         </div>
-      </div>
+      </PanelLayout>
 
+      {/* Dialogs */}
       <GlobalTopicsManager open={showGlobalTopics} onOpenChange={setShowGlobalTopics} isAdmin={true} />
       
       <CreateTeacherDialog
@@ -1117,6 +1133,6 @@ export function AdminDashboard() {
           }}
         />
       )}
-    </div>
+    </>
   );
 }
