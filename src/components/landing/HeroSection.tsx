@@ -30,7 +30,7 @@ export function HeroSection() {
                 fontFamily: "'Yesteryear', cursive",
                 color: "hsl(42, 42%, 94%)",
               }}
-              className="text-xl mb-8 md:text-6xl"
+              className="text-xl mb-8 md:text-5xl"
             >
               Senin İspanyolca Dünyan
             </p>
