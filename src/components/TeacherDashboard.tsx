@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, BookOpen, LogOut, Clock, Wallet, Calendar, FileUser } from "lucide-react";
+import { Users, BookOpen, LogOut, Clock, Wallet, Calendar, FileUser, ChevronRight } from "lucide-react";
 import { StudentTopics } from "./StudentTopics";
 import { Header } from "./Header";
 import { GlobalTopicsManager } from "./GlobalTopicsManager";
@@ -14,6 +14,7 @@ import { ContactDialog } from "./ContactDialog";
 import { WeeklyScheduleDialog } from "./WeeklyScheduleDialog";
 import { TeacherBalanceDialog } from "./TeacherBalanceDialog";
 import { StudentAboutDialog } from "./StudentAboutDialog";
+
 interface StudentLesson {
   id?: string;
   dayOfWeek: number;
@@ -21,6 +22,7 @@ interface StudentLesson {
   endTime: string;
   isCompleted?: boolean;
 }
+
 interface Student {
   id: string;
   student_id: string;
@@ -31,6 +33,7 @@ interface Student {
     email: string;
   };
 }
+
 export function TeacherDashboard() {
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
@@ -39,27 +42,25 @@ export function TeacherDashboard() {
   const [showWeeklySchedule, setShowWeeklySchedule] = useState(false);
   const [showBalance, setShowBalance] = useState(false);
   const [showStudentAbout, setShowStudentAbout] = useState(false);
-  const [studentAboutData, setStudentAboutData] = useState<{ studentId: string; studentName: string; aboutText: string | null } | null>(null);
-  const {
-    profile,
-    signOut,
-    signingOut
-  } = useAuth();
-  const {
-    toast
-  } = useToast();
+  const [studentAboutData, setStudentAboutData] = useState<{
+    studentId: string;
+    studentName: string;
+    aboutText: string | null;
+  } | null>(null);
+  const { profile, signOut, signingOut } = useAuth();
+  const { toast } = useToast();
+
   useEffect(() => {
     if (profile?.user_id) {
       fetchStudents();
     }
   }, [profile]);
+
   const fetchStudents = async () => {
     try {
-      // Fetch students with their lessons (exclude archived students)
-      const {
-        data: studentsData,
-        error: studentsError
-      } = await supabase.from("students").select(`
+      const { data: studentsData, error: studentsError } = await supabase
+        .from("students")
+        .select(`
           id,
           student_id,
           is_archived,
@@ -68,30 +69,33 @@ export function TeacherDashboard() {
             full_name,
             email
           )
-        `).eq("teacher_id", profile?.user_id).eq("is_archived", false);
+        `)
+        .eq("teacher_id", profile?.user_id)
+        .eq("is_archived", false);
+
       if (studentsError) throw studentsError;
 
-      // Fetch lessons for all students
-      const {
-        data: lessonsData,
-        error: lessonsError
-      } = await supabase.from("student_lessons").select("*").eq("teacher_id", profile?.user_id);
+      const { data: lessonsData, error: lessonsError } = await supabase
+        .from("student_lessons")
+        .select("*")
+        .eq("teacher_id", profile?.user_id);
+
       if (lessonsError) throw lessonsError;
 
-      // Combine students with their lessons
-      const studentsWithLessons = (studentsData || []).map(student => ({
+      const studentsWithLessons = (studentsData || []).map((student) => ({
         ...student,
         about_text: student.about_text || null,
-        lessons: (lessonsData || []).filter(lesson => lesson.student_id === student.student_id).map(lesson => ({
-          id: lesson.id,
-          dayOfWeek: lesson.day_of_week,
-          startTime: lesson.start_time,
-          endTime: lesson.end_time,
-          isCompleted: lesson.is_completed
-        }))
+        lessons: (lessonsData || [])
+          .filter((lesson) => lesson.student_id === student.student_id)
+          .map((lesson) => ({
+            id: lesson.id,
+            dayOfWeek: lesson.day_of_week,
+            startTime: lesson.start_time,
+            endTime: lesson.end_time,
+            isCompleted: lesson.is_completed,
+          })),
       }));
 
-      // Sort students by closest upcoming lesson time
       const sortedStudents = studentsWithLessons.sort((a, b) => {
         const getNextLessonTime = (lessons: StudentLesson[]) => {
           if (lessons.length === 0) return Number.MAX_SAFE_INTEGER;
@@ -104,7 +108,7 @@ export function TeacherDashboard() {
             const lessonTime = hours * 60 + minutes;
             let daysUntilLesson = (lesson.dayOfWeek - currentDay + 7) % 7;
             if (daysUntilLesson === 0 && lessonTime < currentTime) {
-              daysUntilLesson = 7; // Next week
+              daysUntilLesson = 7;
             }
             const timeUntilLesson = daysUntilLesson * 24 * 60 + lessonTime;
             if (timeUntilLesson < earliestLesson) {
@@ -113,203 +117,241 @@ export function TeacherDashboard() {
           }
           return earliestLesson;
         };
-        const aNextLesson = getNextLessonTime(a.lessons);
-        const bNextLesson = getNextLessonTime(b.lessons);
-        return aNextLesson - bNextLesson;
+        return getNextLessonTime(a.lessons) - getNextLessonTime(b.lessons);
       });
+
       setStudents(sortedStudents);
     } catch (error: any) {
       toast({
         title: "Hata",
         description: "Öğrenciler yüklenemedi",
-        variant: "destructive"
+        variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
+
   const getDayName = (dayOfWeek?: number) => {
-    const days = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
+    const days = ["Paz", "Pzt", "Sal", "Çar", "Per", "Cum", "Cmt"];
     return dayOfWeek !== undefined ? days[dayOfWeek] : "";
   };
+
   const formatTime = (time?: string) => {
     if (!time) return "";
     return new Date(`2000-01-01T${time}`).toLocaleTimeString([], {
       hour: "numeric",
-      minute: "2-digit"
+      minute: "2-digit",
     });
   };
+
   const getLessonStatus = (dayOfWeek: number, startTime: string) => {
     const now = new Date();
-    const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const currentDay = now.getDay();
     const currentTime = now.getHours() * 60 + now.getMinutes();
-
-    // Convert to Monday = 0, Sunday = 6 format
     const mondayBasedCurrentDay = currentDay === 0 ? 6 : currentDay - 1;
     const mondayBasedLessonDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
-
-    // Get start of current week (Monday)
-    const startOfWeek = new Date(now);
-    const daysToMonday = mondayBasedCurrentDay;
-    startOfWeek.setDate(now.getDate() - daysToMonday);
-    startOfWeek.setHours(0, 0, 0, 0);
-
-    // Get end of current week (Sunday)
-    const endOfWeek = new Date(startOfWeek);
-    endOfWeek.setDate(startOfWeek.getDate() + 6);
-    endOfWeek.setHours(23, 59, 59, 999);
-
-    // Check if lesson is in current week
-    const lessonDate = new Date(startOfWeek);
-    lessonDate.setDate(startOfWeek.getDate() + mondayBasedLessonDay);
-    if (lessonDate < startOfWeek || lessonDate > endOfWeek) {
-      return "not-this-week";
-    }
-
-    // Parse lesson time
     const [hours, minutes] = startTime.split(":").map(Number);
     const lessonTime = hours * 60 + minutes;
 
-    // Check if lesson is past
-    if (mondayBasedLessonDay < mondayBasedCurrentDay || mondayBasedLessonDay === mondayBasedCurrentDay && lessonTime < currentTime) {
+    if (
+      mondayBasedLessonDay < mondayBasedCurrentDay ||
+      (mondayBasedLessonDay === mondayBasedCurrentDay && lessonTime < currentTime)
+    ) {
       return "past";
-    } else if (mondayBasedLessonDay >= mondayBasedCurrentDay) {
-      return "upcoming";
     }
-    return "not-this-week";
+    return "upcoming";
   };
+
   if (loading) {
-    return <div className="min-h-screen flex items-center justify-center">
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>;
+      </div>
+    );
   }
-  return <div className="min-h-screen bg-background">
-      <Header rightActions={<>
-            <NotificationBell 
+
+  return (
+    <div className="min-h-screen bg-background">
+      {/* Header */}
+      <Header
+        rightActions={
+          <>
+            <NotificationBell
               userId={profile?.user_id || ""}
-              teacherId={profile?.user_id || ""} 
-              onNotificationClick={() => {
-                // Find the student that triggered the notification and open their homework dialog
-                if (selectedStudent) {
-                  // The StudentTopics component will handle opening homework dialog
-                }
-              }}
+              teacherId={profile?.user_id || ""}
+              onNotificationClick={() => {}}
             />
-            <Button onClick={() => setShowGlobalTopics(true)} variant="outline" size="sm">
+            <Button onClick={() => setShowGlobalTopics(true)} variant="ghost" size="sm">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline ml-2">Konular</span>
             </Button>
             <ContactDialog />
-            <Button onClick={signOut} variant="outline" size="sm" disabled={signingOut}>
+            <Button onClick={signOut} variant="ghost" size="sm" disabled={signingOut}>
               <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline ml-2">{signingOut ? "Çıkış..." : "Çıkış"}</span>
+              <span className="hidden sm:inline ml-2">{signingOut ? "..." : "Çıkış"}</span>
             </Button>
-          </>}>
+          </>
+        }
+      >
         <div className="text-center">
-          <h1 className="text-xl sm:text-2xl font-bold text-card-foreground">Öğretmen Paneli</h1>
-          <p className="text-sm sm:text-lg text-card-foreground/70 hidden sm:block">Hoş geldin, {profile?.full_name}</p>
+          <h1 className="text-lg sm:text-xl font-semibold text-header-foreground">
+            Öğretmen Paneli
+          </h1>
         </div>
       </Header>
 
-      <div className="container mx-auto p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Students List */}
-          <div className="lg:col-span-1">
+      <main className="container mx-auto px-4 py-6 max-w-7xl">
+        {/* Quick Actions Bar */}
+        <div className="flex flex-wrap gap-3 mb-6">
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowWeeklySchedule(true)}
+            className="flex items-center gap-2"
+          >
+            <Calendar className="h-4 w-4" />
+            Haftalık Program
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setShowBalance(true)}
+            className="flex items-center gap-2"
+          >
+            <Wallet className="h-4 w-4" />
+            Bakiye
+          </Button>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Students List - Left Column */}
+          <div className="lg:col-span-4 xl:col-span-3">
             <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
                   <div>
-                    <CardTitle className="flex items-center gap-2">
-                      <Users className="h-5 w-5" />
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Users className="h-4 w-4" />
                       Öğrencilerim
                     </CardTitle>
-                    <CardDescription>{students.length} öğrenci kayıtlı</CardDescription>
-                  </div>
-                  <div className="flex flex-wrap gap-2 lg:flex-col lg:items-end">
-                    <Button onClick={() => setShowBalance(true)} variant="outline" size="sm">
-                      <Wallet className="h-4 w-4" />
-                      <span className="ml-2 hidden sm:inline">Bakiye</span>
-                    </Button>
-                    <Button onClick={() => setShowWeeklySchedule(true)} variant="outline" size="sm">
-                      <Calendar className="h-4 w-4" />
-                      <span className="ml-2 hidden sm:inline">Derslerim</span>
-                    </Button>
+                    <CardDescription className="text-xs mt-1">
+                      {students.length} öğrenci
+                    </CardDescription>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-2">
-                {students.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">
-                    Henüz öğrenci yok. Başlamak için ilk öğrencinizi ekleyin!
-                  </p> : students.map(student => <Card key={student.id} className={`cursor-pointer transition-colors hover:bg-accent ${selectedStudent?.id === student.id ? "ring-2 ring-primary" : ""}`} onClick={() => setSelectedStudent(student)}>
-                      <CardContent className="p-3">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between">
-                              <h4 className="font-medium">{student.profiles.full_name}</h4>
-                              <Button 
-                                variant="ghost" 
-                                size="sm"
-                                className="h-7 w-7 p-0"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setStudentAboutData({
-                                    studentId: student.student_id,
-                                    studentName: student.profiles.full_name,
-                                    aboutText: student.about_text
-                                  });
-                                  setShowStudentAbout(true);
-                                }}
-                                title="Öğrenci hakkında"
-                              >
-                                <FileUser className="h-4 w-4" />
-                              </Button>
-                            </div>
-                            <p className="text-sm text-muted-foreground">{student.profiles.email}</p>
+              <CardContent className="space-y-1 pt-0">
+                {students.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">
+                    Henüz öğrenci yok.
+                  </p>
+                ) : (
+                  students.map((student) => {
+                    const isSelected = selectedStudent?.id === student.id;
+                    const nextLesson = student.lessons[0];
 
-                            {student.lessons.length > 0 && <div className="mt-1 space-y-1">
-                                {student.lessons.map((lesson, index) => {
-                          const status = getLessonStatus(lesson.dayOfWeek, lesson.startTime);
-                          return <div key={index} className="flex items-center gap-1">
-                                      <Clock className="h-3 w-3" />
-                                      <span className={`
-                    ${status === "past" ? "text-[10px] line-through opacity-60" : status === "upcoming" ? "text-sm font-semibold" : "text-xs opacity-70"}
-                  `}>
-                                        {getDayName(lesson.dayOfWeek)} {formatTime(lesson.startTime)}-
-                                        {formatTime(lesson.endTime)}
-                                      </span>
-                                    </div>;
-                        })}
-                              </div>}
+                    return (
+                      <div
+                        key={student.id}
+                        onClick={() => setSelectedStudent(student)}
+                        className={`
+                          group relative p-3 rounded-lg cursor-pointer transition-all
+                          ${isSelected
+                            ? "bg-primary text-primary-foreground"
+                            : "hover:bg-muted"
+                          }
+                        `}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h4 className={`font-medium text-sm truncate ${
+                              isSelected ? "text-primary-foreground" : "text-card-foreground"
+                            }`}>
+                              {student.profiles.full_name}
+                            </h4>
+                            {nextLesson && (
+                              <div className={`flex items-center gap-1 mt-1 ${
+                                isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
+                              }`}>
+                                <Clock className="h-3 w-3" />
+                                <span className="text-xs">
+                                  {getDayName(nextLesson.dayOfWeek)} {formatTime(nextLesson.startTime)}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1">
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              className={`h-7 w-7 ${
+                                isSelected 
+                                  ? "text-primary-foreground hover:bg-primary-foreground/20" 
+                                  : "text-muted-foreground hover:text-card-foreground"
+                              }`}
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setStudentAboutData({
+                                  studentId: student.student_id,
+                                  studentName: student.profiles.full_name,
+                                  aboutText: student.about_text,
+                                });
+                                setShowStudentAbout(true);
+                              }}
+                            >
+                              <FileUser className="h-3.5 w-3.5" />
+                            </Button>
+                            <ChevronRight className={`h-4 w-4 ${
+                              isSelected ? "text-primary-foreground/60" : "text-muted-foreground/50"
+                            }`} />
                           </div>
                         </div>
-                      </CardContent>
-                    </Card>)}
+                      </div>
+                    );
+                  })
+                )}
               </CardContent>
             </Card>
           </div>
 
-          {/* Student Topics */}
-          <div className="lg:col-span-2">
-            {selectedStudent ? <StudentTopics student={selectedStudent} teacherId={profile?.user_id || ""} /> : <Card className="h-96 flex items-center justify-center">
-                <div className="text-center">
-                  <BookOpen className="h-12 w-12 mx-auto opacity-50 mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Bir Öğrenci Seç</h3>
-                  <p className="opacity-70">
-                    Konuları görüntülemek ve yönetmek için listeden bir öğrenci seçin
+          {/* Student Topics - Right Column */}
+          <div className="lg:col-span-8 xl:col-span-9">
+            {selectedStudent ? (
+              <StudentTopics student={selectedStudent} teacherId={profile?.user_id || ""} />
+            ) : (
+              <Card className="h-80 flex items-center justify-center">
+                <div className="text-center px-4">
+                  <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                    <BookOpen className="h-6 w-6 text-muted-foreground" />
+                  </div>
+                  <h3 className="font-medium text-card-foreground mb-1">Öğrenci Seçin</h3>
+                  <p className="text-sm text-muted-foreground">
+                    Konuları görüntülemek için listeden bir öğrenci seçin
                   </p>
                 </div>
-              </Card>}
+              </Card>
+            )}
           </div>
         </div>
-      </div>
+      </main>
 
-      {/* Global Topics Manager - Read-only for teachers */}
-      <GlobalTopicsManager open={showGlobalTopics} onOpenChange={setShowGlobalTopics} isAdmin={false} />
-
-      <WeeklyScheduleDialog open={showWeeklySchedule} onOpenChange={setShowWeeklySchedule} teacherId={profile?.user_id || ""} />
-
-      <TeacherBalanceDialog open={showBalance} onOpenChange={setShowBalance} teacherId={profile?.user_id || ""} />
-
+      {/* Dialogs */}
+      <GlobalTopicsManager
+        open={showGlobalTopics}
+        onOpenChange={setShowGlobalTopics}
+        isAdmin={false}
+      />
+      <WeeklyScheduleDialog
+        open={showWeeklySchedule}
+        onOpenChange={setShowWeeklySchedule}
+        teacherId={profile?.user_id || ""}
+      />
+      <TeacherBalanceDialog
+        open={showBalance}
+        onOpenChange={setShowBalance}
+        teacherId={profile?.user_id || ""}
+      />
       {studentAboutData && (
         <StudentAboutDialog
           key={studentAboutData.studentId}
@@ -321,5 +363,6 @@ export function TeacherDashboard() {
           isReadOnly={true}
         />
       )}
-    </div>;
+    </div>
+  );
 }

@@ -574,94 +574,115 @@ export function AdminDashboard() {
         rightActions={
           <>
             <AdminNotificationBell adminId={profile?.user_id || ''} />
-            <Button onClick={() => setShowGlobalTopics(true)} variant="outline" size="sm">
+            <Button onClick={() => setShowGlobalTopics(true)} variant="ghost" size="sm">
               <FolderOpen className="h-4 w-4" />
               <span className="hidden sm:inline ml-2">Konular</span>
             </Button>
-            <Button onClick={signOut} variant="outline" size="sm" disabled={signingOut}>
+            <Button onClick={signOut} variant="ghost" size="sm" disabled={signingOut}>
               <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline ml-2">{signingOut ? "Çıkış..." : "Çıkış"}</span>
+              <span className="hidden sm:inline ml-2">{signingOut ? "..." : "Çıkış"}</span>
             </Button>
           </>
         }
       >
-        <div className="text-center text-card-foreground">
-          <h1 className="text-xl sm:text-2xl font-bold text-card-foreground">Admin Paneli</h1>
-          <p className="text-sm sm:text-lg text-card-foreground/70 hidden sm:block">Hoş geldin, {profile?.full_name}</p>
+        <div className="text-center">
+          <h1 className="text-lg sm:text-xl font-semibold text-header-foreground">Admin Paneli</h1>
         </div>
       </Header>
 
-      <div className="container mx-auto p-4">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <main className="container mx-auto px-4 py-6 max-w-7xl">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Teachers List */}
-          <div className="lg:col-span-1">
+          <div className="lg:col-span-4 xl:col-span-3">
             <Card>
-              <CardHeader>
+              <CardHeader className="pb-3">
                 <div className="flex justify-between items-center">
                   <div>
-                    <CardTitle className="flex items-center gap-2 text-card-foreground">
-                      <Users className="h-5 w-5" />
+                    <CardTitle className="text-base flex items-center gap-2">
+                      <Users className="h-4 w-4" />
                       Öğretmenler
                     </CardTitle>
-                    <CardDescription>{teachers.length} öğretmen kayıtlı</CardDescription>
+                    <CardDescription className="text-xs mt-1">
+                      {teachers.length} öğretmen
+                    </CardDescription>
                   </div>
                   <Button onClick={() => setShowCreateTeacher(true)} size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Oluştur
+                    <Plus className="h-4 w-4" />
                   </Button>
                 </div>
               </CardHeader>
-              <CardContent className="space-y-2">
+              <CardContent className="space-y-1 pt-0">
                 {teachers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">Henüz öğretmen yok.</p>
+                  <p className="text-sm text-muted-foreground text-center py-8">Henüz öğretmen yok.</p>
                 ) : (
-                  teachers.map((teacher) => (
-                    <Card
-                      key={teacher.user_id}
-                      className={`cursor-pointer transition-colors hover:bg-accent ${
-                        selectedTeacher?.user_id === teacher.user_id ? "ring-2 ring-primary" : ""
-                      }`}
-                      onClick={() => setSelectedTeacher(teacher)}
-                    >
-                      <CardContent className="p-3">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h4 className="font-medium text-card-foreground">{teacher.full_name}</h4>
-                            <p className="text-sm text-card-foreground/70">{teacher.email}</p>
-                          <Badge variant="outline" className="mt-1 text-card-foreground border-card-foreground/30">
-                              {teacher.students.filter(s => !s.is_archived).length} öğrenci
-                            </Badge>
+                  teachers.map((teacher) => {
+                    const isSelected = selectedTeacher?.user_id === teacher.user_id;
+                    const activeStudentCount = teacher.students.filter(s => !s.is_archived).length;
+                    
+                    return (
+                      <div
+                        key={teacher.user_id}
+                        onClick={() => setSelectedTeacher(teacher)}
+                        className={`
+                          group relative p-3 rounded-lg cursor-pointer transition-all
+                          ${isSelected
+                            ? "bg-primary text-primary-foreground"
+                            : "hover:bg-muted"
+                          }
+                        `}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex-1 min-w-0">
+                            <h4 className={`font-medium text-sm truncate ${
+                              isSelected ? "text-primary-foreground" : "text-card-foreground"
+                            }`}>
+                              {teacher.full_name}
+                            </h4>
+                            <div className={`flex items-center gap-2 mt-1 ${
+                              isSelected ? "text-primary-foreground/80" : "text-muted-foreground"
+                            }`}>
+                              <span className="text-xs">{activeStudentCount} öğrenci</span>
+                            </div>
                           </div>
                           <Button
                             variant="ghost"
-                            size="sm"
-                            className="text-card-foreground hover:text-card-foreground hover:bg-card-foreground/10"
+                            size="icon-sm"
+                            className={`h-7 w-7 ${
+                              isSelected 
+                                ? "text-primary-foreground hover:bg-primary-foreground/20" 
+                                : "text-muted-foreground hover:text-card-foreground"
+                            }`}
                             onClick={(e) => {
                               e.stopPropagation();
                               openTeacherSettings(teacher);
                             }}
                           >
-                            <Settings className="h-4 w-4" />
+                            <Settings className="h-3.5 w-3.5" />
                           </Button>
                         </div>
-                      </CardContent>
-                    </Card>
-                  ))
+                      </div>
+                    );
+                  })
                 )}
               </CardContent>
             </Card>
           </div>
 
           {/* Teacher Details */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-8 xl:col-span-9">
             {selectedTeacher ? (
               <Card>
-                <CardHeader>
-                  <CardTitle>{selectedTeacher.full_name}</CardTitle>
-                  <CardDescription>{selectedTeacher.email}</CardDescription>
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="text-base">{selectedTeacher.full_name}</CardTitle>
+                      <CardDescription className="text-xs">{selectedTeacher.email}</CardDescription>
+                    </div>
+                  </div>
                 </CardHeader>
                 <CardContent>
-                  <div className="flex gap-2 border-b mb-4">
+                  {/* Tab Navigation */}
+                  <div className="flex gap-1 mb-4 border-b pb-3">
                     <Button
                       variant={activeTab === "students" ? "tab-active" : "tab-inactive"}
                       className="rounded-b-none"
@@ -1029,7 +1050,7 @@ export function AdminDashboard() {
             )}
           </div>
         </div>
-      </div>
+      </main>
 
       <GlobalTopicsManager open={showGlobalTopics} onOpenChange={setShowGlobalTopics} isAdmin={true} />
       
