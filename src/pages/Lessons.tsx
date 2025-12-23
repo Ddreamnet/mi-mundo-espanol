@@ -1,7 +1,6 @@
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { LandingFooter } from "@/components/landing/LandingFooter";
-import { Card } from "@/components/ui/card";
-import { Check, Phone, Mail, User, Users, Award, Clock, BookOpen } from "lucide-react";
+import { Check, Phone, Mail, User, Users } from "lucide-react";
 import lessonsIllustration from "@/assets/lessons-illustration.png";
 
 const individualFeatures = [
@@ -51,120 +50,114 @@ export default function Lessons() {
           </div>
 
           {/* Cards Container */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-10 mb-20">
-            {/* Bireysel Card */}
-            <Card className="relative overflow-hidden bg-card border-0 shadow-xl">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-primary/20 to-primary/5 p-6 lg:p-8">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-primary/20 backdrop-blur-sm">
-                    <User className="w-8 h-8 text-primary" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-card-foreground">
-                      Bireysel
-                    </h2>
-                    <p className="text-card-foreground/70 text-sm mt-1">Birebir özel dersler</p>
-                  </div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 lg:gap-12 mb-20">
+            {/* Bireysel Section */}
+            <div className="flex flex-col">
+              {/* Title - Outside Card */}
+              <div className="flex items-center gap-3 mb-5">
+                <div className="p-2.5 rounded-xl bg-primary/15">
+                  <User className="w-7 h-7 text-primary" />
                 </div>
-                {/* Badges */}
-                <div className="flex flex-wrap gap-2 mt-4">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-card/80 text-card-foreground/80 text-xs font-medium">
-                    <Clock className="w-3.5 h-3.5" /> 40 dk
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-card/80 text-card-foreground/80 text-xs font-medium">
-                    <BookOpen className="w-3.5 h-3.5" /> Esnek program
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-card/80 text-card-foreground/80 text-xs font-medium">
-                    <Award className="w-3.5 h-3.5" /> Sertifika
-                  </span>
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+                  Bireysel
+                </h2>
+              </div>
+              
+              {/* Floating Card */}
+              <div className="group relative flex-1">
+                {/* Shadow layer for depth */}
+                <div className="absolute inset-0 bg-primary/5 rounded-2xl translate-y-2 blur-xl transition-all duration-500 group-hover:translate-y-4 group-hover:blur-2xl" />
+                
+                {/* Main Card */}
+                <div className="relative h-full bg-card rounded-2xl p-6 lg:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-500 ease-out group-hover:shadow-[0_20px_50px_rgb(0,0,0,0.15)] group-hover:-translate-y-1 border border-border/20">
+                  {/* Subtle gradient overlay */}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/40 via-primary/60 to-primary/40 rounded-t-2xl" />
+                  
+                  <ul className="space-y-4 pt-2">
+                    {individualFeatures.map((feature, index) => (
+                      <li 
+                        key={index} 
+                        className="flex items-start gap-3 transition-all duration-300"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <div className="flex-shrink-0 mt-1 w-5 h-5 rounded-full bg-success/15 flex items-center justify-center border border-success/30">
+                          <Check className="w-3 h-3 text-success" strokeWidth={3} />
+                        </div>
+                        <span className="text-card-foreground/85 text-sm lg:text-[15px] leading-relaxed">
+                          {feature}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
-              {/* Features */}
-              <div className="p-6 lg:p-8">
-                <ul className="space-y-3">
-                  {individualFeatures.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-3 group">
-                      <div className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full bg-success/20 flex items-center justify-center">
-                        <Check className="w-3 h-3 text-success" />
-                      </div>
-                      <span className="text-card-foreground/90 text-sm lg:text-base leading-relaxed">
-                        {feature}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </Card>
+            </div>
 
-            {/* Grup Card */}
-            <Card className="relative overflow-hidden bg-card border-0 shadow-xl">
-              {/* Header */}
-              <div className="bg-gradient-to-r from-accent/20 to-accent/5 p-6 lg:p-8">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 rounded-xl bg-accent/20 backdrop-blur-sm">
-                    <Users className="w-8 h-8 text-accent" />
-                  </div>
-                  <div>
-                    <h2 className="text-2xl md:text-3xl font-bold text-card-foreground">
-                      Grup
-                    </h2>
-                    <p className="text-card-foreground/70 text-sm mt-1">Küçük grup dersleri</p>
-                  </div>
+            {/* Grup Section */}
+            <div className="flex flex-col">
+              {/* Title - Outside Card */}
+              <div className="flex items-center gap-3 mb-5">
+                <div className="p-2.5 rounded-xl bg-accent/15">
+                  <Users className="w-7 h-7 text-accent" />
                 </div>
-                {/* Badges */}
-                <div className="flex flex-wrap gap-2 mt-4">
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-card/80 text-card-foreground/80 text-xs font-medium">
-                    <Clock className="w-3.5 h-3.5" /> 40 dk
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-card/80 text-card-foreground/80 text-xs font-medium">
-                    <Users className="w-3.5 h-3.5" /> Max 5 kişi
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-card/80 text-card-foreground/80 text-xs font-medium">
-                    <Award className="w-3.5 h-3.5" /> Sertifika
-                  </span>
+                <h2 className="text-2xl md:text-3xl font-bold text-foreground">
+                  Grup
+                </h2>
+              </div>
+              
+              {/* Floating Card */}
+              <div className="group relative flex-1">
+                {/* Shadow layer for depth */}
+                <div className="absolute inset-0 bg-accent/5 rounded-2xl translate-y-2 blur-xl transition-all duration-500 group-hover:translate-y-4 group-hover:blur-2xl" />
+                
+                {/* Main Card */}
+                <div className="relative h-full bg-card rounded-2xl p-6 lg:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)] transition-all duration-500 ease-out group-hover:shadow-[0_20px_50px_rgb(0,0,0,0.15)] group-hover:-translate-y-1 border border-border/20">
+                  {/* Subtle gradient overlay */}
+                  <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-accent/40 via-accent/60 to-accent/40 rounded-t-2xl" />
+                  
+                  <ul className="space-y-4 pt-2">
+                    {groupFeatures.map((feature, index) => (
+                      <li 
+                        key={index} 
+                        className="flex items-start gap-3 transition-all duration-300"
+                        style={{ animationDelay: `${index * 50}ms` }}
+                      >
+                        <div className="flex-shrink-0 mt-1 w-5 h-5 rounded-full bg-success/15 flex items-center justify-center border border-success/30">
+                          <Check className="w-3 h-3 text-success" strokeWidth={3} />
+                        </div>
+                        <span className="text-card-foreground/85 text-sm lg:text-[15px] leading-relaxed">
+                          {feature}
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
                 </div>
               </div>
-              {/* Features */}
-              <div className="p-6 lg:p-8">
-                <ul className="space-y-3">
-                  {groupFeatures.map((feature, index) => (
-                    <li key={index} className="flex items-start gap-3 group">
-                      <div className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full bg-success/20 flex items-center justify-center">
-                        <Check className="w-3 h-3 text-success" />
-                      </div>
-                      <span className="text-card-foreground/90 text-sm lg:text-base leading-relaxed">
-                        {feature}
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </Card>
+            </div>
           </div>
 
-          {/* Contact Section - No Card */}
+          {/* Contact Section */}
           <div className="text-center">
-            <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-8">
+            <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-10">
               Ücretlendirme için <span className="text-primary">iletişim</span>
             </h3>
-            <div className="flex flex-col lg:flex-row items-center justify-center gap-10 lg:gap-20">
+            <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-20">
               {/* Contact Info */}
               <div className="flex flex-col gap-6">
                 <a
                   href="tel:+905551234567"
-                  className="flex items-center gap-4 text-foreground hover:text-primary transition-colors group"
+                  className="flex items-center gap-4 text-foreground hover:text-primary transition-all duration-300 group"
                 >
-                  <div className="p-4 rounded-full bg-primary/20 group-hover:bg-primary/30 transition-colors">
+                  <div className="p-4 rounded-full bg-primary/15 group-hover:bg-primary/25 group-hover:scale-110 transition-all duration-300">
                     <Phone className="w-6 h-6 text-primary" />
                   </div>
                   <span className="text-lg lg:text-xl font-medium">+90 555 123 45 67</span>
                 </a>
                 <a
                   href="mailto:info@mimundoespanol.com"
-                  className="flex items-center gap-4 text-foreground hover:text-primary transition-colors group"
+                  className="flex items-center gap-4 text-foreground hover:text-primary transition-all duration-300 group"
                 >
-                  <div className="p-4 rounded-full bg-primary/20 group-hover:bg-primary/30 transition-colors">
+                  <div className="p-4 rounded-full bg-primary/15 group-hover:bg-primary/25 group-hover:scale-110 transition-all duration-300">
                     <Mail className="w-6 h-6 text-primary" />
                   </div>
                   <span className="text-lg lg:text-xl font-medium">info@mimundoespanol.com</span>
@@ -172,11 +165,11 @@ export default function Lessons() {
               </div>
 
               {/* Illustration */}
-              <div className="w-full max-w-[280px] lg:max-w-[320px]">
+              <div className="w-full max-w-[260px] lg:max-w-[300px]">
                 <img
                   src={lessonsIllustration}
                   alt="İletişim"
-                  className="w-full h-auto opacity-90"
+                  className="w-full h-auto opacity-85"
                 />
               </div>
             </div>
