@@ -25,6 +25,10 @@ const buttonVariants = cva(
         card: "bg-card-foreground/10 text-card-foreground hover:bg-card-foreground/20 border border-card-foreground/20",
         // Card ghost variant - for ghost buttons on card backgrounds
         "card-ghost": "text-card-foreground hover:bg-card-foreground/10",
+        // Tab inactive variant - for inactive tabs on light card backgrounds
+        "tab-inactive": "text-card-foreground hover:bg-card-foreground/10",
+        // Tab active variant - for active tabs (same as default)
+        "tab-active": "bg-btn-primary text-btn-primary-foreground hover:bg-btn-primary-hover active:opacity-90 shadow-sm",
         // Landing page primary button - light cream bg for dark background
         "landing-primary": "bg-btn-landing-primary text-btn-landing-primary-foreground hover:bg-btn-landing-primary-hover active:opacity-90 shadow-lg font-semibold",
         // Landing page secondary button - dark burgundy bg for dark background

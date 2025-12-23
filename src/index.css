@@ -88,7 +88,10 @@
 
     /* Muted elements */
     --muted: 1 40% 30%;
-    --muted-foreground: 42 42% 94%;
+    --muted-foreground: 42 30% 65%;
+
+    /* Muted foreground for card/light backgrounds */
+    --muted-foreground-on-card: 1 30% 40%;
 
     /* Accent - warm terracotta */
     --accent: 15 60% 45%;
@@ -212,6 +215,9 @@
 
     --muted: 1 40% 18%;
     --muted-foreground: 42 30% 65%;
+
+    /* Muted foreground for card/light backgrounds (dark mode cards are dark) */
+    --muted-foreground-on-card: 42 30% 70%;
 
     --accent: 15 55% 40%;
     --accent-foreground: 42 42% 94%;

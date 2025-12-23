@@ -587,7 +587,7 @@ export function AdminDashboard() {
       >
         <div className="text-center text-card-foreground">
           <h1 className="text-xl sm:text-2xl font-bold text-card-foreground">Admin Paneli</h1>
-          <p className="text-sm sm:text-lg text-muted-foreground hidden sm:block">Hoş geldin, {profile?.full_name}</p>
+          <p className="text-sm sm:text-lg text-card-foreground/70 hidden sm:block">Hoş geldin, {profile?.full_name}</p>
         </div>
       </Header>
 
@@ -663,21 +663,21 @@ export function AdminDashboard() {
                 <CardContent>
                   <div className="flex gap-2 border-b mb-4">
                     <Button
-                      variant={activeTab === "students" ? "default" : "ghost"}
+                      variant={activeTab === "students" ? "tab-active" : "tab-inactive"}
                       className="rounded-b-none"
                       onClick={() => setActiveTab("students")}
                     >
                       Öğrenciler
                     </Button>
                     <Button
-                      variant={activeTab === "schedule" ? "default" : "ghost"}
+                      variant={activeTab === "schedule" ? "tab-active" : "tab-inactive"}
                       className="rounded-b-none"
                       onClick={() => setActiveTab("schedule")}
                     >
                       Ders programı
                     </Button>
                     <Button
-                      variant={activeTab === "payments" ? "default" : "ghost"}
+                      variant={activeTab === "payments" ? "tab-active" : "tab-inactive"}
                       className="rounded-b-none"
                       onClick={() => setActiveTab("payments")}
                     >
