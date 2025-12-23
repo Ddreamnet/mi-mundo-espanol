@@ -1,11 +1,9 @@
 // ============================================================================
-// ÖĞRENCİ PANELİ
+// ÖĞRENCİ PANELİ - Modern Minimal Design
 // ============================================================================
-// Bu bileşen öğrencilerin kendi öğrenme materyallerini görüntülemesini sağlar.
-// Sadece tamamlanmış kaynakları gösterir.
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
@@ -17,14 +15,14 @@ import {
   ChevronRight,
   LogOut,
   BookOpen,
-  CheckCircle,
-  Clock,
+  CheckCircle2,
   ExternalLink,
   FileText,
   Video,
   Link as LinkIcon,
   Upload,
-  ClipboardList,
+  FolderOpen,
+  GraduationCap,
 } from "lucide-react";
 import { Header } from "./Header";
 import { StudentLessonTracker } from "./StudentLessonTracker";
@@ -32,10 +30,6 @@ import { UploadHomeworkDialog } from "./UploadHomeworkDialog";
 import { HomeworkListDialog } from "./HomeworkListDialog";
 import { ContactDialog } from "./ContactDialog";
 import { NotificationBell } from "./NotificationBell";
-
-// ============================================================================
-// TİPLER
-// ============================================================================
 
 interface Topic {
   id: string;
@@ -56,15 +50,7 @@ interface Resource {
   order_index: number;
 }
 
-// ============================================================================
-// ANA BİLEŞEN
-// ============================================================================
-
 export function StudentDashboard() {
-  // ============================================================================
-  // STATE YÖNETİMİ
-  // ============================================================================
-
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set());
@@ -74,28 +60,14 @@ export function StudentDashboard() {
   const { profile, signOut, signingOut } = useAuth();
   const { toast } = useToast();
 
-  // ============================================================================
-  // EFFECTS
-  // ============================================================================
-
-  // Profil yüklendiğinde konuları getir
   useEffect(() => {
     if (profile?.user_id) {
       fetchTopics();
     }
   }, [profile]);
 
-  // ============================================================================
-  // VERİ ÇEKME FONKSİYONLARI
-  // ============================================================================
-
-  /**
-   * Öğrenciye ait tüm konuları ve global konuları getirir
-   * Her kaynağın tamamlanma durumunu kontrol eder
-   */
   const fetchTopics = async () => {
     try {
-      // 1) Önce öğrencinin öğretmenini bul
       const { data: studentRelation, error: relationError } = await supabase
         .from("students")
         .select("teacher_id")
@@ -103,11 +75,8 @@ export function StudentDashboard() {
         .single();
 
       if (relationError) throw relationError;
-      
-      // Store teacher_id for homework submissions
       setTeacherId(studentRelation.teacher_id);
 
-      // 2) Öğrenciye özel konuları getir
       const studentTopicsResponse = await supabase
         .from("topics")
         .select("*, resources (*)")
@@ -116,98 +85,66 @@ export function StudentDashboard() {
 
       if (studentTopicsResponse.error) throw studentTopicsResponse.error;
 
-      // 3) Tüm global konuları getir (admin sahipliğinde, tüm öğretmenler kullanabilir)
       const globalTopicsResponse = await supabase
         .from("global_topics")
-        .select(
-          `
-    *,
-    global_topic_resources (*)
-  `,
-        )
+        .select(`*, global_topic_resources (*)`)
         .order("order_index");
 
       if (globalTopicsResponse.error) throw globalTopicsResponse.error;
 
-      // 4) Kaynak ID'lerini topla
       const studentTopics = studentTopicsResponse.data || [];
       const globalTopics = globalTopicsResponse.data || [];
 
-      const studentResourceIds = studentTopics.flatMap((topic) => topic.resources.map((resource: any) => resource.id));
-      const globalResourceIds = globalTopics.flatMap((topic) =>
-        topic.global_topic_resources.map((resource: any) => resource.id),
-      );
-      const allResourceIds = [...studentResourceIds, ...globalResourceIds];
-
-      // 5) Tüm tamamlanma verilerini getir (filtresiz)
-      let completionData: any[] = [];
       const { data: completionResponse, error: completionError } = await supabase
         .from("student_resource_completion")
         .select("resource_id, is_completed, completed_at")
         .eq("student_id", profile?.user_id);
 
-      if (completionError) {
-        console.error("Completion data error:", completionError);
-        throw completionError;
-      }
-      completionData = completionResponse || [];
+      if (completionError) throw completionError;
 
-      // Tamamlanma map'ini oluştur
       const completionMap = new Map();
-      completionData.forEach((completion) => {
-        completionMap.set(completion.resource_id, completion);
+      (completionResponse || []).forEach((c) => {
+        completionMap.set(c.resource_id, c);
       });
 
-      // 6) Öğrenciye özel konuları işle
       const processedStudentTopics = studentTopics.map((topic) => ({
         ...topic,
         resources: topic.resources
-          .map((resource: any) => {
-            const completion = completionMap.get(resource.id);
-            return {
-              ...resource,
-              is_completed: completion?.is_completed || false,
-              completed_at: completion?.completed_at,
-            };
-          })
+          .map((resource: any) => ({
+            ...resource,
+            is_completed: completionMap.get(resource.id)?.is_completed || false,
+          }))
           .sort((a: Resource, b: Resource) => a.order_index - b.order_index),
       }));
 
-      // 7) Global konuları işle - tüm konuları göster, tamamlanma durumunu işaretle
       const processedGlobalTopics = globalTopics.map((topic) => {
         const globalResources = (topic.global_topic_resources || [])
-          .map((res: any) => {
-            const completion = completionMap.get(res.id);
-            return {
-              id: res.id,
-              title: res.title,
-              description: res.description,
-              resource_type: res.resource_type,
-              resource_url: res.resource_url,
-              order_index: res.order_index,
-              is_completed: completion?.is_completed || false,
-              completed_at: completion?.completed_at,
-            };
-          })
+          .map((res: any) => ({
+            id: res.id,
+            title: res.title,
+            description: res.description,
+            resource_type: res.resource_type,
+            resource_url: res.resource_url,
+            order_index: res.order_index,
+            is_completed: completionMap.get(res.id)?.is_completed || false,
+          }))
           .sort((a: Resource, b: Resource) => a.order_index - b.order_index);
 
-        // Tüm kaynaklar tamamlanmışsa konu da tamamlanmış sayılır
-        const allResourcesCompleted =
-          globalResources.length > 0 && globalResources.every((resource) => resource.is_completed);
+        const allCompleted =
+          globalResources.length > 0 && globalResources.every((r) => r.is_completed);
 
         return {
           id: `global-${topic.id}`,
           title: topic.title,
           description: topic.description,
-          is_completed: allResourcesCompleted,
-          completed_at: allResourcesCompleted ? new Date().toISOString() : null,
+          is_completed: allCompleted,
+          completed_at: allCompleted ? new Date().toISOString() : null,
           order_index: topic.order_index + 1000,
           resources: globalResources,
         };
       });
 
-      const allTopics = [...processedStudentTopics, ...processedGlobalTopics];
-      setTopics(allTopics);
+      setTopics([...processedStudentTopics, ...processedGlobalTopics]);
     } catch (error: any) {
       toast({
         title: "Hata",
@@ -219,13 +156,6 @@ export function StudentDashboard() {
     }
   };
 
-  // ============================================================================
-  // UI FONKSİYONLARI
-  // ============================================================================
-
-  /**
-   * Bir konuyu aç/kapa
-   */
   const toggleTopic = (topicId: string) => {
     const newExpanded = new Set(expandedTopics);
     if (newExpanded.has(topicId)) {
@@ -236,9 +166,6 @@ export function StudentDashboard() {
     setExpandedTopics(newExpanded);
   };
 
-  /**
-   * Kaynak tipine göre ikon döndür
-   */
   const getResourceIcon = (type: string) => {
     switch (type) {
       case "video":
@@ -253,42 +180,31 @@ export function StudentDashboard() {
     }
   };
 
-  /**
-   * Öğrenciler sadece tamamlanmış kaynakları görebilir
-   */
   const getVisibleResources = (topic: Topic) => {
-    // If the whole topic is marked as completed, show all resources
-    if (topic.is_completed) {
-      return topic.resources;
-    }
-    // Otherwise, only show completed resources
-    return topic.resources.filter((resource: any) => resource.is_completed);
+    if (topic.is_completed) return topic.resources;
+    return topic.resources.filter((r: any) => r.is_completed);
   };
 
-  // ============================================================================
-  // VERİ HAZIRLAMA
-  // ============================================================================
-
-  // Tamamlanmış ve işlenmiş konuları filtrele ve order_index'e göre sırala
   const completedTopics = topics.filter((t) => t.is_completed);
-  const pendingTopics = topics.filter((t) => !t.is_completed && t.resources.some((r: any) => r.is_completed));
-  const allActiveTopics = [...completedTopics, ...pendingTopics].sort((a, b) => a.order_index - b.order_index);
+  const pendingTopics = topics.filter(
+    (t) => !t.is_completed && t.resources.some((r: any) => r.is_completed)
+  );
+  const allActiveTopics = [...completedTopics, ...pendingTopics].sort(
+    (a, b) => a.order_index - b.order_index
+  );
 
-  // ============================================================================
-  // RENDER - LOADING STATE
-  // ============================================================================
+  const totalResources = topics.reduce(
+    (acc, topic) => acc + getVisibleResources(topic).length,
+    0
+  );
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
-
-  // ============================================================================
-  // RENDER - ANA İÇERİK
-  // ============================================================================
 
   return (
     <div className="min-h-screen bg-background">
@@ -296,7 +212,7 @@ export function StudentDashboard() {
       <Header
         rightActions={
           <>
-            <NotificationBell 
+            <NotificationBell
               userId={profile?.user_id || ""}
               teacherId={teacherId}
               studentId={profile?.user_id}
@@ -304,210 +220,191 @@ export function StudentDashboard() {
               onNotificationClick={() => setListDialogOpen(true)}
             />
             <ContactDialog />
-            <Button onClick={signOut} variant="outline" size="sm" disabled={signingOut}>
+            <Button onClick={signOut} variant="ghost" size="sm" disabled={signingOut}>
               <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline ml-2">{signingOut ? "Çıkış..." : "Çıkış"}</span>
+              <span className="hidden sm:inline ml-2">{signingOut ? "..." : "Çıkış"}</span>
             </Button>
           </>
         }
       >
         <div className="text-center">
-          <h1 className="text-xl sm:text-2xl font-bold text-card-foreground">Öğrenme Panelim</h1>
-          <p className="text-sm sm:text-lg text-card-foreground/70 hidden sm:block">Hoş geldin, {profile?.full_name}</p>
+          <h1 className="text-lg sm:text-xl font-semibold text-header-foreground">
+            Öğrenme Panelim
+          </h1>
         </div>
       </Header>
 
-      <div className="container mx-auto p-4">
-        {/* İlerleme Özeti - 2x2 Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          {/* Row 1 - Col 1: İşlenen Konular */}
-          <Card>
+      <main className="container mx-auto px-4 py-6 max-w-5xl">
+        {/* Stats Grid - Compact */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
+          {/* Topics Count */}
+          <Card className="overflow-hidden">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <BookOpen className="h-8 w-8" />
+                <div className="p-2 rounded-lg bg-primary/10">
+                  <BookOpen className="h-5 w-5 text-primary" />
+                </div>
                 <div>
-                  <p className="text-2xl font-bold">{allActiveTopics.length}</p>
-                  <p className="text-sm opacity-70">İşlenen Konular</p>
+                  <p className="text-2xl font-bold text-card-foreground">{allActiveTopics.length}</p>
+                  <p className="text-xs text-muted-foreground">Konu</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Row 1 - Col 2: Toplam Kaynak */}
-          <Card>
+          {/* Resources Count */}
+          <Card className="overflow-hidden">
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <CheckCircle className="h-8 w-8" />
+                <div className="p-2 rounded-lg bg-success/10">
+                  <CheckCircle2 className="h-5 w-5 text-success" />
+                </div>
                 <div>
-                  <p className="text-2xl font-bold">
-                    {topics.reduce((acc, topic) => acc + getVisibleResources(topic).length, 0)}
-                  </p>
-                  <p className="text-sm opacity-70">Toplam Kaynak</p>
+                  <p className="text-2xl font-bold text-card-foreground">{totalResources}</p>
+                  <p className="text-xs text-muted-foreground">Kaynak</p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          {/* Row 2 - Col 1: İşlenen Dersler */}
+          {/* Lesson Tracker */}
           <StudentLessonTracker studentId={profile?.user_id || ""} />
 
-          {/* Row 2 - Col 2: Ödev Kartı */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="grid grid-cols-2 gap-3">
+          {/* Homework Actions */}
+          <Card className="overflow-hidden">
+            <CardContent className="p-3">
+              <div className="flex gap-2 h-full">
                 <Button
                   variant="outline"
-                  className="h-full flex flex-col items-center justify-center gap-2 min-h-[80px]"
+                  className="flex-1 h-full min-h-[60px] flex-col gap-1"
                   onClick={() => setUploadDialogOpen(true)}
                 >
-                  <Upload className="h-6 w-6" />
-                  <span className="text-sm font-medium">Yükle</span>
+                  <Upload className="h-5 w-5" />
+                  <span className="text-xs">Yükle</span>
                 </Button>
                 <Button
                   variant="outline"
-                  className="h-full flex flex-col items-center justify-center gap-2 min-h-[80px]"
+                  className="flex-1 h-full min-h-[60px] flex-col gap-1"
                   onClick={() => setListDialogOpen(true)}
                 >
-                  <ClipboardList className="h-6 w-6" />
-                  <span className="text-sm font-medium">Ödevler</span>
+                  <FolderOpen className="h-5 w-5" />
+                  <span className="text-xs">Ödevler</span>
                 </Button>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Öğrenme Konuları */}
-        <div className="space-y-6">
-          {allActiveTopics.length > 0 ? (
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <BookOpen className="h-5 w-5" />
-                  Öğrendiklerimiz
-                </CardTitle>
-                <CardDescription>Öğrenme materyallerin</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                {allActiveTopics.map((topic) => {
-                  const visibleResources = getVisibleResources(topic);
-                  const completedResources = topic.resources.filter((r: any) => r.is_completed);
-                  const isFullyCompleted = topic.is_completed;
-
-                  return (
-                    <Card key={topic.id} className="border-l-4 border-l-primary">
-                      <CardContent className="p-4">
-                        <Collapsible>
-                          <div className="flex items-center justify-between">
-                            <CollapsibleTrigger
-                              className="flex items-center gap-2 flex-1 text-left"
-                              onClick={() => toggleTopic(topic.id)}
-                            >
-                              {expandedTopics.has(topic.id) ? (
-                                <ChevronDown className="h-4 w-4" />
-                              ) : (
-                                <ChevronRight className="h-4 w-4" />
-                              )}
-                              <div className="flex-1">
-                                <h4 className="font-medium">{topic.title}</h4>
-                                {topic.description && (
-                                  <p className="text-sm opacity-70">{topic.description}</p>
-                                )}
-                              </div>
-                            </CollapsibleTrigger>
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline">{visibleResources.length} kaynak</Badge>
-                            </div>
-                          </div>
-
-                          {/* Kaynaklar */}
-                          <CollapsibleContent className="mt-4">
-                            <div className="pl-6 space-y-2">
-                              <h5 className="font-medium text-sm">Kaynaklar</h5>
-                              {visibleResources.length === 0 ? (
-                                <p className="text-sm opacity-70">
-                                  Bu konu için henüz gösterilecek kaynak bulunmuyor.
-                                </p>
-                              ) : (
-                                <div className="space-y-2">
-                                  {visibleResources.map((resource: any) => (
-                                    <div
-                                      key={resource.id}
-                                      className="flex items-center gap-3 p-2 bg-secondary/30 rounded-md"
-                                    >
-                                      {resource.is_completed ? (
-                                        <CheckCircle className="h-4 w-4" />
-                                      ) : (
-                                        <Clock className="h-4 w-4 opacity-60" />
-                                      )}
-                                      {getResourceIcon(resource.resource_type)}
-                                      <div className="flex-1">
-                                        <button
-                                          className="font-medium text-sm text-left hover:underline cursor-pointer"
-                                          onClick={() => window.open(resource.resource_url, "_blank")}
-                                        >
-                                          {resource.title}
-                                        </button>
-                                        {resource.description && (
-                                          <p className="text-xs opacity-70">{resource.description}</p>
-                                        )}
-                                      </div>
-                                      <Button
-                                        size="sm"
-                                        variant="ghost"
-                                        onClick={() => window.open(resource.resource_url, "_blank")}
-                                      >
-                                        <ExternalLink className="h-3 w-3" />
-                                      </Button>
-                                    </div>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          </CollapsibleContent>
-                        </Collapsible>
-                      </CardContent>
-                    </Card>
-                  );
-                })}
-              </CardContent>
-            </Card>
-          ) : (
-            <Card className="text-center py-12">
-              <CardContent>
-                <BookOpen className="h-12 w-12 mx-auto opacity-50 mb-4" />
-                <h3 className="text-lg font-medium mb-2">Henüz Öğrenme Aktivitesi Yok</h3>
-                <p className="opacity-70">
-                  Öğretmeniniz size keşfetmeniz için konular ve kaynaklar atayacak.
+        {/* Topics Section */}
+        <Card>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-base flex items-center gap-2">
+              <GraduationCap className="h-4 w-4" />
+              Öğrenme Materyalleri
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {allActiveTopics.length === 0 ? (
+              <div className="text-center py-12">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-4">
+                  <BookOpen className="h-6 w-6 text-muted-foreground" />
+                </div>
+                <h3 className="font-medium text-card-foreground mb-1">Henüz içerik yok</h3>
+                <p className="text-sm text-muted-foreground">
+                  Öğretmeniniz materyalleri eklediğinde burada görünecek
                 </p>
-              </CardContent>
-            </Card>
-          )}
-        </div>
+              </div>
+            ) : (
+              allActiveTopics.map((topic) => {
+                const visibleResources = getVisibleResources(topic);
+                const isExpanded = expandedTopics.has(topic.id);
 
-        {/* Ödev Dialogs */}
-        <UploadHomeworkDialog
-          open={uploadDialogOpen}
-          onOpenChange={setUploadDialogOpen}
-          studentId={profile?.user_id || ""}
-          teacherId={teacherId}
-          uploadedByUserId={profile?.user_id}
-          onSuccess={() => {
-            toast({
-              title: "Başarılı",
-              description: "Ödev başarıyla yüklendi",
-            });
-          }}
-        />
+                return (
+                  <div
+                    key={topic.id}
+                    className={`rounded-lg border transition-colors ${
+                      topic.is_completed
+                        ? "border-success/30 bg-success/5"
+                        : "border-border"
+                    }`}
+                  >
+                    <Collapsible open={isExpanded} onOpenChange={() => toggleTopic(topic.id)}>
+                      <CollapsibleTrigger className="w-full p-4 flex items-center justify-between hover:bg-muted/50 transition-colors rounded-lg">
+                        <div className="flex items-center gap-3 text-left">
+                          {isExpanded ? (
+                            <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                          ) : (
+                            <ChevronRight className="h-4 w-4 text-muted-foreground" />
+                          )}
+                          <div>
+                            <h4 className="font-medium text-card-foreground">{topic.title}</h4>
+                            {topic.description && (
+                              <p className="text-sm text-muted-foreground mt-0.5">
+                                {topic.description}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        <Badge variant={topic.is_completed ? "success" : "outline"}>
+                          {visibleResources.length} kaynak
+                        </Badge>
+                      </CollapsibleTrigger>
 
-        <HomeworkListDialog
-          open={listDialogOpen}
-          onOpenChange={setListDialogOpen}
-          studentId={profile?.user_id || ""}
-          teacherId={teacherId}
-          currentUserId={profile?.user_id || ""}
-          isTeacher={false}
-        />
-      </div>
+                      <CollapsibleContent>
+                        <div className="px-4 pb-4 pt-2 space-y-2 ml-7">
+                          {visibleResources.length === 0 ? (
+                            <p className="text-sm text-muted-foreground py-2">
+                              Bu konu için henüz gösterilecek kaynak yok.
+                            </p>
+                          ) : (
+                            visibleResources.map((resource: any) => (
+                              <button
+                                key={resource.id}
+                                onClick={() => window.open(resource.resource_url, "_blank")}
+                                className="w-full flex items-center gap-3 p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-left group"
+                              >
+                                <div className="p-1.5 rounded bg-card">
+                                  {getResourceIcon(resource.resource_type)}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-medium text-sm text-card-foreground group-hover:text-primary transition-colors truncate">
+                                    {resource.title}
+                                  </p>
+                                  {resource.description && (
+                                    <p className="text-xs text-muted-foreground truncate">
+                                      {resource.description}
+                                    </p>
+                                  )}
+                                </div>
+                                <ExternalLink className="h-4 w-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                              </button>
+                            ))
+                          )}
+                        </div>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </div>
+                );
+              })
+            )}
+          </CardContent>
+        </Card>
+      </main>
+
+      {/* Dialogs */}
+      <UploadHomeworkDialog
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        studentId={profile?.user_id || ""}
+        teacherId={teacherId}
+      />
+      <HomeworkListDialog
+        open={listDialogOpen}
+        onOpenChange={setListDialogOpen}
+        studentId={profile?.user_id || ""}
+        teacherId={teacherId}
+        currentUserId={profile?.user_id || ""}
+      />
     </div>
   );
 }
