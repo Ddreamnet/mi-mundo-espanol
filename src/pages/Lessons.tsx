@@ -169,7 +169,7 @@ export default function Lessons() {
                 <img
                   src={lessonsIllustration}
                   alt="İletişim"
-                  className="w-full h-auto opacity-85"
+                  className="w-full h-auto"
                 />
               </div>
             </div>
