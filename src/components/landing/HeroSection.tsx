@@ -11,10 +11,16 @@ export function HeroSection() {
 
           {/* Text Content - Right on desktop */}
           <div className="order-1 lg:order-2 text-center lg:text-left">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl text-foreground leading-tight mb-6" style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 700 }}>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl text-foreground leading-tight mb-6" style={{
+            fontFamily: "'Montserrat', sans-serif",
+            fontWeight: 700
+          }}>
               Mi Mundo Español
             </h1>
-            <p className="text-xl md:text-2xl mb-8" style={{ fontFamily: "'Yesteryear', cursive", color: 'hsl(42, 42%, 94%)' }}>
+            <p style={{
+            fontFamily: "'Yesteryear', cursive",
+            color: 'hsl(42, 42%, 94%)'
+          }} className="text-xl mb-8 md:text-4xl">
               Senin İspanyolca Dünyan
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
