@@ -905,7 +905,7 @@ export function EditStudentDialog({
                 return allLessons.map((lesson, displayIndex) => (
                   <div key={lesson.lessonNumber} className={`flex items-center gap-3 p-3 border rounded-lg ${
                     lesson.isCancelled ? "opacity-50 bg-muted" : ""
-                  } ${lesson.isOverridden ? "border-amber-500" : ""}`}>
+                  } ${lesson.isOverridden ? "border-warning" : ""}`}>
                     <div className="flex items-center gap-2 flex-1">
                       <div 
                         className={`h-4 w-4 rounded-full ${
@@ -928,14 +928,14 @@ export function EditStudentDialog({
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Label className={`text-sm ${lesson.isOverridden ? "text-amber-600 font-medium" : "text-muted-foreground"}`}>
+                      <Label className={`text-sm ${lesson.isOverridden ? "text-warning font-medium" : "text-muted-foreground"}`}>
                         {lesson.isOverridden ? "Yeni Tarih:" : "Tarih:"}
                       </Label>
                       <Input
                         type="date"
                         value={lesson.effectiveDate || lessonDates[lesson.lessonNumber.toString()] || ""}
                         onChange={(e) => updateLessonDate(lesson.lessonNumber, e.target.value)}
-                        className={`w-40 ${lesson.isOverridden ? "border-amber-500" : ""}`}
+                        className={`w-40 ${lesson.isOverridden ? "border-warning" : ""}`}
                         disabled={lesson.isCancelled}
                       />
                     </div>
