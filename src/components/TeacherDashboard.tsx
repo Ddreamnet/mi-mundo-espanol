@@ -6,7 +6,7 @@ import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Users, BookOpen, LogOut, Clock, Wallet, Calendar, FileUser } from "lucide-react";
-import { StudentTopics } from "./StudentTopics";
+import { StudentContentTabs } from "./StudentContentTabs";
 import { Header } from "./Header";
 import { GlobalTopicsManager } from "./GlobalTopicsManager";
 import { NotificationBell } from "./NotificationBell";
@@ -288,17 +288,21 @@ export function TeacherDashboard() {
             </Card>
           </div>
 
-          {/* Student Topics */}
+          {/* Student Content - Topics & Homework Tabs */}
           <div className="lg:col-span-2">
-            {selectedStudent ? <StudentTopics student={selectedStudent} teacherId={profile?.user_id || ""} /> : <Card className="h-96 flex items-center justify-center">
+            {selectedStudent ? (
+              <StudentContentTabs student={selectedStudent} teacherId={profile?.user_id || ""} />
+            ) : (
+              <Card className="h-96 flex items-center justify-center">
                 <div className="text-center">
                   <BookOpen className="h-12 w-12 mx-auto opacity-50 mb-4" />
                   <h3 className="text-lg font-medium mb-2">Bir Öğrenci Seç</h3>
                   <p className="opacity-70">
-                    Konuları görüntülemek ve yönetmek için listeden bir öğrenci seçin
+                    Konuları ve ödevleri görüntülemek için listeden bir öğrenci seçin
                   </p>
                 </div>
-              </Card>}
+              </Card>
+            )}
           </div>
         </div>
       </div>

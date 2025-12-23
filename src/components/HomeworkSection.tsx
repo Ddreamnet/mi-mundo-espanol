@@ -1,0 +1,421 @@
+// ============================================================================
+// ÖDEV BÖLÜMÜ
+// ============================================================================
+// Bu bileşen öğretmen ve öğrenci ödevlerini listeler ve yeni ödev yükleme sağlar.
+
+import { useState, useEffect } from "react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
+import { FileText, Calendar, Download, FileImage, File, Edit2, Trash2, Upload, FolderOpen } from "lucide-react";
+import { format } from "date-fns";
+import { tr } from "date-fns/locale";
+import { EditHomeworkDialog } from "./EditHomeworkDialog";
+import { UploadHomeworkDialog } from "./UploadHomeworkDialog";
+
+// ============================================================================
+// TİPLER
+// ============================================================================
+
+interface HomeworkSectionProps {
+  studentId: string;
+  teacherId: string;
+  currentUserId: string;
+  uploadedByUserId: string;
+  isTeacher?: boolean;
+}
+
+interface Homework {
+  id: string;
+  student_id: string;
+  teacher_id: string;
+  title: string;
+  description: string | null;
+  file_url: string;
+  file_type: string;
+  file_name: string;
+  created_at: string;
+  uploaded_by_user_id: string;
+  batch_id: string;
+}
+
+interface GroupedHomework {
+  batch_id: string;
+  title: string;
+  description: string | null;
+  created_at: string;
+  uploaded_by_user_id: string;
+  student_id: string;
+  files: {
+    id: string;
+    file_url: string;
+    file_type: string;
+    file_name: string;
+  }[];
+}
+
+// ============================================================================
+// ANA BİLEŞEN
+// ============================================================================
+
+export function HomeworkSection({ 
+  studentId, 
+  teacherId,
+  currentUserId,
+  uploadedByUserId,
+  isTeacher = false 
+}: HomeworkSectionProps) {
+  const [homeworks, setHomeworks] = useState<Homework[]>([]);
+  const [groupedHomeworks, setGroupedHomeworks] = useState<GroupedHomework[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [editHomework, setEditHomework] = useState<Homework | null>(null);
+  const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
+  const { toast } = useToast();
+
+  // ============================================================================
+  // EFFECTS
+  // ============================================================================
+
+  useEffect(() => {
+    fetchHomeworks();
+  }, [studentId, teacherId]);
+
+  // ============================================================================
+  // VERİ ÇEKME FONKSİYONLARI
+  // ============================================================================
+
+  const fetchHomeworks = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('homework_submissions')
+        .select('*')
+        .eq('student_id', studentId)
+        .eq('teacher_id', teacherId)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setHomeworks(data || []);
+
+      // Group homeworks by batch_id
+      const grouped: { [key: string]: GroupedHomework } = {};
+      
+      (data || []).forEach((hw: Homework) => {
+        if (!grouped[hw.batch_id]) {
+          grouped[hw.batch_id] = {
+            batch_id: hw.batch_id,
+            title: hw.title,
+            description: hw.description,
+            created_at: hw.created_at,
+            uploaded_by_user_id: hw.uploaded_by_user_id,
+            student_id: hw.student_id,
+            files: [],
+          };
+        }
+        grouped[hw.batch_id].files.push({
+          id: hw.id,
+          file_url: hw.file_url,
+          file_type: hw.file_type,
+          file_name: hw.file_name,
+        });
+      });
+
+      // Sort by created_at descending
+      const sortedGroups = Object.values(grouped).sort((a, b) => 
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+      );
+
+      setGroupedHomeworks(sortedGroups);
+    } catch (error: any) {
+      toast({
+        title: "Hata",
+        description: "Ödevler yüklenemedi",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ============================================================================
+  // YARDIMCI FONKSİYONLAR
+  // ============================================================================
+
+  const getFileIcon = (fileType: string) => {
+    if (fileType.startsWith('image/')) {
+      return <FileImage className="h-5 w-5" />;
+    } else if (fileType === 'application/pdf') {
+      return <FileText className="h-5 w-5" />;
+    } else {
+      return <File className="h-5 w-5" />;
+    }
+  };
+
+  const handleDownload = async (fileUrl: string, fileName: string) => {
+    try {
+      const urlParts = fileUrl.split('/homework-files/');
+      if (urlParts.length < 2) {
+        throw new Error("Invalid file URL");
+      }
+      const filePath = decodeURIComponent(urlParts[1]);
+
+      const { data, error } = await supabase.storage
+        .from('homework-files')
+        .download(filePath);
+
+      if (error) throw error;
+
+      const url = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    } catch (error: any) {
+      toast({
+        title: "Hata",
+        description: "Dosya indirilemedi",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDelete = async (batchId: string) => {
+    try {
+      const batchHomeworks = homeworks.filter(h => h.batch_id === batchId);
+      
+      const filePaths = batchHomeworks
+        .map(h => h.file_url.split('/homework-files/')[1])
+        .filter(Boolean)
+        .map(decodeURIComponent);
+      
+      if (filePaths.length > 0) {
+        await supabase.storage.from('homework-files').remove(filePaths);
+      }
+
+      const { error } = await supabase
+        .from('homework_submissions')
+        .delete()
+        .eq('batch_id', batchId);
+
+      if (error) throw error;
+
+      toast({
+        title: "Başarılı",
+        description: "Ödev silindi",
+      });
+
+      fetchHomeworks();
+    } catch (error: any) {
+      toast({
+        title: "Hata",
+        description: "Ödev silinemedi",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const canEdit = (group: GroupedHomework) => {
+    return group.uploaded_by_user_id === currentUserId;
+  };
+
+  const isUploadedByStudent = (group: GroupedHomework) => {
+    return group.uploaded_by_user_id === group.student_id;
+  };
+
+  // ============================================================================
+  // RENDER
+  // ============================================================================
+
+  if (loading) {
+    return (
+      <div className="flex justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-4">
+      {/* Header with Upload Button */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h3 className="text-lg font-semibold">Ödevler</h3>
+          <p className="text-sm text-muted-foreground">
+            {groupedHomeworks.length} ödev yüklendi
+          </p>
+        </div>
+        <Button onClick={() => setUploadDialogOpen(true)}>
+          <Upload className="h-4 w-4 mr-2" />
+          Yükle
+        </Button>
+      </div>
+
+      {/* Homework List */}
+      {groupedHomeworks.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <FolderOpen className="h-12 w-12 opacity-50 mb-4" />
+            <p className="text-muted-foreground">Henüz ödev yok</p>
+            <Button 
+              variant="outline" 
+              className="mt-4"
+              onClick={() => setUploadDialogOpen(true)}
+            >
+              <Upload className="h-4 w-4 mr-2" />
+              İlk Ödevi Yükle
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        <div className="space-y-3">
+          {groupedHomeworks.map((group) => {
+            const uploadedByStudent = isUploadedByStudent(group);
+            const borderClass = uploadedByStudent 
+              ? "border-l-4 border-l-primary" 
+              : "border-l-4 border-l-muted-foreground/30";
+            
+            return (
+              <Card key={group.batch_id} className={borderClass}>
+                <CardContent className="p-4 relative pb-10">
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="flex-1 min-w-0">
+                      <h4 className="font-medium text-sm mb-1">{group.title}</h4>
+                      {group.description && (
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {group.description}
+                        </p>
+                      )}
+                      <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                        <span className="flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {format(new Date(group.created_at), "dd MMM yyyy HH:mm", { locale: tr })}
+                        </span>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-1 shrink-0">
+                      {canEdit(group) && (
+                        <>
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            onClick={() => {
+                              const firstFile = homeworks.find(h => h.batch_id === group.batch_id);
+                              if (firstFile) setEditHomework(firstFile);
+                            }}
+                            title="Düzenle"
+                          >
+                            <Edit2 className="h-4 w-4" />
+                          </Button>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                title="Sil"
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Ödevi Sil</AlertDialogTitle>
+                                <AlertDialogDescription>
+                                  Bu ödevi ve tüm dosyalarını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel>İptal</AlertDialogCancel>
+                                <AlertDialogAction
+                                  onClick={() => handleDelete(group.batch_id)}
+                                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                                >
+                                  Sil
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Files list */}
+                  <div className="space-y-2">
+                    {group.files.map((file) => {
+                      const truncatedName = file.file_name.length > 40 
+                        ? file.file_name.substring(0, 40) + "..." 
+                        : file.file_name;
+                      return (
+                        <div
+                          key={file.id}
+                          className="flex items-center gap-2 bg-secondary/30 p-2 rounded border min-w-0"
+                        >
+                          <div className="shrink-0">{getFileIcon(file.file_type)}</div>
+                          <span className="text-sm flex-1 truncate min-w-0" title={file.file_name}>
+                            {truncatedName}
+                          </span>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDownload(file.file_url, file.file_name)}
+                            title="İndir"
+                            className="shrink-0"
+                          >
+                            <Download className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <Badge 
+                    variant="outline" 
+                    className={`absolute bottom-2 right-2 text-xs ${uploadedByStudent ? "bg-primary/10 border-primary" : ""}`}
+                  >
+                    {uploadedByStudent ? "Öğrenci" : "Öğretmen"}
+                  </Badge>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Dialogs */}
+      <UploadHomeworkDialog
+        open={uploadDialogOpen}
+        onOpenChange={setUploadDialogOpen}
+        studentId={studentId}
+        teacherId={teacherId}
+        uploadedByUserId={uploadedByUserId}
+        onSuccess={() => {
+          toast({
+            title: "Başarılı",
+            description: "Ödev başarıyla yüklendi",
+          });
+          fetchHomeworks();
+        }}
+      />
+
+      {editHomework && (
+        <EditHomeworkDialog
+          open={!!editHomework}
+          onOpenChange={(open) => !open && setEditHomework(null)}
+          homeworkId={editHomework.id}
+          batchId={editHomework.batch_id}
+          currentTitle={editHomework.title}
+          currentDescription={editHomework.description}
+          onSuccess={fetchHomeworks}
+        />
+      )}
+    </div>
+  );
+}
