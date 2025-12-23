@@ -13,7 +13,7 @@ function WhatsAppIcon({ className }: { className?: string }) {
 
 export function LandingFooter() {
   const footerLinks = [
-    { label: "İletişim", href: "#iletisim" },
+    { label: "İletişim", href: "/iletisim" },
     { label: "SSS", href: "#sss" },
     { label: "Gizlilik Politikası", href: "#gizlilik" },
   ];
@@ -41,7 +41,7 @@ export function LandingFooter() {
       <div className="container mx-auto px-4 lg:px-8 py-6 lg:py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Logo & Brand */}
-          <a href="#">
+          <a href="/">
             <Logo size="md" />
           </a>
 
