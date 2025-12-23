@@ -41,12 +41,16 @@ interface AdminWeeklyScheduleProps {
 
 const DAYS = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
 const STUDENT_COLORS = [
-  "bg-blue-100 text-blue-800 hover:bg-blue-200 border-blue-300",
-  "bg-green-100 text-green-800 hover:bg-green-200 border-green-300",
-  "bg-purple-100 text-purple-800 hover:bg-purple-200 border-purple-300",
-  "bg-orange-100 text-orange-800 hover:bg-orange-200 border-orange-300",
-  "bg-pink-100 text-pink-800 hover:bg-pink-200 border-pink-300",
-  "bg-cyan-100 text-cyan-800 hover:bg-cyan-200 border-cyan-300",
+  "schedule-color-1",
+  "schedule-color-2",
+  "schedule-color-3",
+  "schedule-color-4",
+  "schedule-color-5",
+  "schedule-color-6",
+  "schedule-color-7",
+  "schedule-color-8",
+  "schedule-color-9",
+  "schedule-color-10",
 ];
 
 export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {

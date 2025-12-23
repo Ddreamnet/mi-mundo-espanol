@@ -31,7 +31,7 @@ interface WeeklyScheduleDialogProps {
   onOpenChange: (open: boolean) => void;
   teacherId: string;
 }
-const STUDENT_COLORS = ["bg-rose-100 border-rose-300 text-rose-900", "bg-blue-100 border-blue-300 text-blue-900", "bg-amber-100 border-amber-300 text-amber-900", "bg-emerald-100 border-emerald-300 text-emerald-900", "bg-purple-100 border-purple-300 text-purple-900", "bg-pink-100 border-pink-300 text-pink-900", "bg-cyan-100 border-cyan-300 text-cyan-900", "bg-orange-100 border-orange-300 text-orange-900", "bg-lime-100 border-lime-300 text-lime-900", "bg-indigo-100 border-indigo-300 text-indigo-900"];
+const STUDENT_COLORS = ["schedule-color-1", "schedule-color-2", "schedule-color-3", "schedule-color-4", "schedule-color-5", "schedule-color-6", "schedule-color-7", "schedule-color-8", "schedule-color-9", "schedule-color-10"];
 export function WeeklyScheduleDialog({
   open,
   onOpenChange,

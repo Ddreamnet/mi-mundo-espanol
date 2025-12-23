@@ -1,7 +1,6 @@
 import type { Config } from "tailwindcss";
 
 export default {
-  darkMode: ["class"],
   content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
   prefix: "",
   theme: {
@@ -14,11 +13,14 @@ export default {
     },
     extend: {
       colors: {
+        // Core semantic colors
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
+        
+        // Primary palette
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
@@ -27,6 +29,8 @@ export default {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
         },
+        
+        // Status colors
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
           foreground: "hsl(var(--destructive-foreground))",
@@ -39,9 +43,12 @@ export default {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
         },
+        
+        // UI elements
         muted: {
           DEFAULT: "hsl(var(--muted))",
           foreground: "hsl(var(--muted-foreground))",
+          "foreground-on-card": "hsl(var(--muted-foreground-on-card))",
         },
         accent: {
           DEFAULT: "hsl(var(--accent))",
@@ -55,6 +62,8 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        
+        // Sidebar
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
@@ -65,7 +74,8 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        // Button colors - centralized for easy theming
+        
+        // Button tokens
         btn: {
           primary: {
             DEFAULT: "hsl(var(--btn-primary))",
@@ -108,13 +118,99 @@ export default {
             hover: "hsl(var(--btn-landing-header-hover))",
           },
         },
-        // Icon colors - centralized for easy theming
+        
+        // Icon tokens
         icon: {
           DEFAULT: "hsl(var(--icon-default))",
           muted: "hsl(var(--icon-muted))",
           primary: "hsl(var(--icon-primary))",
           "on-card": "hsl(var(--icon-on-card))",
           "on-card-muted": "hsl(var(--icon-on-card-muted))",
+        },
+        
+        // Role accent (changes based on data-dashboard attribute)
+        role: {
+          accent: {
+            DEFAULT: "hsl(var(--role-accent))",
+            hover: "hsl(var(--role-accent-hover))",
+            foreground: "hsl(var(--role-accent-foreground))",
+          },
+        },
+        
+        // Page-specific backgrounds
+        page: {
+          lessons: "hsl(var(--page-lessons))",
+          contact: "hsl(var(--page-contact))",
+        },
+        
+        // Schedule colors for student identification
+        schedule: {
+          1: {
+            bg: "hsl(var(--schedule-1-bg))",
+            text: "hsl(var(--schedule-1-text))",
+            border: "hsl(var(--schedule-1-border))",
+            hover: "hsl(var(--schedule-1-hover))",
+          },
+          2: {
+            bg: "hsl(var(--schedule-2-bg))",
+            text: "hsl(var(--schedule-2-text))",
+            border: "hsl(var(--schedule-2-border))",
+            hover: "hsl(var(--schedule-2-hover))",
+          },
+          3: {
+            bg: "hsl(var(--schedule-3-bg))",
+            text: "hsl(var(--schedule-3-text))",
+            border: "hsl(var(--schedule-3-border))",
+            hover: "hsl(var(--schedule-3-hover))",
+          },
+          4: {
+            bg: "hsl(var(--schedule-4-bg))",
+            text: "hsl(var(--schedule-4-text))",
+            border: "hsl(var(--schedule-4-border))",
+            hover: "hsl(var(--schedule-4-hover))",
+          },
+          5: {
+            bg: "hsl(var(--schedule-5-bg))",
+            text: "hsl(var(--schedule-5-text))",
+            border: "hsl(var(--schedule-5-border))",
+            hover: "hsl(var(--schedule-5-hover))",
+          },
+          6: {
+            bg: "hsl(var(--schedule-6-bg))",
+            text: "hsl(var(--schedule-6-text))",
+            border: "hsl(var(--schedule-6-border))",
+            hover: "hsl(var(--schedule-6-hover))",
+          },
+          7: {
+            bg: "hsl(var(--schedule-7-bg))",
+            text: "hsl(var(--schedule-7-text))",
+            border: "hsl(var(--schedule-7-border))",
+            hover: "hsl(var(--schedule-7-hover))",
+          },
+          8: {
+            bg: "hsl(var(--schedule-8-bg))",
+            text: "hsl(var(--schedule-8-text))",
+            border: "hsl(var(--schedule-8-border))",
+            hover: "hsl(var(--schedule-8-hover))",
+          },
+          9: {
+            bg: "hsl(var(--schedule-9-bg))",
+            text: "hsl(var(--schedule-9-text))",
+            border: "hsl(var(--schedule-9-border))",
+            hover: "hsl(var(--schedule-9-hover))",
+          },
+          10: {
+            bg: "hsl(var(--schedule-10-bg))",
+            text: "hsl(var(--schedule-10-text))",
+            border: "hsl(var(--schedule-10-border))",
+            hover: "hsl(var(--schedule-10-hover))",
+          },
+          trial: {
+            bg: "hsl(var(--schedule-trial-bg))",
+            text: "hsl(var(--schedule-trial-text))",
+            border: "hsl(var(--schedule-trial-border))",
+            hover: "hsl(var(--schedule-trial-hover))",
+          },
         },
       },
       borderRadius: {

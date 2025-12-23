@@ -23,19 +23,23 @@ interface ExportScheduleConfig {
 
 const DAYS = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
 
-// Tailwind color mappings to hex values
+// Schedule color tokens mapped to hex values for canvas rendering
+// These match the HSL values in index.css schedule color tokens
 const COLOR_MAP: Record<string, { bg: string; text: string; border: string }> = {
-  "bg-rose-100 border-rose-300 text-rose-900": { bg: "#ffe4e6", text: "#881337", border: "#fda4af" },
-  "bg-blue-100 border-blue-300 text-blue-900": { bg: "#dbeafe", text: "#1e3a8a", border: "#93c5fd" },
-  "bg-amber-100 border-amber-300 text-amber-900": { bg: "#fef3c7", text: "#78350f", border: "#fcd34d" },
-  "bg-emerald-100 border-emerald-300 text-emerald-900": { bg: "#d1fae5", text: "#064e3b", border: "#6ee7b7" },
-  "bg-purple-100 border-purple-300 text-purple-900": { bg: "#f3e8ff", text: "#581c87", border: "#d8b4fe" },
-  "bg-pink-100 border-pink-300 text-pink-900": { bg: "#fce7f3", text: "#831843", border: "#f9a8d4" },
-  "bg-cyan-100 border-cyan-300 text-cyan-900": { bg: "#cffafe", text: "#164e63", border: "#67e8f9" },
-  "bg-orange-100 border-orange-300 text-orange-900": { bg: "#ffedd5", text: "#7c2d12", border: "#fdba74" },
-  "bg-lime-100 border-lime-300 text-lime-900": { bg: "#ecfccb", text: "#365314", border: "#bef264" },
-  "bg-indigo-100 border-indigo-300 text-indigo-900": { bg: "#e0e7ff", text: "#312e81", border: "#a5b4fc" },
+  "schedule-color-1": { bg: "#ffe4e6", text: "#881337", border: "#fda4af" },  // Rose
+  "schedule-color-2": { bg: "#dbeafe", text: "#1e3a8a", border: "#93c5fd" },  // Blue
+  "schedule-color-3": { bg: "#fef3c7", text: "#78350f", border: "#fcd34d" },  // Amber
+  "schedule-color-4": { bg: "#d1fae5", text: "#064e3b", border: "#6ee7b7" },  // Emerald
+  "schedule-color-5": { bg: "#f3e8ff", text: "#581c87", border: "#d8b4fe" },  // Purple
+  "schedule-color-6": { bg: "#fce7f3", text: "#831843", border: "#f9a8d4" },  // Pink
+  "schedule-color-7": { bg: "#cffafe", text: "#164e63", border: "#67e8f9" },  // Cyan
+  "schedule-color-8": { bg: "#ffedd5", text: "#7c2d12", border: "#fdba74" },  // Orange
+  "schedule-color-9": { bg: "#ecfccb", text: "#365314", border: "#bef264" },  // Lime
+  "schedule-color-10": { bg: "#e0e7ff", text: "#312e81", border: "#a5b4fc" }, // Indigo
 };
+
+// Default/fallback colors
+const DEFAULT_COLOR = { bg: "#f3f4f6", text: "#111827", border: "#d1d5db" };
 
 const formatTime = (time: string) => {
   try {
@@ -147,8 +151,8 @@ export const exportScheduleAsPNG = async (config: ExportScheduleConfig) => {
       const trialLesson = getTrialLessonForDayAndTime(trialLessons, dayIndex, timeSlot);
 
       if (lesson) {
-        const colorClass = studentColors[lesson.student_id] || "bg-gray-100 border-gray-300 text-gray-900";
-        const colors = COLOR_MAP[colorClass] || { bg: "#f3f4f6", text: "#111827", border: "#d1d5db" };
+        const colorClass = studentColors[lesson.student_id] || "schedule-color-1";
+        const colors = COLOR_MAP[colorClass] || DEFAULT_COLOR;
         
         // Apply opacity if completed
         const opacity = lesson.is_completed ? 0.4 : 1.0;

@@ -2,7 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
-/* TipTap Editor Styles */
+/* ============================================================================
+   TipTap Editor Styles
+   ============================================================================ */
 .ProseMirror {
   outline: none;
 }
@@ -62,22 +64,35 @@
   text-decoration: underline;
 }
 
-/* Professional dark red theme */
+/* ============================================================================
+   DESIGN TOKEN SYSTEM - LIGHT MODE ONLY
+   ============================================================================
+   All colors use HSL format: H S% L%
+   Usage in Tailwind: hsl(var(--token-name))
+   ============================================================================ */
 
 @layer base {
   :root {
+    /* ========================================================================
+       BASE PALETTE - Core brand colors
+       ======================================================================== */
+    
     /* Main background - deep burgundy */
     --background: 1 85% 24%;
     --foreground: 42 42% 94%;
 
-    /* Card - light cream */
+    /* Card/Surface - light cream */
     --card: 42 42% 94%;
     --card-foreground: 1 85% 15%;
 
-    /* Popover */
+    /* Popover - slightly lighter cream */
     --popover: 49 100% 97%;
     --popover-foreground: 1 85% 15%;
 
+    /* ========================================================================
+       SEMANTIC TOKENS - Shared across all dashboards
+       ======================================================================== */
+    
     /* Primary - warm gold accent */
     --primary: 42 70% 55%;
     --primary-foreground: 1 85% 15%;
@@ -89,14 +104,16 @@
     /* Muted elements */
     --muted: 1 40% 30%;
     --muted-foreground: 42 30% 65%;
-
-    /* Muted foreground for card/light backgrounds */
     --muted-foreground-on-card: 1 30% 40%;
 
     /* Accent - warm terracotta */
     --accent: 15 60% 45%;
     --accent-foreground: 42 42% 94%;
 
+    /* ========================================================================
+       STATUS COLORS - Semantic feedback
+       ======================================================================== */
+    
     /* Destructive - coral red */
     --destructive: 0 65% 50%;
     --destructive-foreground: 42 42% 94%;
@@ -109,16 +126,20 @@
     --warning: 38 90% 50%;
     --warning-foreground: 1 85% 15%;
 
-    /* Borders and inputs */
+    /* ========================================================================
+       FORM ELEMENTS
+       ======================================================================== */
+    
     --border: 1 40% 35%;
     --input: 1 40% 35%;
     --ring: 42 70% 55%;
-
     --radius: 0.5rem;
 
-    /* ========== BUTTON COLORS ========== */
-    /* Primary Button (default) - for light backgrounds (cards) */
-    /* Dark burgundy bg with light cream text */
+    /* ========================================================================
+       BUTTON TOKENS - Centralized button theming
+       ======================================================================== */
+    
+    /* Primary Button - dark burgundy on light backgrounds */
     --btn-primary: 354 47% 20%;
     --btn-primary-foreground: 42 42% 94%;
     --btn-primary-hover: 354 47% 15%;
@@ -132,37 +153,33 @@
     --btn-ghost-foreground: 42 42% 94%;
     --btn-ghost-hover: 1 40% 30%;
 
-    /* Outline Button - for dark backgrounds (panel header) */
-    /* Light cream bg with dark text */
+    /* Outline Button - light cream on dark backgrounds */
     --btn-outline: 42 42% 94%;
     --btn-outline-foreground: 1 85% 24%;
     --btn-outline-border: 42 42% 80%;
     --btn-outline-hover: 42 42% 88%;
 
-    /* Landing Primary Button - for dark backgrounds */
-    /* Light cream bg with dark text */
+    /* Landing Page Buttons */
     --btn-landing-primary: 42 42% 94%;
     --btn-landing-primary-foreground: 1 85% 24%;
     --btn-landing-primary-hover: 42 42% 88%;
 
-    /* Landing Secondary Button - for dark backgrounds */
-    /* Dark burgundy bg with light text */
     --btn-landing-secondary: 354 47% 20%;
     --btn-landing-secondary-foreground: 42 42% 94%;
     --btn-landing-secondary-hover: 354 47% 15%;
 
-    /* Landing Outline Button */
     --btn-landing-outline-border: 42 42% 94%;
     --btn-landing-outline-foreground: 42 42% 94%;
     --btn-landing-outline-hover: 42 42% 94% / 0.15;
 
-    /* Landing Header Button - for light header */
-    /* Dark burgundy bg with light text */
     --btn-landing-header: 354 47% 20%;
     --btn-landing-header-foreground: 42 42% 94%;
     --btn-landing-header-hover: 354 47% 15%;
 
-    /* ========== ICON COLORS ========== */
+    /* ========================================================================
+       ICON TOKENS
+       ======================================================================== */
+    
     /* Icons on dark background */
     --icon-default: 42 42% 94%;
     --icon-muted: 42 30% 70%;
@@ -172,7 +189,10 @@
     --icon-on-card: 1 85% 25%;
     --icon-on-card-muted: 1 50% 40%;
 
-    /* Sidebar - darker burgundy */
+    /* ========================================================================
+       SIDEBAR TOKENS
+       ======================================================================== */
+    
     --sidebar-background: 1 85% 18%;
     --sidebar-foreground: 42 42% 94%;
     --sidebar-primary: 42 70% 55%;
@@ -182,116 +202,138 @@
     --sidebar-border: 1 50% 28%;
     --sidebar-ring: 42 70% 55%;
 
-    /* Chart colors */
+    /* ========================================================================
+       CHART TOKENS
+       ======================================================================== */
+    
     --chart-1: 42 70% 55%;
     --chart-2: 15 60% 45%;
     --chart-3: 1 50% 40%;
     --chart-4: 30 50% 50%;
     --chart-5: 350 45% 45%;
 
-    /* Landing page specific */
+    /* ========================================================================
+       LANDING PAGE TOKENS
+       ======================================================================== */
+    
     --landing-header: 49 100% 97%;
     --landing-header-foreground: 1 85% 15%;
     --landing-footer: 49 100% 97%;
     --landing-footer-foreground: 1 85% 15%;
+
+    /* Page-specific backgrounds */
+    --page-lessons: 228 43% 29%;
+    --page-contact: 214 26% 31%;
+
+    /* ========================================================================
+       ROLE ACCENT TOKENS - Default (Admin)
+       Used for branding highlights, not the whole palette
+       ======================================================================== */
+    
+    --role-accent: 42 70% 55%;
+    --role-accent-hover: 42 70% 50%;
+    --role-accent-foreground: 1 85% 15%;
+
+    /* ========================================================================
+       SCHEDULE COLOR TOKENS
+       For student identification in schedule views
+       Each set has: background, text, border, hover
+       ======================================================================== */
+    
+    /* Schedule Color 1 - Rose */
+    --schedule-1-bg: 350 100% 94%;
+    --schedule-1-text: 336 84% 17%;
+    --schedule-1-border: 350 96% 82%;
+    --schedule-1-hover: 350 100% 90%;
+    
+    /* Schedule Color 2 - Blue */
+    --schedule-2-bg: 213 97% 87%;
+    --schedule-2-text: 224 64% 33%;
+    --schedule-2-border: 213 94% 75%;
+    --schedule-2-hover: 213 97% 82%;
+    
+    /* Schedule Color 3 - Amber */
+    --schedule-3-bg: 48 96% 89%;
+    --schedule-3-text: 28 73% 26%;
+    --schedule-3-border: 43 96% 65%;
+    --schedule-3-hover: 48 96% 84%;
+    
+    /* Schedule Color 4 - Emerald */
+    --schedule-4-bg: 152 76% 91%;
+    --schedule-4-text: 164 86% 16%;
+    --schedule-4-border: 156 72% 67%;
+    --schedule-4-hover: 152 76% 86%;
+    
+    /* Schedule Color 5 - Purple */
+    --schedule-5-bg: 270 100% 97%;
+    --schedule-5-text: 274 87% 21%;
+    --schedule-5-border: 270 95% 75%;
+    --schedule-5-hover: 270 100% 93%;
+    
+    /* Schedule Color 6 - Pink */
+    --schedule-6-bg: 327 73% 97%;
+    --schedule-6-text: 336 74% 35%;
+    --schedule-6-border: 327 73% 66%;
+    --schedule-6-hover: 327 73% 93%;
+    
+    /* Schedule Color 7 - Cyan */
+    --schedule-7-bg: 183 100% 96%;
+    --schedule-7-text: 192 91% 36%;
+    --schedule-7-border: 183 93% 65%;
+    --schedule-7-hover: 183 100% 91%;
+    
+    /* Schedule Color 8 - Orange */
+    --schedule-8-bg: 34 100% 92%;
+    --schedule-8-text: 17 88% 40%;
+    --schedule-8-border: 27 96% 61%;
+    --schedule-8-hover: 34 100% 87%;
+    
+    /* Schedule Color 9 - Lime */
+    --schedule-9-bg: 79 89% 89%;
+    --schedule-9-text: 85 78% 27%;
+    --schedule-9-border: 82 85% 67%;
+    --schedule-9-hover: 79 89% 84%;
+    
+    /* Schedule Color 10 - Indigo */
+    --schedule-10-bg: 226 100% 94%;
+    --schedule-10-text: 238 66% 29%;
+    --schedule-10-border: 229 94% 82%;
+    --schedule-10-hover: 226 100% 89%;
+
+    /* Trial Lesson - Special yellow accent */
+    --schedule-trial-bg: 50 100% 85%;
+    --schedule-trial-text: 28 73% 26%;
+    --schedule-trial-border: 48 96% 53%;
+    --schedule-trial-hover: 50 100% 80%;
   }
 
-  .dark {
-    /* Dark mode - even deeper tones */
-    --background: 1 85% 12%;
-    --foreground: 42 42% 94%;
+  /* ========================================================================
+     ROLE-SPECIFIC ACCENT OVERRIDES
+     Apply via data-dashboard attribute on dashboard container
+     ======================================================================== */
+  
+  [data-dashboard="admin"] {
+    --role-accent: 42 70% 55%;
+    --role-accent-hover: 42 70% 50%;
+    --role-accent-foreground: 1 85% 15%;
+  }
 
-    --card: 1 70% 16%;
-    --card-foreground: 42 42% 94%;
+  [data-dashboard="teacher"] {
+    --role-accent: 15 60% 45%;
+    --role-accent-hover: 15 60% 40%;
+    --role-accent-foreground: 42 42% 94%;
+  }
 
-    --popover: 1 70% 16%;
-    --popover-foreground: 42 42% 94%;
-
-    --primary: 42 70% 60%;
-    --primary-foreground: 1 85% 10%;
-
-    --secondary: 1 50% 22%;
-    --secondary-foreground: 42 42% 94%;
-
-    --muted: 1 40% 18%;
-    --muted-foreground: 42 30% 65%;
-
-    /* Muted foreground for card/light backgrounds (dark mode cards are dark) */
-    --muted-foreground-on-card: 42 30% 70%;
-
-    --accent: 15 55% 40%;
-    --accent-foreground: 42 42% 94%;
-
-    --destructive: 0 60% 45%;
-    --destructive-foreground: 42 42% 94%;
-
-    /* Success - green */
-    --success: 142 65% 35%;
-    --success-foreground: 42 42% 94%;
-
-    /* Warning - amber */
-    --warning: 38 85% 45%;
-    --warning-foreground: 1 85% 15%;
-
-    --border: 1 40% 22%;
-    --input: 1 40% 22%;
-    --ring: 42 70% 60%;
-
-    /* ========== BUTTON COLORS (Dark Mode) ========== */
-    /* Primary Button - for light card backgrounds */
-    --btn-primary: 354 47% 20%;
-    --btn-primary-foreground: 42 42% 94%;
-    --btn-primary-hover: 354 47% 15%;
-
-    /* Secondary Button */
-    --btn-secondary: 1 30% 35%;
-    --btn-secondary-foreground: 42 42% 94%;
-    --btn-secondary-hover: 1 30% 28%;
-
-    --btn-ghost-foreground: 42 42% 94%;
-    --btn-ghost-hover: 1 40% 18%;
-
-    /* Outline Button - for dark backgrounds */
-    --btn-outline: 42 42% 94%;
-    --btn-outline-foreground: 1 85% 12%;
-    --btn-outline-border: 42 42% 75%;
-    --btn-outline-hover: 42 42% 85%;
-
-    /* Landing buttons */
-    --btn-landing-primary: 42 42% 94%;
-    --btn-landing-primary-foreground: 1 85% 12%;
-    --btn-landing-primary-hover: 42 42% 88%;
-
-    --btn-landing-secondary: 354 47% 20%;
-    --btn-landing-secondary-foreground: 42 42% 94%;
-    --btn-landing-secondary-hover: 354 47% 15%;
-
-    --btn-landing-outline-border: 42 42% 94%;
-    --btn-landing-outline-foreground: 42 42% 94%;
-    --btn-landing-outline-hover: 42 42% 94% / 0.15;
-
-    --btn-landing-header: 354 47% 20%;
-    --btn-landing-header-foreground: 42 42% 94%;
-    --btn-landing-header-hover: 354 47% 15%;
-
-    /* ========== ICON COLORS (Dark Mode) ========== */
-    --icon-default: 42 42% 94%;
-    --icon-muted: 42 30% 65%;
-    --icon-primary: 42 70% 60%;
-
-    --icon-on-card: 42 42% 94%;
-    --icon-on-card-muted: 42 30% 70%;
-
-    --sidebar-background: 1 85% 10%;
-    --sidebar-foreground: 42 42% 94%;
-    --sidebar-primary: 42 70% 60%;
-    --sidebar-primary-foreground: 1 85% 10%;
-    --sidebar-accent: 1 60% 15%;
-    --sidebar-accent-foreground: 42 42% 94%;
-    --sidebar-border: 1 50% 18%;
-    --sidebar-ring: 42 70% 60%;
+  [data-dashboard="student"] {
+    --role-accent: 142 70% 40%;
+    --role-accent-hover: 142 70% 35%;
+    --role-accent-foreground: 42 42% 94%;
   }
 }
+
+/* ============================================================================
+   BASE ELEMENT STYLING
+   ============================================================================ */
 
 @layer base {
   * {
@@ -300,5 +342,112 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+  }
+}
+
+/* ============================================================================
+   SEMANTIC UTILITY CLASSES
+   Use these instead of hardcoded Tailwind colors
+   ============================================================================ */
+
+@layer components {
+  /* Schedule student colors - use these classes for lesson cards */
+  .schedule-color-1 {
+    background-color: hsl(var(--schedule-1-bg));
+    color: hsl(var(--schedule-1-text));
+    border-color: hsl(var(--schedule-1-border));
+  }
+  .schedule-color-1:hover {
+    background-color: hsl(var(--schedule-1-hover));
+  }
+
+  .schedule-color-2 {
+    background-color: hsl(var(--schedule-2-bg));
+    color: hsl(var(--schedule-2-text));
+    border-color: hsl(var(--schedule-2-border));
+  }
+  .schedule-color-2:hover {
+    background-color: hsl(var(--schedule-2-hover));
+  }
+
+  .schedule-color-3 {
+    background-color: hsl(var(--schedule-3-bg));
+    color: hsl(var(--schedule-3-text));
+    border-color: hsl(var(--schedule-3-border));
+  }
+  .schedule-color-3:hover {
+    background-color: hsl(var(--schedule-3-hover));
+  }
+
+  .schedule-color-4 {
+    background-color: hsl(var(--schedule-4-bg));
+    color: hsl(var(--schedule-4-text));
+    border-color: hsl(var(--schedule-4-border));
+  }
+  .schedule-color-4:hover {
+    background-color: hsl(var(--schedule-4-hover));
+  }
+
+  .schedule-color-5 {
+    background-color: hsl(var(--schedule-5-bg));
+    color: hsl(var(--schedule-5-text));
+    border-color: hsl(var(--schedule-5-border));
+  }
+  .schedule-color-5:hover {
+    background-color: hsl(var(--schedule-5-hover));
+  }
+
+  .schedule-color-6 {
+    background-color: hsl(var(--schedule-6-bg));
+    color: hsl(var(--schedule-6-text));
+    border-color: hsl(var(--schedule-6-border));
+  }
+  .schedule-color-6:hover {
+    background-color: hsl(var(--schedule-6-hover));
+  }
+
+  .schedule-color-7 {
+    background-color: hsl(var(--schedule-7-bg));
+    color: hsl(var(--schedule-7-text));
+    border-color: hsl(var(--schedule-7-border));
+  }
+  .schedule-color-7:hover {
+    background-color: hsl(var(--schedule-7-hover));
+  }
+
+  .schedule-color-8 {
+    background-color: hsl(var(--schedule-8-bg));
+    color: hsl(var(--schedule-8-text));
+    border-color: hsl(var(--schedule-8-border));
+  }
+  .schedule-color-8:hover {
+    background-color: hsl(var(--schedule-8-hover));
+  }
+
+  .schedule-color-9 {
+    background-color: hsl(var(--schedule-9-bg));
+    color: hsl(var(--schedule-9-text));
+    border-color: hsl(var(--schedule-9-border));
+  }
+  .schedule-color-9:hover {
+    background-color: hsl(var(--schedule-9-hover));
+  }
+
+  .schedule-color-10 {
+    background-color: hsl(var(--schedule-10-bg));
+    color: hsl(var(--schedule-10-text));
+    border-color: hsl(var(--schedule-10-border));
+  }
+  .schedule-color-10:hover {
+    background-color: hsl(var(--schedule-10-hover));
+  }
+
+  .schedule-trial {
+    background-color: hsl(var(--schedule-trial-bg));
+    color: hsl(var(--schedule-trial-text));
+    border-color: hsl(var(--schedule-trial-border));
+  }
+  .schedule-trial:hover {
+    background-color: hsl(var(--schedule-trial-hover));
   }
 }
