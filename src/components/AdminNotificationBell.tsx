@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Bell, Clock, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
@@ -119,93 +118,79 @@ export function AdminNotificationBell({ adminId }: AdminNotificationBellProps) {
   return (
     <Popover open={open} onOpenChange={handleOpenChange}>
       <PopoverTrigger asChild>
-        <Button variant="card-ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5 text-card-foreground" />
+        <Button variant="ghost" size="icon" className="relative text-icon-default">
+          <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
-            <Badge 
-              className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 bg-destructive text-destructive-foreground text-xs"
-            >
+            <span className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center rounded-full bg-destructive text-destructive-foreground text-xs font-bold">
               {unreadCount > 9 ? '9+' : unreadCount}
-            </Badge>
+            </span>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-96 p-0" align="end">
-        <Card className="border-0 shadow-lg">
-          <CardHeader className="border-b bg-gradient-to-r from-secondary/30 to-secondary/50 pb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-lg font-semibold">Admin Bildirimleri</CardTitle>
-                <CardDescription className="mt-1">
-                  {unreadCount > 0 
-                    ? `${unreadCount} okunmamış bildirim` 
-                    : "Tüm bildirimler okundu"}
-                </CardDescription>
-              </div>
-              {unreadCount > 0 && (
-                <Badge className="bg-primary text-primary-foreground">
-                  {unreadCount}
-                </Badge>
-              )}
+      <PopoverContent className="w-80 p-0" align="end">
+        <div className="p-4 border-b border-border">
+          <div className="flex items-center justify-between">
+            <div>
+              <h4 className="font-semibold text-card-foreground">Admin Bildirimleri</h4>
+              <p className="text-sm text-muted-foreground mt-0.5">
+                {unreadCount > 0 
+                  ? `${unreadCount} okunmamış bildirim` 
+                  : "Tüm bildirimler okundu"}
+              </p>
             </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <ScrollArea className="h-[400px]">
-              {notifications.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 px-4">
-                  <div className="rounded-full bg-muted p-4 mb-4">
-                    <Bell className="h-8 w-8 opacity-50" />
-                  </div>
-                  <p className="text-sm font-medium opacity-70">Henüz bildirim yok</p>
-                  <p className="text-xs opacity-60 mt-1 text-center">
-                    Öğrencilerin son dersleri yaklaştığında burada görünecek
-                  </p>
-                </div>
-              ) : (
-                <div className="divide-y">
-                  {notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className={`p-4 transition-colors ${
-                        !notification.is_read 
-                          ? 'bg-secondary/20 border-l-4 border-l-primary' 
-                          : ''
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className={`mt-0.5 rounded-full p-2 ${
-                          !notification.is_read 
-                            ? 'bg-secondary/50' 
-                            : 'bg-secondary/30'
-                        }`}>
-                          <Users className="h-4 w-4" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className={`text-sm ${
-                            !notification.is_read 
-                              ? 'font-semibold' 
-                              : 'font-medium opacity-70'
-                          }`}>
-                            {notification.message}
-                          </p>
-                          <div className="flex items-center gap-1.5 mt-2">
-                            <Clock className="h-3 w-3 opacity-50" />
-                            <p className="text-xs opacity-60">
-                              {format(new Date(notification.created_at), "dd MMM yyyy, HH:mm", { locale: tr })}
-                            </p>
-                          </div>
-                        </div>
-                        {!notification.is_read && (
-                          <div className="h-2 w-2 rounded-full bg-primary mt-2" />
-                        )}
+            {unreadCount > 0 && (
+              <Badge variant="default" className="text-xs">
+                {unreadCount}
+              </Badge>
+            )}
+          </div>
+        </div>
+        <ScrollArea className="h-[320px]">
+          {notifications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-12 px-4">
+              <div className="rounded-full bg-muted p-3 mb-3">
+                <Bell className="h-6 w-6 text-muted-foreground" />
+              </div>
+              <p className="text-sm font-medium text-card-foreground">Henüz bildirim yok</p>
+              <p className="text-xs text-muted-foreground mt-1 text-center">
+                Öğrencilerin son dersleri yaklaştığında burada görünecek
+              </p>
+            </div>
+          ) : (
+            <div className="divide-y divide-border">
+              {notifications.map((notification) => (
+                <div
+                  key={notification.id}
+                  className={`p-4 transition-colors ${
+                    !notification.is_read ? 'bg-primary/5' : ''
+                  }`}
+                >
+                  <div className="flex items-start gap-3">
+                    <div className="rounded-full bg-secondary p-2">
+                      <Users className="h-4 w-4 text-secondary-foreground" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm text-card-foreground ${
+                        !notification.is_read ? 'font-semibold' : 'font-medium'
+                      }`}>
+                        {notification.message}
+                      </p>
+                      <div className="flex items-center gap-1.5 mt-2">
+                        <Clock className="h-3 w-3 text-muted-foreground" />
+                        <p className="text-xs text-muted-foreground">
+                          {format(new Date(notification.created_at), "dd MMM yyyy, HH:mm", { locale: tr })}
+                        </p>
                       </div>
                     </div>
-                  ))}
+                    {!notification.is_read && (
+                      <div className="h-2 w-2 rounded-full bg-primary mt-2" />
+                    )}
+                  </div>
                 </div>
-              )}
-            </ScrollArea>
-          </CardContent>
-        </Card>
+              ))}
+            </div>
+          )}
+        </ScrollArea>
       </PopoverContent>
     </Popover>
   );
