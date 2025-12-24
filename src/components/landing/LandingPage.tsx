@@ -2,6 +2,7 @@ import { LandingHeader } from "./LandingHeader";
 import { LandingFooter } from "./LandingFooter";
 import { HeroSection } from "./HeroSection";
 import { ZigzagSection } from "./ZigzagSection";
+import { TestimonialsSection } from "./TestimonialsSection";
 import { CTASection } from "./CTASection";
 import zigzag1Image from "@/assets/zigzag-1.png";
 import zigzag2Image from "@/assets/zigzag-2.png";
@@ -38,6 +39,8 @@ export function LandingPage() {
           imageOnLeft={true}
           imageSrc={zigzag2Image}
         />
+
+        <TestimonialsSection />
 
         <CTASection />
       </main>
