@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -9,14 +10,16 @@ interface CTAContent {
   buttonLink: string;
 }
 
-const defaultCTA: CTAContent = {
-  title: "Eğer Hazırsan Hemen Bilgi Al!",
-  description: "İspanyolca öğrenme yolculuğuna bugün başla. Sana özel ders planları ve birebir eğitim ile hedeflerine ulaş.",
-  buttonText: "İletişim",
-  buttonLink: "https://wa.me/+905304721875",
-};
-
 export function CTASection() {
+  const { t } = useTranslation();
+
+  const defaultCTA: CTAContent = {
+    title: t("cta.title"),
+    description: t("cta.description"),
+    buttonText: t("cta.button"),
+    buttonLink: "https://wa.me/+905304721875",
+  };
+
   const { data: content } = useQuery({
     queryKey: ["page-content", "cta"],
     queryFn: async () => {
@@ -43,11 +46,7 @@ export function CTASection() {
           <p className="text-card-foreground/70 text-lg mb-8 max-w-2xl mx-auto">
             {cta.description}
           </p>
-          <Button
-            variant="landing-header"
-            size="lg"
-            asChild
-          >
+          <Button variant="landing-header" size="lg" asChild>
             <a
               href={cta.buttonLink}
               target={cta.buttonLink.startsWith("http") ? "_blank" : undefined}

@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -14,17 +15,19 @@ interface HeroContent {
 
 const defaultImageUrl = "/lovable-uploads/2da228c0-e8c3-4d4d-ae77-9eeca2c98996.png";
 
-const defaultHero: HeroContent = {
-  mainTitle: "Mi Mundo Español",
-  subtitle: "Senin İspanyolca Dünyan",
-  imageUrl: defaultImageUrl,
-  primaryButtonText: "Hemen Başla",
-  primaryButtonLink: "/iletisim",
-  secondaryButtonText: "Dersler Hakkında",
-  secondaryButtonLink: "/dersler",
-};
-
 export function HeroSection() {
+  const { t } = useTranslation();
+
+  const defaultHero: HeroContent = {
+    mainTitle: t("hero.mainTitle"),
+    subtitle: t("hero.subtitle"),
+    imageUrl: defaultImageUrl,
+    primaryButtonText: t("hero.primaryButton"),
+    primaryButtonLink: "/iletisim",
+    secondaryButtonText: t("hero.secondaryButton"),
+    secondaryButtonLink: "/dersler",
+  };
+
   const { data: content } = useQuery({
     queryKey: ["page-content", "hero"],
     queryFn: async () => {
@@ -36,19 +39,16 @@ export function HeroSection() {
       if (error) throw error;
       return data?.content as unknown as HeroContent | null;
     },
-    staleTime: 1000 * 60 * 5, // 5 dakika cache
+    staleTime: 1000 * 60 * 5,
   });
 
   const hero = content ? { ...defaultHero, ...content } : defaultHero;
-  
-  // Boş imageUrl varsa default görseli kullan
   const imageUrl = hero.imageUrl && hero.imageUrl.trim() !== '' ? hero.imageUrl : defaultImageUrl;
 
   return (
     <section id="hero" className="pt-20 lg:pt-24">
       <div className="container mx-auto px-4 lg:px-8 py-16 lg:py-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
-          {/* Image - Left on desktop */}
           <div className="order-2 lg:order-1">
             <img
               alt={hero.mainTitle}
@@ -57,22 +57,15 @@ export function HeroSection() {
             />
           </div>
 
-          {/* Text Content - Right on desktop */}
           <div className="order-1 lg:order-2 text-center lg:text-left">
             <h1
               className="text-4xl md:text-5xl lg:text-6xl text-foreground leading-tight mb-6"
-              style={{
-                fontFamily: "'Montserrat', sans-serif",
-                fontWeight: 700,
-              }}
+              style={{ fontFamily: "'Montserrat', sans-serif", fontWeight: 700 }}
             >
               {hero.mainTitle}
             </h1>
             <p
-              style={{
-                fontFamily: "'Yesteryear', cursive",
-                color: "hsl(42, 42%, 94%)",
-              }}
+              style={{ fontFamily: "'Yesteryear', cursive", color: "hsl(42, 42%, 94%)" }}
               className="text-xl mb-8 md:text-5xl"
             >
               {hero.subtitle}
