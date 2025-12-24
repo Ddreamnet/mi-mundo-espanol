@@ -23,9 +23,9 @@ interface FooterContent {
 const defaultFooter: FooterContent = {
   links: [
     { label: "İletişim", href: "/iletisim" },
-    { label: "SSS", href: "#sss" },
+    { label: "SSS", href: "/sss" },
     { label: "Blog", href: "/blog" },
-    { label: "Gizlilik Politikası", href: "#gizlilik" },
+    { label: "Gizlilik Politikası", href: "/gizlilik-politikasi" },
   ],
   socialLinks: [
     { icon: "instagram", href: "https://www.instagram.com/mi.mundo_espanol/", label: "Instagram" },
@@ -68,6 +68,8 @@ export function LandingFooter() {
     // Backward compatibility for older DB content
     if (href === "/contact") return "/iletisim";
     if (href === "/lessons") return "/dersler";
+    if (href === "#sss") return "/sss";
+    if (href === "#gizlilik") return "/gizlilik-politikasi";
     return href;
   };
 

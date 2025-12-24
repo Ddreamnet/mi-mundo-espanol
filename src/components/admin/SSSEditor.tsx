@@ -1,0 +1,204 @@
+import { useState, useEffect } from "react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
+import { Save, Plus, Trash2, GripVertical, HelpCircle } from "lucide-react";
+
+interface FAQItem {
+  question: string;
+  answer: string;
+}
+
+interface SSSContent {
+  pageTitle: string;
+  pageSubtitle: string;
+  items: FAQItem[];
+}
+
+const defaultSSS: SSSContent = {
+  pageTitle: "Sıkça Sorulan Sorular",
+  pageSubtitle: "En çok merak edilen sorular ve cevapları",
+  items: [],
+};
+
+export function SSSEditor() {
+  const queryClient = useQueryClient();
+  const [formData, setFormData] = useState<SSSContent>(defaultSSS);
+
+  const { data: pageContent, isLoading } = useQuery({
+    queryKey: ["page-content", "sss"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("page_contents")
+        .select("*")
+        .eq("page_key", "sss")
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+  });
+
+  useEffect(() => {
+    if (pageContent?.content) {
+      setFormData({ ...defaultSSS, ...(pageContent.content as unknown as SSSContent) });
+    }
+  }, [pageContent]);
+
+  const saveMutation = useMutation({
+    mutationFn: async (data: SSSContent) => {
+      const jsonContent = JSON.parse(JSON.stringify(data));
+      if (pageContent?.id) {
+        const { error } = await supabase
+          .from("page_contents")
+          .update({ content: jsonContent, updated_at: new Date().toISOString() })
+          .eq("id", pageContent.id);
+        if (error) throw error;
+      } else {
+        const { error } = await supabase
+          .from("page_contents")
+          .insert([{ page_key: "sss", content: jsonContent }]);
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["page-content", "sss"] });
+      toast.success("SSS sayfası güncellendi");
+    },
+    onError: () => {
+      toast.error("Kaydetme başarısız");
+    },
+  });
+
+  const handleSave = () => {
+    saveMutation.mutate(formData);
+  };
+
+  const addItem = () => {
+    setFormData({
+      ...formData,
+      items: [...formData.items, { question: "", answer: "" }],
+    });
+  };
+
+  const removeItem = (index: number) => {
+    setFormData({
+      ...formData,
+      items: formData.items.filter((_, i) => i !== index),
+    });
+  };
+
+  const updateItem = (index: number, field: keyof FAQItem, value: string) => {
+    const newItems = [...formData.items];
+    newItems[index] = { ...newItems[index], [field]: value };
+    setFormData({ ...formData, items: newItems });
+  };
+
+  if (isLoading) {
+    return <div className="p-4 text-center text-muted-foreground">Yükleniyor...</div>;
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Page Settings */}
+      <Card>
+        <CardHeader className="pb-3">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <HelpCircle className="h-5 w-5" />
+            Sayfa Ayarları
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Sayfa Başlığı</Label>
+              <Input
+                value={formData.pageTitle}
+                onChange={(e) => setFormData({ ...formData, pageTitle: e.target.value })}
+                placeholder="Sıkça Sorulan Sorular"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Alt Başlık</Label>
+              <Input
+                value={formData.pageSubtitle}
+                onChange={(e) => setFormData({ ...formData, pageSubtitle: e.target.value })}
+                placeholder="En çok merak edilen sorular"
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* FAQ Items */}
+      <Card>
+        <CardHeader className="pb-3">
+          <div className="flex items-center justify-between">
+            <CardTitle className="text-lg">Sorular ({formData.items.length})</CardTitle>
+            <Button onClick={addItem} size="sm" variant="outline">
+              <Plus className="h-4 w-4 mr-1" />
+              Soru Ekle
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          {formData.items.length === 0 ? (
+            <p className="text-center text-muted-foreground py-8">
+              Henüz soru eklenmemiş. "Soru Ekle" butonuna tıklayarak başlayın.
+            </p>
+          ) : (
+            formData.items.map((item, index) => (
+              <div
+                key={index}
+                className="border rounded-lg p-4 space-y-3 bg-muted/30"
+              >
+                <div className="flex items-start gap-3">
+                  <GripVertical className="h-5 w-5 text-muted-foreground mt-2 cursor-move" />
+                  <div className="flex-1 space-y-3">
+                    <div className="space-y-2">
+                      <Label className="text-sm">Soru {index + 1}</Label>
+                      <Input
+                        value={item.question}
+                        onChange={(e) => updateItem(index, "question", e.target.value)}
+                        placeholder="Soru giriniz..."
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label className="text-sm">Cevap</Label>
+                      <Textarea
+                        value={item.answer}
+                        onChange={(e) => updateItem(index, "answer", e.target.value)}
+                        placeholder="Cevap giriniz..."
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => removeItem(index)}
+                    className="text-destructive hover:text-destructive"
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Save Button */}
+      <div className="flex justify-end">
+        <Button onClick={handleSave} disabled={saveMutation.isPending}>
+          <Save className="h-4 w-4 mr-2" />
+          {saveMutation.isPending ? "Kaydediliyor..." : "Kaydet"}
+        </Button>
+      </div>
+    </div>
+  );
+}

@@ -7,7 +7,9 @@ import { HeroCTAEditor } from "./HeroCTAEditor";
 import { ZigzagEditor } from "./ZigzagEditor";
 import { LessonsEditor } from "./LessonsEditor";
 import { ContactFooterEditor } from "./ContactFooterEditor";
-import { MessageSquareQuote, FileText, Home, BookOpen, Mail, Layout } from "lucide-react";
+import { SSSEditor } from "./SSSEditor";
+import { GizlilikPolitikasiEditor } from "./GizlilikPolitikasiEditor";
+import { MessageSquareQuote, FileText, Home, BookOpen, Mail, Layout, HelpCircle, Shield } from "lucide-react";
 
 interface PagesManagerDialogProps {
   open: boolean;
@@ -28,7 +30,7 @@ export function PagesManagerDialog({ open, onOpenChange }: PagesManagerDialogPro
         </DialogHeader>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col overflow-hidden">
-          <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 mb-4">
+          <TabsList className="grid w-full grid-cols-4 sm:grid-cols-8 mb-4">
             <TabsTrigger value="hero" className="flex items-center gap-1 text-xs sm:text-sm">
               <Home className="h-4 w-4" />
               <span className="hidden sm:inline">Hero/CTA</span>
@@ -44,6 +46,14 @@ export function PagesManagerDialog({ open, onOpenChange }: PagesManagerDialogPro
             <TabsTrigger value="lessons" className="flex items-center gap-1 text-xs sm:text-sm">
               <BookOpen className="h-4 w-4" />
               <span className="hidden sm:inline">Dersler</span>
+            </TabsTrigger>
+            <TabsTrigger value="sss" className="flex items-center gap-1 text-xs sm:text-sm">
+              <HelpCircle className="h-4 w-4" />
+              <span className="hidden sm:inline">SSS</span>
+            </TabsTrigger>
+            <TabsTrigger value="gizlilik" className="flex items-center gap-1 text-xs sm:text-sm">
+              <Shield className="h-4 w-4" />
+              <span className="hidden sm:inline">Gizlilik</span>
             </TabsTrigger>
             <TabsTrigger value="contact" className="flex items-center gap-1 text-xs sm:text-sm">
               <Mail className="h-4 w-4" />
@@ -67,6 +77,12 @@ export function PagesManagerDialog({ open, onOpenChange }: PagesManagerDialogPro
             </TabsContent>
             <TabsContent value="lessons" className="mt-0">
               <LessonsEditor />
+            </TabsContent>
+            <TabsContent value="sss" className="mt-0">
+              <SSSEditor />
+            </TabsContent>
+            <TabsContent value="gizlilik" className="mt-0">
+              <GizlilikPolitikasiEditor />
             </TabsContent>
             <TabsContent value="contact" className="mt-0">
               <ContactFooterEditor />
