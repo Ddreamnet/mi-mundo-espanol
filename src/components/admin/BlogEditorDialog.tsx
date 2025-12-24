@@ -9,12 +9,13 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Save, Eye, Image } from "lucide-react";
+import { Save, Eye } from "lucide-react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import { TextStyle } from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
+import { ImageUpload } from "./ImageUpload";
 
 interface BlogPost {
   id: string;
@@ -192,24 +193,12 @@ export function BlogEditorDialog({ open, onOpenChange, post }: BlogEditorDialogP
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="cover">Kapak Görseli URL</Label>
-              <div className="flex gap-2">
-                <Input
-                  id="cover"
-                  value={coverImageUrl}
-                  onChange={(e) => setCoverImageUrl(e.target.value)}
-                  placeholder="https://..."
-                />
-                {coverImageUrl && (
-                  <img
-                    src={coverImageUrl}
-                    alt="Cover preview"
-                    className="w-12 h-12 object-cover rounded"
-                  />
-                )}
-              </div>
-            </div>
+            <ImageUpload
+              label="Kapak Görseli"
+              value={coverImageUrl}
+              onChange={setCoverImageUrl}
+              folder="blog"
+            />
           </div>
 
           <div className="space-y-2">
