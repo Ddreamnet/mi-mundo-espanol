@@ -93,10 +93,10 @@ export default function GizlilikPolitikasi() {
                 content.pageTitle
               )}
             </h1>
-            <p className="text-lg text-[hsl(1_85%_24%)]/80 max-w-2xl mx-auto">
+            <p className="text-lg text-[hsl(1_85%_24%/0.8)] max-w-2xl mx-auto">
               {content.pageSubtitle}
             </p>
-            <p className="text-sm text-[hsl(1_85%_24%)]/60 mt-2">
+            <p className="text-sm text-[hsl(1_85%_24%/0.6)] mt-2">
               Son güncelleme: {content.lastUpdated}
             </p>
           </div>
@@ -113,7 +113,7 @@ export default function GizlilikPolitikasi() {
                   <AccordionTrigger className="text-left font-semibold text-[hsl(1_85%_24%)] hover:text-primary hover:no-underline py-4">
                     {section.title}
                   </AccordionTrigger>
-                  <AccordionContent className="text-[hsl(1_85%_24%)]/80 pb-4 leading-relaxed">
+                  <AccordionContent className="text-[hsl(1_85%_24%/0.8)] pb-4 leading-relaxed">
                     {section.content}
                   </AccordionContent>
                 </AccordionItem>
