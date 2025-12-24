@@ -27,6 +27,11 @@ export function LandingHeader() {
       isRoute: true,
     },
     {
+      label: "Blog",
+      href: "/blog",
+      isRoute: true,
+    },
+    {
       label: "İletişim",
       href: "/iletisim",
       isRoute: true,
