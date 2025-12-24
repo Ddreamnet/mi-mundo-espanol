@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,7 @@ interface GlobalTopicsManagerProps {
 
 // ============= COMPONENT =============
 export function GlobalTopicsManager({ open, onOpenChange, isAdmin = false }: GlobalTopicsManagerProps) {
+  const { t } = useTranslation();
   // State
   const [globalTopics, setGlobalTopics] = useState<GlobalTopic[]>([]);
   const [loading, setLoading] = useState(true);
@@ -101,8 +103,8 @@ export function GlobalTopicsManager({ open, onOpenChange, isAdmin = false }: Glo
       setGlobalTopics(topicsWithSortedResources);
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: "Global konular getirilemedi",
+        title: t("common.error"),
+        description: t("dialogs.globalTopics.fetchError"),
         variant: "destructive",
       });
     } finally {
@@ -445,7 +447,7 @@ export function GlobalTopicsManager({ open, onOpenChange, isAdmin = false }: Glo
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <BookOpen className="h-5 w-5" />
-              Global Konular Yönetimi
+              {t("dialogs.globalTopics.management")}
             </DialogTitle>
           </DialogHeader>
 
@@ -455,8 +457,8 @@ export function GlobalTopicsManager({ open, onOpenChange, isAdmin = false }: Glo
               <div className="flex justify-between items-center">
                 <p className="text-sm opacity-70">
                   {isAdmin 
-                    ? "Herhangi bir öğrenciye atanabilecek global konuları yönetin" 
-                    : "Global konular ve kaynaklar"}
+                    ? t("dialogs.globalTopics.globalTopicsDescAdmin")
+                    : t("dialogs.globalTopics.globalTopicsDesc")}
                 </p>
                 <div className="flex items-center gap-4">
                   {!loading && globalTopics.length > 0 && (
@@ -467,14 +469,14 @@ export function GlobalTopicsManager({ open, onOpenChange, isAdmin = false }: Glo
                         onCheckedChange={setExpandAll}
                       />
                       <Label htmlFor="expand-all" className="cursor-pointer">
-                        Tümünü Aç
+                        {t("dialogs.globalTopics.expandAll")}
                       </Label>
                     </div>
                   )}
                   {isAdmin && (
                     <Button onClick={() => setShowAddTopic(true)}>
                       <Plus className="h-4 w-4 mr-2" />
-                      Konu Ekle
+                      {t("dialogs.globalTopics.addTopic")}
                     </Button>
                   )}
                 </div>
@@ -492,16 +494,16 @@ export function GlobalTopicsManager({ open, onOpenChange, isAdmin = false }: Glo
                 <Card className="text-center py-8">
                   <CardContent>
                     <BookOpen className="h-12 w-12 mx-auto opacity-50 mb-4" />
-                    <h3 className="text-lg font-medium mb-2">Henüz Global Konu Yok</h3>
+                    <h3 className="text-lg font-medium mb-2">{t("dialogs.globalTopics.noTopics")}</h3>
                     <p className="opacity-70 mb-4">
                       {isAdmin 
-                        ? "Herhangi bir öğrenciye atanabilecek yeniden kullanılabilir konular oluşturun." 
-                        : "Henüz hiç global konu eklenmemiş."}
+                        ? t("dialogs.globalTopics.noTopicsDescAdmin")
+                        : t("dialogs.globalTopics.noTopicsDesc")}
                     </p>
                     {isAdmin && (
                       <Button onClick={() => setShowAddTopic(true)}>
                         <Plus className="h-4 w-4 mr-2" />
-                        İlk Konunuzu Ekleyin
+                        {t("dialogs.globalTopics.addFirstTopic")}
                       </Button>
                     )}
                   </CardContent>

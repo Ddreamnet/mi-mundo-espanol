@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -54,6 +55,7 @@ const STUDENT_COLORS = [
 ];
 
 export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
+  const { t } = useTranslation();
   const [lessons, setLessons] = useState<StudentLesson[]>([]);
   const [trialLessons, setTrialLessons] = useState<TrialLesson[]>([]);
   const [loading, setLoading] = useState(true);
@@ -560,13 +562,13 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
               </Button>
               <Button onClick={() => setShowAddTrial(true)} size="sm">
                 <Plus className="h-4 w-4 mr-2" />
-                Deneme Ekle
+                {t("dialogs.weeklySchedule.addTrial")}
               </Button>
             </div>
           </div>
         </CardHeader>
         <CardContent className="text-center py-8 text-muted-foreground">
-          Bu öğretmenin henüz ders programı yok.
+          {t("dialogs.weeklySchedule.noScheduleForTeacher")}
         </CardContent>
         <AddTrialLessonDialog
           open={showAddTrial}

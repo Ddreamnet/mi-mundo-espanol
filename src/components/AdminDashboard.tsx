@@ -1039,9 +1039,9 @@ export function AdminDashboard() {
               <Card className="h-96 flex items-center justify-center">
                 <div className="text-center">
                   <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Bir Öğretmen Seç</h3>
+                  <h3 className="text-lg font-medium mb-2">{t("dashboard.admin.selectTeacher")}</h3>
                   <p className="text-muted-foreground">
-                    Öğretmen detaylarını görüntülemek için listeden bir öğretmen seçin
+                    {t("dashboard.admin.selectTeacherDesc")}
                   </p>
                 </div>
               </Card>
