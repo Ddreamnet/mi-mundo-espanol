@@ -58,9 +58,8 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
       setEmail("");
       setPassword("");
       
-      // The app will automatically redirect based on the user's role
-      // because of the useAuth hook in App.tsx
-      window.location.reload();
+      // Redirect to home page after login to trigger role-based routing
+      window.location.href = "/";
     } catch (error: any) {
       console.error("Login error:", error);
       let errorMessage = "Giriş yapılırken bir hata oluştu.";

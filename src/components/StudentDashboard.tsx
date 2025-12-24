@@ -8,7 +8,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -322,36 +321,42 @@ export function StudentDashboard() {
         </div>
 
         {/* Tabs: Konular ve Ödevler */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-4">
-            <TabsTrigger value="topics" className="flex items-center gap-2">
-              <BookOpen className="h-4 w-4" />
-              Konular
-            </TabsTrigger>
-            <TabsTrigger value="homework" className="flex items-center gap-2">
-              <ClipboardList className="h-4 w-4" />
-              Ödevler
-            </TabsTrigger>
-          </TabsList>
+        <Card className="mb-6">
+          <CardContent className="p-4">
+            <div className="flex gap-2 border-b border-card-foreground/10 mb-4">
+              <Button
+                variant={activeTab === "topics" ? "tab-active" : "tab-inactive"}
+                className="rounded-b-none flex items-center gap-2"
+                onClick={() => setActiveTab("topics")}
+              >
+                <BookOpen className="h-4 w-4" />
+                Konular
+              </Button>
+              <Button
+                variant={activeTab === "homework" ? "tab-active" : "tab-inactive"}
+                className="rounded-b-none flex items-center gap-2"
+                onClick={() => setActiveTab("homework")}
+              >
+                <ClipboardList className="h-4 w-4" />
+                Ödevler
+              </Button>
+            </div>
 
-          {/* Konular Tab */}
-          <TabsContent value="topics" className="mt-0">
-            {allActiveTopics.length > 0 ? (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <BookOpen className="h-5 w-5" />
-                    Öğrendiklerimiz
-                  </CardTitle>
-                  <CardDescription>Öğrenme materyallerin</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  {allActiveTopics.map((topic) => {
-                    const visibleResources = getVisibleResources(topic);
+            {/* Konular Tab */}
+            {activeTab === "topics" && (
+              <>
+                {allActiveTopics.length > 0 ? (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <BookOpen className="h-5 w-5 text-card-foreground" />
+                      <h3 className="text-lg font-semibold text-card-foreground">Öğrendiklerimiz</h3>
+                    </div>
+                    <p className="text-sm text-card-foreground/70 mb-4">Öğrenme materyallerin</p>
+                    {allActiveTopics.map((topic) => {
+                      const visibleResources = getVisibleResources(topic);
 
-                    return (
-                      <Card key={topic.id} className="border-l-4 border-l-primary">
-                        <CardContent className="p-4">
+                      return (
+                        <div key={topic.id} className="border-l-4 border-l-primary bg-card-foreground/5 rounded-md p-4">
                           <Collapsible>
                             <div className="flex items-center justify-between">
                               <CollapsibleTrigger
@@ -388,7 +393,7 @@ export function StudentDashboard() {
                                     {visibleResources.map((resource: any) => (
                                       <div
                                         key={resource.id}
-                                        className="flex items-center gap-3 p-2 bg-secondary/30 rounded-md"
+                                        className="flex items-center gap-3 p-2 bg-card-foreground/10 rounded-md"
                                       >
                                         {resource.is_completed ? (
                                           <CheckCircle className="h-4 w-4" />
@@ -409,7 +414,7 @@ export function StudentDashboard() {
                                         </div>
                                         <Button
                                           size="sm"
-                                          variant="ghost"
+                                          variant="card-ghost"
                                           onClick={() => window.open(resource.resource_url, "_blank")}
                                         >
                                           <ExternalLink className="h-3 w-3" />
@@ -421,36 +426,34 @@ export function StudentDashboard() {
                               </div>
                             </CollapsibleContent>
                           </Collapsible>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="text-center py-12">
-                <CardContent>
-                  <BookOpen className="h-12 w-12 mx-auto opacity-50 mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Henüz Öğrenme Aktivitesi Yok</h3>
-                  <p className="opacity-70">
-                    Öğretmeniniz size keşfetmeniz için konular ve kaynaklar atayacak.
-                  </p>
-                </CardContent>
-              </Card>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <BookOpen className="h-12 w-12 mx-auto opacity-50 mb-4" />
+                    <h3 className="text-lg font-medium mb-2">Henüz Öğrenme Aktivitesi Yok</h3>
+                    <p className="opacity-70">
+                      Öğretmeniniz size keşfetmeniz için konular ve kaynaklar atayacak.
+                    </p>
+                  </div>
+                )}
+              </>
             )}
-          </TabsContent>
 
-          {/* Ödevler Tab */}
-          <TabsContent value="homework" className="mt-0">
-            <HomeworkSection
-              studentId={profile?.user_id || ""}
-              teacherId={teacherId}
-              currentUserId={profile?.user_id || ""}
-              uploadedByUserId={profile?.user_id || ""}
-              isTeacher={false}
-            />
-          </TabsContent>
-        </Tabs>
+            {/* Ödevler Tab */}
+            {activeTab === "homework" && (
+              <HomeworkSection
+                studentId={profile?.user_id || ""}
+                teacherId={teacherId}
+                currentUserId={profile?.user_id || ""}
+                uploadedByUserId={profile?.user_id || ""}
+                isTeacher={false}
+              />
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
