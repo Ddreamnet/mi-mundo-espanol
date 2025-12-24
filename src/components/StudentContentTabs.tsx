@@ -5,8 +5,8 @@
 // arasında geçiş yapan tab sistemi sağlar.
 
 import { useState } from "react";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BookOpen, ClipboardList } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { StudentTopicsContent } from "./StudentTopicsContent";
 import { HomeworkSection } from "./HomeworkSection";
 
@@ -36,23 +36,31 @@ export function StudentContentTabs({ student, teacherId }: StudentContentTabsPro
   const [activeTab, setActiveTab] = useState<string>("topics");
 
   return (
-    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-      <TabsList className="grid w-full grid-cols-2 mb-4">
-        <TabsTrigger value="topics" className="flex items-center gap-2">
+    <div className="w-full">
+      <div className="flex gap-2 border-b border-border mb-4">
+        <Button
+          variant={activeTab === "topics" ? "tab-active" : "tab-inactive"}
+          className="rounded-b-none flex items-center gap-2"
+          onClick={() => setActiveTab("topics")}
+        >
           <BookOpen className="h-4 w-4" />
           Konular
-        </TabsTrigger>
-        <TabsTrigger value="homework" className="flex items-center gap-2">
+        </Button>
+        <Button
+          variant={activeTab === "homework" ? "tab-active" : "tab-inactive"}
+          className="rounded-b-none flex items-center gap-2"
+          onClick={() => setActiveTab("homework")}
+        >
           <ClipboardList className="h-4 w-4" />
           Ödevler
-        </TabsTrigger>
-      </TabsList>
+        </Button>
+      </div>
       
-      <TabsContent value="topics" className="mt-0">
+      {activeTab === "topics" && (
         <StudentTopicsContent student={student} teacherId={teacherId} />
-      </TabsContent>
+      )}
       
-      <TabsContent value="homework" className="mt-0">
+      {activeTab === "homework" && (
         <HomeworkSection 
           studentId={student.student_id}
           teacherId={teacherId}
@@ -60,7 +68,7 @@ export function StudentContentTabs({ student, teacherId }: StudentContentTabsPro
           uploadedByUserId={teacherId}
           isTeacher={true}
         />
-      </TabsContent>
-    </Tabs>
+      )}
+    </div>
   );
 }
