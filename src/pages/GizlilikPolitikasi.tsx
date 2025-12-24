@@ -2,12 +2,7 @@ import { LandingHeader } from "@/components/landing/LandingHeader";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Shield } from "lucide-react";
 
 interface PolicySection {
@@ -29,27 +24,33 @@ const defaultPrivacy: PrivacyContent = {
   sections: [
     {
       title: "Toplanan Bilgiler",
-      content: "Hizmetlerimizi kullanırken ad, soyad, e-posta adresi ve telefon numarası gibi kişisel bilgilerinizi topluyoruz. Bu bilgiler yalnızca ders planlaması ve iletişim amacıyla kullanılmaktadır.",
+      content:
+        "Hizmetlerimizi kullanırken ad, soyad, e-posta adresi ve telefon numarası gibi kişisel bilgilerinizi topluyoruz. Bu bilgiler yalnızca ders planlaması ve iletişim amacıyla kullanılmaktadır.",
     },
     {
       title: "Bilgilerin Kullanımı",
-      content: "Toplanan bilgiler; ders programlarının düzenlenmesi, ödev takibi, ilerleme raporları ve sizinle iletişim kurmak amacıyla kullanılmaktadır. Bilgileriniz üçüncü taraflarla paylaşılmaz.",
+      content:
+        "Toplanan bilgiler; ders programlarının düzenlenmesi, ödev takibi, ilerleme raporları ve sizinle iletişim kurmak amacıyla kullanılmaktadır. Bilgileriniz üçüncü taraflarla paylaşılmaz.",
     },
     {
       title: "Veri Güvenliği",
-      content: "Kişisel verileriniz endüstri standardı güvenlik önlemleri ile korunmaktadır. Verilerinize yetkisiz erişimi önlemek için gerekli tüm teknik ve idari tedbirler alınmaktadır.",
+      content:
+        "Kişisel verileriniz endüstri standardı güvenlik önlemleri ile korunmaktadır. Verilerinize yetkisiz erişimi önlemek için gerekli tüm teknik ve idari tedbirler alınmaktadır.",
     },
     {
       title: "Çerezler",
-      content: "Web sitemiz, kullanıcı deneyimini iyileştirmek için çerezler kullanmaktadır. Tarayıcı ayarlarınızdan çerez tercihlerinizi yönetebilirsiniz.",
+      content:
+        "Web sitemiz, kullanıcı deneyimini iyileştirmek için çerezler kullanmaktadır. Tarayıcı ayarlarınızdan çerez tercihlerinizi yönetebilirsiniz.",
     },
     {
       title: "Haklarınız",
-      content: "KVKK kapsamında kişisel verilerinize erişim, düzeltme ve silme haklarına sahipsiniz. Bu haklarınızı kullanmak için bizimle iletişime geçebilirsiniz.",
+      content:
+        "KVKK kapsamında kişisel verilerinize erişim, düzeltme ve silme haklarına sahipsiniz. Bu haklarınızı kullanmak için bizimle iletişime geçebilirsiniz.",
     },
     {
       title: "İletişim",
-      content: "Gizlilik politikamız hakkında sorularınız için info@mimundoespanol.com adresinden bize ulaşabilirsiniz.",
+      content:
+        "Gizlilik politikamız hakkında sorularınız için info@mimundoespanol.com adresinden bize ulaşabilirsiniz.",
     },
   ],
 };
@@ -71,14 +72,13 @@ export default function GizlilikPolitikasi() {
   });
 
   // Merge with defaults, ensuring sections from DB override defaults
-  const content: PrivacyContent = pageContent 
-    ? { 
-        ...defaultPrivacy, 
+  const content: PrivacyContent = pageContent
+    ? {
+        ...defaultPrivacy,
         ...pageContent,
-        sections: pageContent.sections && pageContent.sections.length > 0 
-          ? pageContent.sections 
-          : defaultPrivacy.sections 
-      } 
+        sections:
+          pageContent.sections && pageContent.sections.length > 0 ? pageContent.sections : defaultPrivacy.sections,
+      }
     : defaultPrivacy;
 
   return (
@@ -96,23 +96,23 @@ export default function GizlilikPolitikasi() {
               {content.pageTitle.includes(" ") ? (
                 <>
                   {content.pageTitle.split(" ").slice(0, -1).join(" ")}{" "}
-                  <span className="text-primary">{content.pageTitle.split(" ").pop()}</span>
+                  <span>{content.pageTitle.split(" ").pop()}</span>
                 </>
               ) : (
                 content.pageTitle
               )}
             </h1>
-            <p className="text-lg text-[hsl(1_85%_24%/0.8)] max-w-2xl mx-auto">
-              {content.pageSubtitle}
-            </p>
-            <p className="text-sm text-[hsl(1_85%_24%/0.6)] mt-2">
-              Son güncelleme: {content.lastUpdated}
-            </p>
+            <p className="text-lg text-[hsl(1_85%_24%/0.8)] max-w-2xl mx-auto">{content.pageSubtitle}</p>
+            <p className="text-sm text-[hsl(1_85%_24%/0.6)] mt-2">Son güncelleme: {content.lastUpdated}</p>
           </div>
 
           {/* Privacy Sections Accordion */}
           <div className="bg-card rounded-2xl p-6 lg:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border/20">
-            <Accordion type="multiple" defaultValue={content.sections.map((_, i) => `item-${i}`)} className="w-full space-y-2">
+            <Accordion
+              type="multiple"
+              defaultValue={content.sections.map((_, i) => `item-${i}`)}
+              className="w-full space-y-2"
+            >
               {content.sections.map((section, index) => (
                 <AccordionItem
                   key={index}
