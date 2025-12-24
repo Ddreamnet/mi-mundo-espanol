@@ -135,6 +135,61 @@ export default {
             DEFAULT: "hsl(var(--role-accent))",
             hover: "hsl(var(--role-accent-hover))",
             foreground: "hsl(var(--role-accent-foreground))",
+            muted: "hsl(var(--role-accent-muted))",
+          },
+        },
+        
+        // Dashboard-specific tokens (active within data-area="dashboard")
+        dash: {
+          bg: "hsl(var(--dash-bg))",
+          surface: {
+            DEFAULT: "hsl(var(--dash-surface))",
+            2: "hsl(var(--dash-surface-2))",
+          },
+          border: {
+            DEFAULT: "hsl(var(--dash-border))",
+            "on-dark": "hsl(var(--dash-border-on-dark))",
+          },
+          text: {
+            DEFAULT: "hsl(var(--dash-text))",
+            muted: "hsl(var(--dash-text-muted))",
+            "on-surface": "hsl(var(--dash-text-on-surface))",
+            "muted-on-surface": "hsl(var(--dash-text-muted-on-surface))",
+          },
+          input: {
+            bg: "hsl(var(--dash-input-bg))",
+            border: "hsl(var(--dash-input-border))",
+            "border-focus": "hsl(var(--dash-input-border-focus))",
+            placeholder: "hsl(var(--dash-placeholder))",
+            text: "hsl(var(--dash-input-text))",
+          },
+          dialog: {
+            bg: "hsl(var(--dash-dialog-bg))",
+            text: "hsl(var(--dash-dialog-text))",
+            border: "hsl(var(--dash-dialog-border))",
+          },
+          primary: {
+            DEFAULT: "hsl(var(--dash-primary))",
+            foreground: "hsl(var(--dash-primary-foreground))",
+            hover: "hsl(var(--dash-primary-hover))",
+          },
+          secondary: {
+            DEFAULT: "hsl(var(--dash-secondary))",
+            foreground: "hsl(var(--dash-secondary-foreground))",
+            hover: "hsl(var(--dash-secondary-hover))",
+          },
+          ghost: {
+            hover: "hsl(var(--dash-ghost-hover))",
+            "hover-on-dark": "hsl(var(--dash-ghost-hover-on-dark))",
+          },
+          outline: {
+            border: "hsl(var(--dash-outline-border))",
+            hover: "hsl(var(--dash-outline-hover))",
+          },
+          destructive: {
+            DEFAULT: "hsl(var(--dash-destructive))",
+            foreground: "hsl(var(--dash-destructive-foreground))",
+            hover: "hsl(var(--dash-destructive-hover))",
           },
         },
         
