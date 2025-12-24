@@ -53,7 +53,8 @@
     "readMore": "Devamını Oku",
     "noPosts": "Henüz blog yazısı yok.",
     "backToBlog": "Blog'a Dön",
-    "notFound": "Blog yazısı bulunamadı"
+    "notFound": "Blog yazısı bulunamadı",
+    "minRead": "dk okuma"
   },
   "privacy": {
     "pageTitle": "Gizlilik Politikası",
@@ -79,14 +80,226 @@
   },
   "common": {
     "loading": "Yükleniyor...",
+    "profileLoading": "Profil yükleniyor...",
     "error": "Bir hata oluştu",
     "save": "Kaydet",
+    "saving": "Kaydediliyor...",
     "cancel": "İptal",
     "delete": "Sil",
     "edit": "Düzenle",
     "add": "Ekle",
     "close": "Kapat",
     "confirm": "Onayla",
-    "back": "Geri"
+    "back": "Geri",
+    "create": "Oluştur",
+    "update": "Güncelle",
+    "updating": "Güncelleniyor...",
+    "success": "Başarılı",
+    "saveAll": "Tümünü Kaydet",
+    "saveChanges": "Değişiklikleri Kaydet",
+    "reset": "Sıfırla",
+    "resetAndSave": "Sıfırla ve Kaydet",
+    "upload": "Yükle",
+    "uploading": "Yükleniyor...",
+    "selectFile": "Dosya Seç",
+    "noData": "Veri bulunamadı",
+    "minutes": "dakika",
+    "resource": "kaynak",
+    "resources": "kaynaklar"
+  },
+  "auth": {
+    "signUp": "Kayıt Ol",
+    "signIn": "Giriş Yap",
+    "signOut": "Çıkış Yap",
+    "signingOut": "Çıkış...",
+    "signedOut": "Çıkış yapıldı",
+    "email": "E-posta",
+    "password": "Şifre",
+    "fullName": "Ad Soyad",
+    "emailPlaceholder": "E-posta adresinizi girin",
+    "passwordPlaceholder": "Şifrenizi girin",
+    "namePlaceholder": "Ad ve soyadınızı girin",
+    "iAmA": "Ben bir...",
+    "selectRole": "Rolünüzü seçin",
+    "student": "Öğrenci",
+    "teacher": "Öğretmen",
+    "alreadyHaveAccount": "Zaten hesabınız var mı?",
+    "accountCreated": "Hesap başarıyla oluşturuldu! Şimdi giriş yapabilirsiniz."
+  },
+  "dashboard": {
+    "admin": {
+      "title": "Admin Paneli",
+      "welcome": "Hoş geldin",
+      "pages": "Sayfalar",
+      "topics": "Konular",
+      "teachers": "Öğretmenler",
+      "teachersRegistered": "öğretmen kayıtlı",
+      "noTeachers": "Henüz öğretmen yok.",
+      "selectTeacher": "Bir Öğretmen Seç",
+      "selectTeacherDesc": "Öğretmen detaylarını görüntülemek için listeden bir öğretmen seçin",
+      "students": "Öğrenciler",
+      "schedule": "Ders programı",
+      "payments": "Ödemeler",
+      "createStudent": "Öğrenci Oluştur",
+      "noActiveStudents": "Bu öğretmenin henüz aktif öğrencisi yok.",
+      "archivedStudents": "Arşivlenmiş Öğrenciler",
+      "restore": "Geri Al",
+      "studentRestored": "Öğrenci başarıyla geri alındı",
+      "processedTopics": "İşlenen Konular",
+      "resourcesProcessed": "kaynak işlendi",
+      "topicsFull": "konu tam",
+      "noProcessedResources": "Henüz işlenmiş kaynak yok.",
+      "studentSpecificTopics": "Öğrenciye Özel Konular",
+      "addTopic": "Konu Ekle",
+      "noStudentTopics": "Bu öğrenciye özel konu henüz eklenmemiş.",
+      "moreLessons": "ders daha",
+      "aboutStudent": "Öğrenci hakkında"
+    },
+    "teacher": {
+      "title": "Öğretmen Paneli",
+      "welcome": "Hoş geldin",
+      "myStudents": "Öğrencilerim",
+      "studentsRegistered": "öğrenci kayıtlı",
+      "noStudents": "Henüz öğrenci yok. Başlamak için ilk öğrencinizi ekleyin!",
+      "balance": "Bakiye",
+      "myLessons": "Derslerim",
+      "selectStudent": "Bir Öğrenci Seç",
+      "selectStudentDesc": "Konuları ve ödevleri görüntülemek için listeden bir öğrenci seçin"
+    },
+    "student": {
+      "title": "Öğrenme Panelim",
+      "welcome": "Hoş geldin",
+      "processedTopics": "İşlenen Konular",
+      "totalResources": "Toplam Kaynak",
+      "topics": "Konular",
+      "homework": "Ödevler",
+      "whatWeLearned": "Öğrendiklerimiz",
+      "learningMaterials": "Öğrenme materyallerin",
+      "noResourcesYet": "Bu konu için henüz gösterilecek kaynak bulunmuyor.",
+      "noLearningActivity": "Henüz Öğrenme Aktivitesi Yok",
+      "teacherWillAssign": "Öğretmeniniz size keşfetmeniz için konular ve kaynaklar atayacak."
+    }
+  },
+  "dialogs": {
+    "editTopic": {
+      "title": "Konuyu Düzenle",
+      "titleLabel": "Başlık",
+      "titlePlaceholder": "Konu başlığı",
+      "descriptionLabel": "Açıklama",
+      "descriptionPlaceholder": "Konu açıklaması (opsiyonel)"
+    },
+    "addTopic": {
+      "title": "Yeni Konu Ekle",
+      "titleLabel": "Başlık",
+      "titlePlaceholder": "Konu başlığı",
+      "descriptionLabel": "Açıklama",
+      "descriptionPlaceholder": "Konu açıklaması (opsiyonel)"
+    },
+    "editResource": {
+      "title": "Kaynağı Düzenle",
+      "titleLabel": "Başlık",
+      "titlePlaceholder": "Kaynak başlığı",
+      "descriptionLabel": "Açıklama",
+      "descriptionPlaceholder": "Kaynak açıklaması (opsiyonel)",
+      "typeLabel": "Kaynak Türü",
+      "typePlaceholder": "Kaynak türünü seçin",
+      "urlLabel": "Kaynak URL",
+      "urlPlaceholder": "https://...",
+      "types": {
+        "video": "Video",
+        "pdf": "PDF",
+        "document": "Doküman",
+        "link": "Link"
+      }
+    },
+    "addResource": {
+      "title": "Yeni Kaynak Ekle",
+      "titleLabel": "Başlık",
+      "titlePlaceholder": "Kaynak başlığı",
+      "descriptionLabel": "Açıklama",
+      "descriptionPlaceholder": "Kaynak açıklaması (opsiyonel)",
+      "typeLabel": "Kaynak Türü",
+      "typePlaceholder": "Kaynak türünü seçin",
+      "urlLabel": "Kaynak URL",
+      "urlPlaceholder": "https://..."
+    },
+    "uploadHomework": {
+      "title": "Ödev Yükle",
+      "description": "Ödevinizi başlık, açıklama ve dosya ile yükleyin",
+      "titleLabel": "Ödev Başlığı",
+      "titlePlaceholder": "Örn: İngilizce Kompozisyon",
+      "descriptionLabel": "Açıklama",
+      "descriptionPlaceholder": "Ödev hakkında ek bilgiler...",
+      "filesLabel": "Dosyalar",
+      "supportedFormats": "Desteklenen formatlar: JPG, PNG, WEBP, PDF, DOCX (Maks. 10MB)",
+      "titleRequired": "Ödev başlığı zorunludur",
+      "selectFile": "Lütfen en az bir dosya seçin",
+      "fileTooLarge": "boyutu en fazla 10MB olabilir",
+      "filesUploaded": "dosya başarıyla yüklendi"
+    },
+    "editHomework": {
+      "title": "Ödevi Düzenle",
+      "description": "Ödev başlığını ve açıklamasını güncelleyin",
+      "titleLabel": "Ödev Başlığı",
+      "titlePlaceholder": "Örn: İngilizce Kompozisyon",
+      "descriptionLabel": "Açıklama",
+      "descriptionPlaceholder": "Ödev hakkında ek bilgiler..."
+    },
+    "editStudent": {
+      "title": "Öğrenci Ayarları",
+      "description": "Öğrencinin adını ve ders programını güncelleyin.",
+      "nameLabel": "Öğrenci Adı"
+    },
+    "editTeacher": {
+      "title": "Öğretmen Ayarları",
+      "nameLabel": "Öğretmen Adı",
+      "deleteTeacher": "Öğretmeni Sil",
+      "deleteConfirm": "adlı öğretmeni silmek istediğinize emin misiniz? Bu öğretmenin öğrencilerinin başka bir öğretmene atandığından emin olun. Bu işlem geri alınamaz ve öğretmenin tüm verileri (global konular, deneme dersleri, bakiye bilgileri) silinecektir."
+    },
+    "lessonLink": {
+      "linkNote": "Bu link tüm öğrencilerinize gösterilecektir."
+    },
+    "lessonOverride": {
+      "title": "Ders Düzenle"
+    },
+    "globalTopics": {
+      "title": "Global Konular",
+      "expandAll": "Tümünü Aç",
+      "collapseAll": "Tümünü Kapat",
+      "noTopics": "Henüz konu eklenmemiş.",
+      "addFirstTopic": "İlk global konunuzu ekleyin.",
+      "sessionNotFound": "Oturum bilgisi bulunamadı. Lütfen tekrar giriş yapın."
+    },
+    "balance": {
+      "paymentDeleted": "Ödeme kaydı silindi",
+      "paymentDeleteError": "Ödeme kaydı silinirken hata oluştu",
+      "resetConfirmTitle": "Bakiyeyi Sıfırla",
+      "resetConfirmDesc": "Bu işlem öğretmenin tüm bakiyesini (toplam dakika, normal ders sayısı, deneme dersi sayısı) sıfırlayacak ve mevcut bakiye ödeme geçmişine kaydedilecek. Devam etmek istediğinize emin misiniz?"
+    },
+    "pageSettings": "Sayfa Ayarları"
+  },
+  "days": {
+    "sunday": "Pazar",
+    "monday": "Pazartesi",
+    "tuesday": "Salı",
+    "wednesday": "Çarşamba",
+    "thursday": "Perşembe",
+    "friday": "Cuma",
+    "saturday": "Cumartesi"
+  },
+  "messages": {
+    "topicCreated": "Konu başarıyla oluşturuldu",
+    "topicUpdated": "Konu güncellendi",
+    "topicDeleted": "Konu silindi",
+    "resourceAdded": "Kaynak başarıyla eklendi",
+    "resourceUpdated": "Kaynak güncellendi",
+    "resourceDeleted": "Kaynak silindi",
+    "teachersLoadError": "Öğretmenler yüklenemedi",
+    "studentsLoadError": "Öğrenciler yüklenemedi",
+    "topicsLoadError": "Konular yüklenemedi",
+    "globalTopicsLoadError": "Global konular getirilemedi",
+    "orderUpdateError": "Sıra güncellenemedi",
+    "resourceOrderError": "Kaynak sırası güncellenemedi",
+    "homeworkLoadError": "Ödev yüklenemedi"
   }
 }

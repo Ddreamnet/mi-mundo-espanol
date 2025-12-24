@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { useTranslation } from "react-i18next";
 
 interface EditTopicDialogProps {
   open: boolean;
@@ -16,6 +17,7 @@ export function EditTopicDialog({ open, onOpenChange, onEditTopic, topic }: Edit
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (topic) {
@@ -41,35 +43,35 @@ export function EditTopicDialog({ open, onOpenChange, onEditTopic, topic }: Edit
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Konuyu Düzenle</DialogTitle>
+          <DialogTitle>{t("dialogs.editTopic.title")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="title">Başlık</Label>
+            <Label htmlFor="title">{t("dialogs.editTopic.titleLabel")}</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Konu başlığı"
+              placeholder={t("dialogs.editTopic.titlePlaceholder")}
               required
             />
           </div>
           <div>
-            <Label htmlFor="description">Açıklama</Label>
+            <Label htmlFor="description">{t("dialogs.editTopic.descriptionLabel")}</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Konu açıklaması (opsiyonel)"
+              placeholder={t("dialogs.editTopic.descriptionPlaceholder")}
               rows={3}
             />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              İptal
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Kaydediliyor..." : "Kaydet"}
+              {loading ? t("common.saving") : t("common.save")}
             </Button>
           </DialogFooter>
         </form>

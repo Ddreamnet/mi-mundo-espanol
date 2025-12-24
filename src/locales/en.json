@@ -15,8 +15,8 @@
     "secondaryButton": "About Lessons"
   },
   "cta": {
-    "title": "Ready? Get in Touch Now!",
-    "description": "Start your Spanish learning journey today. Reach your goals with personalized lesson plans and one-on-one instruction.",
+    "title": "Ready to Start? Get Information Now!",
+    "description": "Start your Spanish learning journey today. Reach your goals with personalized lesson plans and one-on-one training.",
     "button": "Contact"
   },
   "footer": {
@@ -53,7 +53,8 @@
     "readMore": "Read More",
     "noPosts": "No blog posts yet.",
     "backToBlog": "Back to Blog",
-    "notFound": "Blog post not found"
+    "notFound": "Blog post not found",
+    "minRead": "min read"
   },
   "privacy": {
     "pageTitle": "Privacy Policy",
@@ -61,7 +62,7 @@
   },
   "login": {
     "title": "Login",
-    "description": "Sign in to your Mi Mundo Español account",
+    "description": "Log in to your Mi Mundo Español account",
     "email": "Email",
     "emailPlaceholder": "example@email.com",
     "password": "Password",
@@ -75,18 +76,230 @@
     "loginFailed": "Login Failed",
     "genericError": "An error occurred while logging in.",
     "invalidCredentials": "Invalid email or password.",
-    "emailNotConfirmed": "Your email address has not been verified yet."
+    "emailNotConfirmed": "Your email address has not been confirmed yet."
   },
   "common": {
     "loading": "Loading...",
+    "profileLoading": "Loading profile...",
     "error": "An error occurred",
     "save": "Save",
+    "saving": "Saving...",
     "cancel": "Cancel",
     "delete": "Delete",
     "edit": "Edit",
     "add": "Add",
     "close": "Close",
     "confirm": "Confirm",
-    "back": "Back"
+    "back": "Back",
+    "create": "Create",
+    "update": "Update",
+    "updating": "Updating...",
+    "success": "Success",
+    "saveAll": "Save All",
+    "saveChanges": "Save Changes",
+    "reset": "Reset",
+    "resetAndSave": "Reset and Save",
+    "upload": "Upload",
+    "uploading": "Uploading...",
+    "selectFile": "Select File",
+    "noData": "No data found",
+    "minutes": "minutes",
+    "resource": "resource",
+    "resources": "resources"
+  },
+  "auth": {
+    "signUp": "Sign Up",
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "signingOut": "Signing out...",
+    "signedOut": "Signed out",
+    "email": "Email",
+    "password": "Password",
+    "fullName": "Full Name",
+    "emailPlaceholder": "Enter your email",
+    "passwordPlaceholder": "Enter your password",
+    "namePlaceholder": "Enter your full name",
+    "iAmA": "I am a...",
+    "selectRole": "Select your role",
+    "student": "Student",
+    "teacher": "Teacher",
+    "alreadyHaveAccount": "Already have an account?",
+    "accountCreated": "Account created successfully! You can now sign in."
+  },
+  "dashboard": {
+    "admin": {
+      "title": "Admin Panel",
+      "welcome": "Welcome",
+      "pages": "Pages",
+      "topics": "Topics",
+      "teachers": "Teachers",
+      "teachersRegistered": "teachers registered",
+      "noTeachers": "No teachers yet.",
+      "selectTeacher": "Select a Teacher",
+      "selectTeacherDesc": "Select a teacher from the list to view details",
+      "students": "Students",
+      "schedule": "Schedule",
+      "payments": "Payments",
+      "createStudent": "Create Student",
+      "noActiveStudents": "This teacher has no active students yet.",
+      "archivedStudents": "Archived Students",
+      "restore": "Restore",
+      "studentRestored": "Student restored successfully",
+      "processedTopics": "Processed Topics",
+      "resourcesProcessed": "resources processed",
+      "topicsFull": "topics complete",
+      "noProcessedResources": "No processed resources yet.",
+      "studentSpecificTopics": "Student-Specific Topics",
+      "addTopic": "Add Topic",
+      "noStudentTopics": "No student-specific topics added yet.",
+      "moreLessons": "more lessons",
+      "aboutStudent": "About student"
+    },
+    "teacher": {
+      "title": "Teacher Panel",
+      "welcome": "Welcome",
+      "myStudents": "My Students",
+      "studentsRegistered": "students registered",
+      "noStudents": "No students yet. Add your first student to get started!",
+      "balance": "Balance",
+      "myLessons": "My Lessons",
+      "selectStudent": "Select a Student",
+      "selectStudentDesc": "Select a student from the list to view topics and homework"
+    },
+    "student": {
+      "title": "My Learning Panel",
+      "welcome": "Welcome",
+      "processedTopics": "Processed Topics",
+      "totalResources": "Total Resources",
+      "topics": "Topics",
+      "homework": "Homework",
+      "whatWeLearned": "What We Learned",
+      "learningMaterials": "Your learning materials",
+      "noResourcesYet": "No resources to show for this topic yet.",
+      "noLearningActivity": "No Learning Activity Yet",
+      "teacherWillAssign": "Your teacher will assign topics and resources for you to explore."
+    }
+  },
+  "dialogs": {
+    "editTopic": {
+      "title": "Edit Topic",
+      "titleLabel": "Title",
+      "titlePlaceholder": "Topic title",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Topic description (optional)"
+    },
+    "addTopic": {
+      "title": "Add New Topic",
+      "titleLabel": "Title",
+      "titlePlaceholder": "Topic title",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Topic description (optional)"
+    },
+    "editResource": {
+      "title": "Edit Resource",
+      "titleLabel": "Title",
+      "titlePlaceholder": "Resource title",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Resource description (optional)",
+      "typeLabel": "Resource Type",
+      "typePlaceholder": "Select resource type",
+      "urlLabel": "Resource URL",
+      "urlPlaceholder": "https://...",
+      "types": {
+        "video": "Video",
+        "pdf": "PDF",
+        "document": "Document",
+        "link": "Link"
+      }
+    },
+    "addResource": {
+      "title": "Add New Resource",
+      "titleLabel": "Title",
+      "titlePlaceholder": "Resource title",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Resource description (optional)",
+      "typeLabel": "Resource Type",
+      "typePlaceholder": "Select resource type",
+      "urlLabel": "Resource URL",
+      "urlPlaceholder": "https://..."
+    },
+    "uploadHomework": {
+      "title": "Upload Homework",
+      "description": "Upload your homework with title, description and files",
+      "titleLabel": "Homework Title",
+      "titlePlaceholder": "E.g.: English Essay",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Additional information about the homework...",
+      "filesLabel": "Files",
+      "supportedFormats": "Supported formats: JPG, PNG, WEBP, PDF, DOCX (Max. 10MB)",
+      "titleRequired": "Homework title is required",
+      "selectFile": "Please select at least one file",
+      "fileTooLarge": "size can be at most 10MB",
+      "filesUploaded": "files uploaded successfully"
+    },
+    "editHomework": {
+      "title": "Edit Homework",
+      "description": "Update homework title and description",
+      "titleLabel": "Homework Title",
+      "titlePlaceholder": "E.g.: English Essay",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Additional information about the homework..."
+    },
+    "editStudent": {
+      "title": "Student Settings",
+      "description": "Update student name and lesson schedule.",
+      "nameLabel": "Student Name"
+    },
+    "editTeacher": {
+      "title": "Teacher Settings",
+      "nameLabel": "Teacher Name",
+      "deleteTeacher": "Delete Teacher",
+      "deleteConfirm": "Are you sure you want to delete this teacher? Make sure the teacher's students have been assigned to another teacher. This action cannot be undone and all teacher data (global topics, trial lessons, balance information) will be deleted."
+    },
+    "lessonLink": {
+      "linkNote": "This link will be shown to all your students."
+    },
+    "lessonOverride": {
+      "title": "Edit Lesson"
+    },
+    "globalTopics": {
+      "title": "Global Topics",
+      "expandAll": "Expand All",
+      "collapseAll": "Collapse All",
+      "noTopics": "No topics added yet.",
+      "addFirstTopic": "Add your first global topic.",
+      "sessionNotFound": "Session not found. Please log in again."
+    },
+    "balance": {
+      "paymentDeleted": "Payment record deleted",
+      "paymentDeleteError": "Error deleting payment record",
+      "resetConfirmTitle": "Reset Balance",
+      "resetConfirmDesc": "This will reset the teacher's entire balance (total minutes, regular lessons, trial lessons) and the current balance will be saved to payment history. Are you sure you want to continue?"
+    },
+    "pageSettings": "Page Settings"
+  },
+  "days": {
+    "sunday": "Sunday",
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday"
+  },
+  "messages": {
+    "topicCreated": "Topic created successfully",
+    "topicUpdated": "Topic updated",
+    "topicDeleted": "Topic deleted",
+    "resourceAdded": "Resource added successfully",
+    "resourceUpdated": "Resource updated",
+    "resourceDeleted": "Resource deleted",
+    "teachersLoadError": "Failed to load teachers",
+    "studentsLoadError": "Failed to load students",
+    "topicsLoadError": "Failed to load topics",
+    "globalTopicsLoadError": "Failed to fetch global topics",
+    "orderUpdateError": "Failed to update order",
+    "resourceOrderError": "Failed to update resource order",
+    "homeworkLoadError": "Failed to load homework"
   }
 }
