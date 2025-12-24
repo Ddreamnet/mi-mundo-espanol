@@ -571,7 +571,7 @@ export function AdminDashboard() {
   }
 
   return (
-    <div className="min-h-screen bg-background" data-dashboard="admin">
+    <div className="min-h-screen bg-background" data-area="dashboard" data-dashboard="admin">
       <Header
         rightActions={
           <>
