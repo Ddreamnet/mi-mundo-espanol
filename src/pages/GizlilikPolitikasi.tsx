@@ -83,7 +83,7 @@ export default function GizlilikPolitikasi() {
             <div className="inline-flex items-center justify-center p-3 rounded-full bg-primary/15 mb-4">
               <Shield className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[hsl(1_85%_24%)] mb-4">
               {content.pageTitle.includes(" ") ? (
                 <>
                   {content.pageTitle.split(" ").slice(0, -1).join(" ")}{" "}
@@ -93,10 +93,10 @@ export default function GizlilikPolitikasi() {
                 content.pageTitle
               )}
             </h1>
-            <p className="text-lg text-foreground/80 max-w-2xl mx-auto">
+            <p className="text-lg text-[hsl(1_85%_24%)]/80 max-w-2xl mx-auto">
               {content.pageSubtitle}
             </p>
-            <p className="text-sm text-foreground/60 mt-2">
+            <p className="text-sm text-[hsl(1_85%_24%)]/60 mt-2">
               Son güncelleme: {content.lastUpdated}
             </p>
           </div>
@@ -110,10 +110,10 @@ export default function GizlilikPolitikasi() {
                   value={`item-${index}`}
                   className="border border-border/30 rounded-xl px-4 data-[state=open]:bg-primary/5 transition-colors"
                 >
-                  <AccordionTrigger className="text-left font-semibold text-foreground hover:text-primary hover:no-underline py-4">
+                  <AccordionTrigger className="text-left font-semibold text-[hsl(1_85%_24%)] hover:text-primary hover:no-underline py-4">
                     {section.title}
                   </AccordionTrigger>
-                  <AccordionContent className="text-foreground/80 pb-4 leading-relaxed">
+                  <AccordionContent className="text-[hsl(1_85%_24%)]/80 pb-4 leading-relaxed">
                     {section.content}
                   </AccordionContent>
                 </AccordionItem>
