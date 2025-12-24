@@ -1,4 +1,5 @@
 import { Phone, Mail, MessageCircle, Instagram, Facebook } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import contactIllustration from "@/assets/contact-illustration.png";
@@ -18,19 +19,6 @@ interface ContactContent {
   contactItems: ContactItem[];
 }
 
-const defaultContact: ContactContent = {
-  pageTitle: "İletişim",
-  supportText: "7/24 Destek",
-  contactItems: [
-    { icon: "phone", label: "Telefon", value: "+90 530 472 1875", href: "tel:+905304721875" },
-    { icon: "mail", label: "Mail", value: "mimundoespanol@outlook.com", href: "mailto:mimundoespanol@outlook.com" },
-    { icon: "mail", label: "Mail - 2", value: "mertaydin245@hotmail.com", href: "mailto:mertaydin245@hotmail.com" },
-    { icon: "whatsapp", label: "Whatsapp", value: "WhatsApp ile İletişim", href: "https://wa.me/message/2ESUR45URXTFJ1" },
-    { icon: "instagram", label: "Instagram", value: "@mi.mundo_espanol", href: "https://instagram.com/mi.mundo_espanol" },
-    { icon: "facebook", label: "Facebook", value: "Mi Mundo Espanol", href: "https://facebook.com/MiMundoEspanol" },
-  ],
-};
-
 const getIcon = (iconName: string) => {
   switch (iconName) {
     case "phone": return Phone;
@@ -43,6 +31,21 @@ const getIcon = (iconName: string) => {
 };
 
 export default function Contact() {
+  const { t } = useTranslation();
+
+  const defaultContact: ContactContent = {
+    pageTitle: t("contact.pageTitle"),
+    supportText: t("contact.supportText"),
+    contactItems: [
+      { icon: "phone", label: t("contact.phone"), value: "+90 530 472 1875", href: "tel:+905304721875" },
+      { icon: "mail", label: t("contact.mail"), value: "mimundoespanol@outlook.com", href: "mailto:mimundoespanol@outlook.com" },
+      { icon: "mail", label: t("contact.mail") + " - 2", value: "mertaydin245@hotmail.com", href: "mailto:mertaydin245@hotmail.com" },
+      { icon: "whatsapp", label: t("contact.whatsapp"), value: t("contact.whatsappContact"), href: "https://wa.me/message/2ESUR45URXTFJ1" },
+      { icon: "instagram", label: t("contact.instagram"), value: "@mi.mundo_espanol", href: "https://instagram.com/mi.mundo_espanol" },
+      { icon: "facebook", label: t("contact.facebook"), value: "Mi Mundo Espanol", href: "https://facebook.com/MiMundoEspanol" },
+    ],
+  };
+
   const { data: pageContent } = useQuery({
     queryKey: ["page-content", "contact"],
     queryFn: async () => {
@@ -121,7 +124,7 @@ export default function Contact() {
             <div className="flex items-center justify-center lg:justify-end order-first lg:order-last">
               <img
                 src={contactIllustration}
-                alt="İletişim İllüstrasyonu"
+                alt={t("contact.imageAlt")}
                 className="w-full max-w-sm lg:max-w-md xl:max-w-lg object-contain"
               />
             </div>

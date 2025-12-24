@@ -1,0 +1,92 @@
+{
+  "nav": {
+    "home": "Inicio",
+    "lessons": "Clases",
+    "blog": "Blog",
+    "contact": "Contacto",
+    "login": "Iniciar Sesión",
+    "logout": "Cerrar Sesión",
+    "language": "Idioma"
+  },
+  "hero": {
+    "mainTitle": "Mi Mundo Español",
+    "subtitle": "Tu Mundo en Español",
+    "primaryButton": "Empezar Ahora",
+    "secondaryButton": "Sobre las Clases"
+  },
+  "cta": {
+    "title": "¿Listo? ¡Contáctanos Ahora!",
+    "description": "Comienza tu viaje de aprendizaje del español hoy. Alcanza tus metas con planes de lecciones personalizados e instrucción individual.",
+    "button": "Contacto"
+  },
+  "footer": {
+    "contact": "Contacto",
+    "faq": "Preguntas Frecuentes",
+    "blog": "Blog",
+    "privacy": "Política de Privacidad",
+    "copyright": "Mi Mundo Español. Todos los derechos reservados."
+  },
+  "contact": {
+    "pageTitle": "Contacto",
+    "supportText": "Soporte 24/7",
+    "phone": "Teléfono",
+    "mail": "Correo",
+    "whatsapp": "Whatsapp",
+    "instagram": "Instagram",
+    "facebook": "Facebook",
+    "whatsappContact": "Contactar por WhatsApp",
+    "imageAlt": "Ilustración de Contacto"
+  },
+  "sss": {
+    "pageTitle": "Preguntas Frecuentes",
+    "pageSubtitle": "Las preguntas más frecuentes y sus respuestas"
+  },
+  "lessons": {
+    "pageTitle": "Clases",
+    "pageSubtitle": "Programas de clases que hemos preparado para tu viaje de aprendizaje del español",
+    "learnMore": "Más Información",
+    "imageAlt": "Imagen de la clase"
+  },
+  "blog": {
+    "pageTitle": "Blog",
+    "pageSubtitle": "Contenido para ayudarte en tu viaje de aprendizaje del español",
+    "readMore": "Leer Más",
+    "noPosts": "Aún no hay publicaciones.",
+    "backToBlog": "Volver al Blog",
+    "notFound": "Publicación no encontrada"
+  },
+  "privacy": {
+    "pageTitle": "Política de Privacidad",
+    "pageSubtitle": "Proteger tus datos personales es importante para nosotros"
+  },
+  "login": {
+    "title": "Iniciar Sesión",
+    "description": "Inicia sesión en tu cuenta de Mi Mundo Español",
+    "email": "Correo Electrónico",
+    "emailPlaceholder": "ejemplo@email.com",
+    "password": "Contraseña",
+    "passwordPlaceholder": "••••••••",
+    "submit": "Iniciar Sesión",
+    "loading": "Iniciando sesión...",
+    "error": "Error",
+    "emailPasswordRequired": "El correo y la contraseña son obligatorios.",
+    "success": "Éxito",
+    "successMessage": "Sesión iniciada. Redirigiendo...",
+    "loginFailed": "Error de Inicio de Sesión",
+    "genericError": "Ocurrió un error al iniciar sesión.",
+    "invalidCredentials": "Correo o contraseña incorrectos.",
+    "emailNotConfirmed": "Tu correo electrónico aún no ha sido verificado."
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Ocurrió un error",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Agregar",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "back": "Atrás"
+  }
+}

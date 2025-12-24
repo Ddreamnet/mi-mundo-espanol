@@ -1,0 +1,92 @@
+{
+  "nav": {
+    "home": "Ana Sayfa",
+    "lessons": "Dersler",
+    "blog": "Blog",
+    "contact": "İletişim",
+    "login": "Giriş Yap",
+    "logout": "Çıkış Yap",
+    "language": "Dil"
+  },
+  "hero": {
+    "mainTitle": "Mi Mundo Español",
+    "subtitle": "Senin İspanyolca Dünyan",
+    "primaryButton": "Hemen Başla",
+    "secondaryButton": "Dersler Hakkında"
+  },
+  "cta": {
+    "title": "Eğer Hazırsan Hemen Bilgi Al!",
+    "description": "İspanyolca öğrenme yolculuğuna bugün başla. Sana özel ders planları ve birebir eğitim ile hedeflerine ulaş.",
+    "button": "İletişim"
+  },
+  "footer": {
+    "contact": "İletişim",
+    "faq": "SSS",
+    "blog": "Blog",
+    "privacy": "Gizlilik Politikası",
+    "copyright": "Mi Mundo Español. Tüm hakları saklıdır."
+  },
+  "contact": {
+    "pageTitle": "İletişim",
+    "supportText": "7/24 Destek",
+    "phone": "Telefon",
+    "mail": "Mail",
+    "whatsapp": "Whatsapp",
+    "instagram": "Instagram",
+    "facebook": "Facebook",
+    "whatsappContact": "WhatsApp ile İletişim",
+    "imageAlt": "İletişim İllüstrasyonu"
+  },
+  "sss": {
+    "pageTitle": "Sıkça Sorulan Sorular",
+    "pageSubtitle": "En çok merak edilen sorular ve cevapları"
+  },
+  "lessons": {
+    "pageTitle": "Dersler",
+    "pageSubtitle": "İspanyolca öğrenme yolculuğunuz için hazırladığımız ders programları",
+    "learnMore": "Detaylı Bilgi",
+    "imageAlt": "Ders görseli"
+  },
+  "blog": {
+    "pageTitle": "Blog",
+    "pageSubtitle": "İspanyolca öğrenme yolculuğunuzda size yardımcı olacak içerikler",
+    "readMore": "Devamını Oku",
+    "noPosts": "Henüz blog yazısı yok.",
+    "backToBlog": "Blog'a Dön",
+    "notFound": "Blog yazısı bulunamadı"
+  },
+  "privacy": {
+    "pageTitle": "Gizlilik Politikası",
+    "pageSubtitle": "Kişisel verilerinizin korunması bizim için önemlidir"
+  },
+  "login": {
+    "title": "Giriş Yap",
+    "description": "Mi Mundo Español hesabınıza giriş yapın",
+    "email": "E-posta",
+    "emailPlaceholder": "ornek@email.com",
+    "password": "Şifre",
+    "passwordPlaceholder": "••••••••",
+    "submit": "Giriş Yap",
+    "loading": "Giriş yapılıyor...",
+    "error": "Hata",
+    "emailPasswordRequired": "E-posta ve şifre gereklidir.",
+    "success": "Başarılı",
+    "successMessage": "Giriş yapıldı. Yönlendiriliyorsunuz...",
+    "loginFailed": "Giriş Başarısız",
+    "genericError": "Giriş yapılırken bir hata oluştu.",
+    "invalidCredentials": "E-posta veya şifre hatalı.",
+    "emailNotConfirmed": "E-posta adresiniz henüz doğrulanmamış."
+  },
+  "common": {
+    "loading": "Yükleniyor...",
+    "error": "Bir hata oluştu",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "delete": "Sil",
+    "edit": "Düzenle",
+    "add": "Ekle",
+    "close": "Kapat",
+    "confirm": "Onayla",
+    "back": "Geri"
+  }
+}

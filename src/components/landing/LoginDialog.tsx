@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,14 +24,15 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const { t } = useTranslation();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!email || !password) {
       toast({
-        title: "Hata",
-        description: "E-posta ve şifre gereklidir.",
+        title: t("login.error"),
+        description: t("login.emailPasswordRequired"),
         variant: "destructive",
       });
       return;
@@ -50,8 +51,8 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
       }
 
       toast({
-        title: "Başarılı",
-        description: "Giriş yapıldı. Yönlendiriliyorsunuz...",
+        title: t("login.success"),
+        description: t("login.successMessage"),
       });
 
       onOpenChange(false);
@@ -62,16 +63,16 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
       window.location.href = "/";
     } catch (error: any) {
       console.error("Login error:", error);
-      let errorMessage = "Giriş yapılırken bir hata oluştu.";
+      let errorMessage = t("login.genericError");
       
       if (error.message === "Invalid login credentials") {
-        errorMessage = "E-posta veya şifre hatalı.";
+        errorMessage = t("login.invalidCredentials");
       } else if (error.message === "Email not confirmed") {
-        errorMessage = "E-posta adresiniz henüz doğrulanmamış.";
+        errorMessage = t("login.emailNotConfirmed");
       }
 
       toast({
-        title: "Giriş Başarısız",
+        title: t("login.loginFailed"),
         description: errorMessage,
         variant: "destructive",
       });
@@ -85,22 +86,22 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
       <DialogContent className="sm:max-w-md bg-card">
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-card-foreground">
-            Giriş Yap
+            {t("login.title")}
           </DialogTitle>
           <DialogDescription className="text-card-foreground/70">
-            Mi Mundo Español hesabınıza giriş yapın
+            {t("login.description")}
           </DialogDescription>
         </DialogHeader>
 
         <form onSubmit={handleLogin} className="space-y-6 mt-4">
           <div className="space-y-2">
             <Label htmlFor="email" className="text-card-foreground">
-              E-posta
+              {t("login.email")}
             </Label>
             <Input
               id="email"
               type="email"
-              placeholder="ornek@email.com"
+              placeholder={t("login.emailPlaceholder")}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
@@ -110,13 +111,13 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
 
           <div className="space-y-2">
             <Label htmlFor="password" className="text-card-foreground">
-              Şifre
+              {t("login.password")}
             </Label>
             <div className="relative">
               <Input
                 id="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
+                placeholder={t("login.passwordPlaceholder")}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
@@ -140,10 +141,10 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
             {loading ? (
               <>
                 <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                Giriş yapılıyor...
+                {t("login.loading")}
               </>
             ) : (
-              "Giriş Yap"
+              t("login.submit")
             )}
           </Button>
         </form>

@@ -1,4 +1,5 @@
 import { Instagram, Facebook } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { useQuery } from "@tanstack/react-query";
@@ -20,21 +21,6 @@ interface FooterContent {
   copyrightText: string;
 }
 
-const defaultFooter: FooterContent = {
-  links: [
-    { label: "İletişim", href: "/iletisim" },
-    { label: "SSS", href: "/sss" },
-    { label: "Blog", href: "/blog" },
-    { label: "Gizlilik Politikası", href: "/gizlilik-politikasi" },
-  ],
-  socialLinks: [
-    { icon: "instagram", href: "https://www.instagram.com/mi.mundo_espanol/", label: "Instagram" },
-    { icon: "facebook", href: "#", label: "Facebook" },
-    { icon: "whatsapp", href: "https://wa.me/+905304721875", label: "WhatsApp" },
-  ],
-  copyrightText: "Mi Mundo Español. Tüm hakları saklıdır.",
-};
-
 const getIcon = (iconName: string) => {
   switch (iconName) {
     case "instagram": return Instagram;
@@ -47,6 +33,22 @@ const getIcon = (iconName: string) => {
 export function LandingFooter() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
+
+  const defaultFooter: FooterContent = {
+    links: [
+      { label: t("footer.contact"), href: "/iletisim" },
+      { label: t("footer.faq"), href: "/sss" },
+      { label: t("footer.blog"), href: "/blog" },
+      { label: t("footer.privacy"), href: "/gizlilik-politikasi" },
+    ],
+    socialLinks: [
+      { icon: "instagram", href: "https://www.instagram.com/mi.mundo_espanol/", label: "Instagram" },
+      { icon: "facebook", href: "#", label: "Facebook" },
+      { icon: "whatsapp", href: "https://wa.me/+905304721875", label: "WhatsApp" },
+    ],
+    copyrightText: t("footer.copyright"),
+  };
 
   const { data: content } = useQuery({
     queryKey: ["page-content", "footer"],

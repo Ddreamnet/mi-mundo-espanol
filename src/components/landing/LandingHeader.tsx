@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import { Globe, Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -10,33 +11,39 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { LoginDialog } from "./LoginDialog";
 import { Logo } from "@/components/Logo";
+import { useLanguage } from "@/contexts/LanguageContext";
+
 export function LandingHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loginDialogOpen, setLoginDialogOpen] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useTranslation();
+  const { language, setLanguage, languages } = useLanguage();
+
   const navLinks = [
     {
-      label: "Ana Sayfa",
+      label: t("nav.home"),
       href: "#hero",
       isRoute: false,
     },
     {
-      label: "Dersler",
+      label: t("nav.lessons"),
       href: "/dersler",
       isRoute: true,
     },
     {
-      label: "Blog",
+      label: t("nav.blog"),
       href: "/blog",
       isRoute: true,
     },
     {
-      label: "İletişim",
+      label: t("nav.contact"),
       href: "/iletisim",
       isRoute: true,
     },
   ];
+
   const handleNavClick = (link: { href: string; isRoute: boolean }) => {
     if (link.isRoute) {
       navigate(link.href);
@@ -49,6 +56,7 @@ export function LandingHeader() {
       });
     }
   };
+
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (location.pathname === "/") {
@@ -57,6 +65,8 @@ export function LandingHeader() {
       navigate("/");
     }
   };
+
+  const currentLanguage = languages.find((l) => l.code === language) || languages[0];
 
   return (
     <>
@@ -95,15 +105,21 @@ export function LandingHeader() {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="bg-card">
-                  <DropdownMenuItem>🇹🇷 Türkçe</DropdownMenuItem>
-                  <DropdownMenuItem>🇪🇸 Español</DropdownMenuItem>
-                  <DropdownMenuItem>🇬🇧 English</DropdownMenuItem>
+                  {languages.map((lang) => (
+                    <DropdownMenuItem
+                      key={lang.code}
+                      onClick={() => setLanguage(lang.code)}
+                      className={language === lang.code ? "bg-accent" : ""}
+                    >
+                      {lang.flag} {lang.label}
+                    </DropdownMenuItem>
+                  ))}
                 </DropdownMenuContent>
               </DropdownMenu>
 
               {/* Login Button */}
               <Button variant="landing-header" onClick={() => setLoginDialogOpen(true)}>
-                Giriş Yap
+                {t("nav.login")}
               </Button>
             </div>
 
@@ -139,13 +155,19 @@ export function LandingHeader() {
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm" className="text-[hsl(var(--landing-header-foreground))]">
                         <Globe className="w-4 h-4 mr-2" />
-                        Dil
+                        {currentLanguage.flag} {t("nav.language")}
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent className="bg-card">
-                      <DropdownMenuItem>🇹🇷 Türkçe</DropdownMenuItem>
-                      <DropdownMenuItem>🇪🇸 Español</DropdownMenuItem>
-                      <DropdownMenuItem>🇬🇧 English</DropdownMenuItem>
+                      {languages.map((lang) => (
+                        <DropdownMenuItem
+                          key={lang.code}
+                          onClick={() => setLanguage(lang.code)}
+                          className={language === lang.code ? "bg-accent" : ""}
+                        >
+                          {lang.flag} {lang.label}
+                        </DropdownMenuItem>
+                      ))}
                     </DropdownMenuContent>
                   </DropdownMenu>
                   <Button
@@ -156,7 +178,7 @@ export function LandingHeader() {
                       setLoginDialogOpen(true);
                     }}
                   >
-                    Giriş Yap
+                    {t("nav.login")}
                   </Button>
                 </div>
               </nav>
