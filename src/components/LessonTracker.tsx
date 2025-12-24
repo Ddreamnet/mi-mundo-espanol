@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format, addDays, parseISO, isBefore } from "date-fns";
 import { Ban } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface LessonTrackerProps {
   studentId: string;
@@ -34,6 +35,7 @@ interface LessonOverride {
 }
 
 export function LessonTracker({ studentId, studentName, teacherId }: LessonTrackerProps) {
+  const { t } = useTranslation();
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const [lessonDates, setLessonDates] = useState<LessonDates>({});
   const [studentLessonDays, setStudentLessonDays] = useState<number[]>([]);
@@ -140,8 +142,8 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
       }
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: "Ders takibi yüklenemedi",
+        title: t("common.error"),
+        description: t("lessonTracker.loadError"),
         variant: "destructive",
       });
     } finally {
@@ -214,8 +216,8 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
       // CRITICAL: Ensure student lesson days are loaded before calculating dates
       if (studentLessonDays.length === 0) {
         toast({
-          title: "Hata",
-          description: "Öğrenci ders günleri yüklenemedi. Lütfen sayfayı yenileyin.",
+          title: t("common.error"),
+          description: t("lessonTracker.daysNotLoaded"),
           variant: "destructive",
         });
         setShowConfirm(false);
@@ -235,8 +237,8 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
         // Double check that dates were calculated correctly
         if (Object.keys(newLessonDates).length === 0) {
           toast({
-            title: "Hata", 
-            description: "Ders tarihleri hesaplanamadı. Lütfen tekrar deneyin.",
+            title: t("common.error"), 
+            description: t("lessonTracker.datesCalculationError"),
             variant: "destructive",
           });
           setShowConfirm(false);
@@ -255,7 +257,7 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
         .limit(1);
 
       if (!existingRecords || existingRecords.length === 0) {
-        throw new Error("Ders takip kaydı bulunamadı");
+        throw new Error(t("lessonTracker.trackingNotFound"));
       }
 
       const { error } = await supabase
@@ -274,8 +276,8 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
       setCompletedLessons(newCompletedLessons);
       setLessonDates(newLessonDates);
       toast({
-        title: "Başarılı",
-        description: `${pendingLesson}. ders işlendi olarak işaretlendi`,
+        title: t("common.success"),
+        description: t("lessonTracker.lessonMarked", { number: pendingLesson }),
       });
     } catch (error: any) {
       toast({
@@ -453,7 +455,7 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
                                 : "bg-background border-primary/30 hover:bg-primary/10 hover:scale-105 hover:shadow-md cursor-pointer hover:border-primary"
                           }
                         `}
-                        title={isCancelled ? `Ders ${displayPosition} - İptal Edildi` : `Ders ${displayPosition}`}
+                        title={isCancelled ? t("lessonTracker.lessonCancelled", { number: displayPosition }) : t("lessonTracker.lesson", { number: displayPosition })}
                       >
                         {isCancelled ? <Ban className="h-4 w-4" /> : displayPosition}
                       </button>
@@ -477,14 +479,14 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
       <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Dersi İşaretle</AlertDialogTitle>
+            <AlertDialogTitle>{t("lessonTracker.markLessonTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {studentName} için {pendingLesson}. dersi işlendi olarak işaretlemek istiyor musunuz?
+              {t("lessonTracker.markLessonDescription", { name: studentName, number: pendingLesson })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setPendingLesson(null)}>İptal</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmLessonComplete}>Onayla</AlertDialogAction>
+            <AlertDialogCancel onClick={() => setPendingLesson(null)}>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmLessonComplete}>{t("common.confirm")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

@@ -621,6 +621,18 @@
       "saturday": "Sáb"
     }
   },
+  "lessonTracker": {
+    "completedLessons": "Clases Completadas",
+    "loadError": "Error al cargar el seguimiento de clases",
+    "daysNotLoaded": "No se pudieron cargar los días de clase del estudiante. Por favor actualiza la página.",
+    "datesCalculationError": "No se pudieron calcular las fechas de las clases. Por favor intenta de nuevo.",
+    "trackingNotFound": "Registro de seguimiento de clases no encontrado",
+    "lessonMarked": "Clase {{number}} marcada como completada",
+    "lesson": "Clase {{number}}",
+    "lessonCancelled": "Clase {{number}} - Cancelada",
+    "markLessonTitle": "Marcar Clase",
+    "markLessonDescription": "¿Deseas marcar la clase {{number}} como completada para {{name}}?"
+  },
   "messages": {
     "topicCreated": "Tema creado exitosamente",
     "topicUpdated": "Tema actualizado",

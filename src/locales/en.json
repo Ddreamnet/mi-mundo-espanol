@@ -629,6 +629,18 @@
       "saturday": "Sat"
     }
   },
+  "lessonTracker": {
+    "completedLessons": "Completed Lessons",
+    "loadError": "Failed to load lesson tracking",
+    "daysNotLoaded": "Student lesson days could not be loaded. Please refresh the page.",
+    "datesCalculationError": "Lesson dates could not be calculated. Please try again.",
+    "trackingNotFound": "Lesson tracking record not found",
+    "lessonMarked": "Lesson {{number}} marked as completed",
+    "lesson": "Lesson {{number}}",
+    "lessonCancelled": "Lesson {{number}} - Cancelled",
+    "markLessonTitle": "Mark Lesson",
+    "markLessonDescription": "Do you want to mark lesson {{number}} as completed for {{name}}?"
+  },
   "messages": {
     "topicCreated": "Topic created successfully",
     "topicUpdated": "Topic updated",
