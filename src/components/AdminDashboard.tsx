@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -23,7 +24,7 @@ import { AdminWeeklySchedule } from "./AdminWeeklySchedule";
 import { AdminBalanceManager } from "./AdminBalanceManager";
 import { StudentAboutDialog } from "./StudentAboutDialog";
 import { PagesManagerDialog } from "./admin/PagesManagerDialog";
-
+import { useLanguage } from "@/contexts/LanguageContext";
 interface Teacher {
   user_id: string;
   full_name: string;
@@ -72,6 +73,8 @@ interface Resource {
 }
 
 export function AdminDashboard() {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const [teachers, setTeachers] = useState<Teacher[]>([]);
   const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
   const [expandedStudents, setExpandedStudents] = useState<Set<string>>(new Set());
@@ -99,6 +102,16 @@ export function AdminDashboard() {
   const [showPagesManager, setShowPagesManager] = useState(false);
   const { profile, signOut, signingOut } = useAuth();
   const { toast } = useToast();
+
+  const daysOfWeek = [
+    t("days.sunday"),
+    t("days.monday"),
+    t("days.tuesday"),
+    t("days.wednesday"),
+    t("days.thursday"),
+    t("days.friday"),
+    t("days.saturday")
+  ];
 
   useEffect(() => {
     fetchTeachers();
@@ -170,8 +183,8 @@ export function AdminDashboard() {
       setTeachers(teachersWithStudents);
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: "Öğretmenler yüklenemedi",
+        title: t("common.error"),
+        description: t("messages.teachersLoadError"),
         variant: "destructive",
       });
     } finally {
@@ -293,21 +306,21 @@ export function AdminDashboard() {
       setStudentCompletedTopics((prev) => new Map(prev).set(studentId, allTopics));
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: "Konular yüklenemedi",
+        title: t("common.error"),
+        description: t("messages.topicsLoadError"),
         variant: "destructive",
       });
     }
   };
 
   const getDayName = (dayOfWeek?: number) => {
-    const days = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
-    return dayOfWeek !== undefined ? days[dayOfWeek] : "";
+    return dayOfWeek !== undefined ? daysOfWeek[dayOfWeek] : "";
   };
 
   const formatTime = (time?: string) => {
     if (!time) return "";
-    return new Date(`2000-01-01T${time}`).toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
+    const locale = language === "tr" ? "tr-TR" : language === "es" ? "es-ES" : "en-US";
+    return new Date(`2000-01-01T${time}`).toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit" });
   };
 
   const openStudentSettings = (student: Student) => {
@@ -357,14 +370,14 @@ export function AdminDashboard() {
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Konu başarıyla oluşturuldu",
+        title: t("common.success"),
+        description: t("messages.topicCreated"),
       });
 
       await fetchStudentTopics(student.student_id, selectedStudentForTopic);
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -393,8 +406,8 @@ export function AdminDashboard() {
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Kaynak başarıyla eklendi",
+        title: t("common.success"),
+        description: t("messages.resourceAdded"),
       });
 
       // Refresh topics for this student
@@ -410,7 +423,7 @@ export function AdminDashboard() {
       }
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -503,14 +516,14 @@ export function AdminDashboard() {
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Konu silindi",
+        title: t("common.success"),
+        description: t("messages.topicDeleted"),
       });
 
       await fetchStudentTopics(studentUserId, studentId);
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -524,14 +537,14 @@ export function AdminDashboard() {
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Kaynak silindi",
+        title: t("common.success"),
+        description: t("messages.resourceDeleted"),
       });
 
       await fetchStudentTopics(studentUserId, studentId);
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -548,14 +561,14 @@ export function AdminDashboard() {
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Öğrenci başarıyla geri alındı",
+        title: t("common.success"),
+        description: t("dashboard.admin.studentRestored"),
       });
 
       fetchTeachers();
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -578,22 +591,22 @@ export function AdminDashboard() {
             <AdminNotificationBell adminId={profile?.user_id || ''} />
             <Button onClick={() => setShowPagesManager(true)} variant="outline" size="sm">
               <LayoutDashboard className="h-4 w-4" />
-              <span className="hidden sm:inline ml-2">Sayfalar</span>
+              <span className="hidden sm:inline ml-2">{t("dashboard.admin.pages")}</span>
             </Button>
             <Button onClick={() => setShowGlobalTopics(true)} variant="outline" size="sm">
               <FolderOpen className="h-4 w-4" />
-              <span className="hidden sm:inline ml-2">Konular</span>
+              <span className="hidden sm:inline ml-2">{t("dashboard.admin.topics")}</span>
             </Button>
             <Button onClick={signOut} variant="outline" size="sm" disabled={signingOut}>
               <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline ml-2">{signingOut ? "Çıkış..." : "Çıkış"}</span>
+              <span className="hidden sm:inline ml-2">{signingOut ? t("auth.signingOut") : t("auth.signOut")}</span>
             </Button>
           </>
         }
       >
         <div className="text-center text-card-foreground">
-          <h1 className="text-xl sm:text-2xl font-bold text-card-foreground">Admin Paneli</h1>
-          <p className="text-sm sm:text-lg text-card-foreground/70 hidden sm:block">Hoş geldin, {profile?.full_name}</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-card-foreground">{t("dashboard.admin.title")}</h1>
+          <p className="text-sm sm:text-lg text-card-foreground/70 hidden sm:block">{t("dashboard.admin.welcome")}, {profile?.full_name}</p>
         </div>
       </Header>
 
@@ -607,19 +620,19 @@ export function AdminDashboard() {
                   <div>
                     <CardTitle className="flex items-center gap-2 text-card-foreground">
                       <Users className="h-5 w-5" />
-                      Öğretmenler
+                      {t("dashboard.admin.teachers")}
                     </CardTitle>
-                    <CardDescription>{teachers.length} öğretmen kayıtlı</CardDescription>
+                    <CardDescription>{teachers.length} {t("dashboard.admin.teachersRegistered")}</CardDescription>
                   </div>
                   <Button onClick={() => setShowCreateTeacher(true)} size="sm">
                     <Plus className="h-4 w-4 mr-2" />
-                    Oluştur
+                    {t("dashboard.admin.createTeacher")}
                   </Button>
                 </div>
               </CardHeader>
               <CardContent className="space-y-2">
                 {teachers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">Henüz öğretmen yok.</p>
+                  <p className="text-sm text-muted-foreground text-center py-4">{t("dashboard.admin.noTeachers")}</p>
                 ) : (
                   teachers.map((teacher) => (
                     <Card
@@ -635,7 +648,7 @@ export function AdminDashboard() {
                             <h4 className="font-medium text-card-foreground">{teacher.full_name}</h4>
                             <p className="text-sm text-card-foreground/70">{teacher.email}</p>
                           <Badge variant="outline" className="mt-1 text-card-foreground border-card-foreground/30">
-                              {teacher.students.filter(s => !s.is_archived).length} öğrenci
+                              {teacher.students.filter(s => !s.is_archived).length} {t("auth.student").toLowerCase()}
                             </Badge>
                           </div>
                           <Button

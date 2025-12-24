@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -14,6 +15,8 @@ import { LessonLinkDialog } from "./LessonLinkDialog";
 import { WeeklyScheduleDialog } from "./WeeklyScheduleDialog";
 import { TeacherBalanceDialog } from "./TeacherBalanceDialog";
 import { StudentAboutDialog } from "./StudentAboutDialog";
+import { useLanguage } from "@/contexts/LanguageContext";
+
 interface StudentLesson {
   id?: string;
   dayOfWeek: number;
@@ -21,6 +24,7 @@ interface StudentLesson {
   endTime: string;
   isCompleted?: boolean;
 }
+
 interface Student {
   id: string;
   student_id: string;
@@ -31,7 +35,10 @@ interface Student {
     email: string;
   };
 }
+
 export function TeacherDashboard() {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
   const [loading, setLoading] = useState(true);
@@ -48,11 +55,23 @@ export function TeacherDashboard() {
   const {
     toast
   } = useToast();
+
+  const daysOfWeek = [
+    t("days.sunday"),
+    t("days.monday"),
+    t("days.tuesday"),
+    t("days.wednesday"),
+    t("days.thursday"),
+    t("days.friday"),
+    t("days.saturday")
+  ];
+
   useEffect(() => {
     if (profile?.user_id) {
       fetchStudents();
     }
   }, [profile]);
+
   const fetchStudents = async () => {
     try {
       // Fetch students with their lessons (exclude archived students)
@@ -120,57 +139,54 @@ export function TeacherDashboard() {
       setStudents(sortedStudents);
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: "Öğrenciler yüklenemedi",
+        title: t("common.error"),
+        description: t("messages.studentsLoadError"),
         variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
+
   const getDayName = (dayOfWeek?: number) => {
-    const days = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
-    return dayOfWeek !== undefined ? days[dayOfWeek] : "";
+    return dayOfWeek !== undefined ? daysOfWeek[dayOfWeek] : "";
   };
+
   const formatTime = (time?: string) => {
     if (!time) return "";
-    return new Date(`2000-01-01T${time}`).toLocaleTimeString([], {
+    const locale = language === "tr" ? "tr-TR" : language === "es" ? "es-ES" : "en-US";
+    return new Date(`2000-01-01T${time}`).toLocaleTimeString(locale, {
       hour: "numeric",
       minute: "2-digit"
     });
   };
+
   const getLessonStatus = (dayOfWeek: number, startTime: string) => {
     const now = new Date();
-    const currentDay = now.getDay(); // 0 = Sunday, 1 = Monday, etc.
+    const currentDay = now.getDay();
     const currentTime = now.getHours() * 60 + now.getMinutes();
 
-    // Convert to Monday = 0, Sunday = 6 format
     const mondayBasedCurrentDay = currentDay === 0 ? 6 : currentDay - 1;
     const mondayBasedLessonDay = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
 
-    // Get start of current week (Monday)
     const startOfWeek = new Date(now);
     const daysToMonday = mondayBasedCurrentDay;
     startOfWeek.setDate(now.getDate() - daysToMonday);
     startOfWeek.setHours(0, 0, 0, 0);
 
-    // Get end of current week (Sunday)
     const endOfWeek = new Date(startOfWeek);
     endOfWeek.setDate(startOfWeek.getDate() + 6);
     endOfWeek.setHours(23, 59, 59, 999);
 
-    // Check if lesson is in current week
     const lessonDate = new Date(startOfWeek);
     lessonDate.setDate(startOfWeek.getDate() + mondayBasedLessonDay);
     if (lessonDate < startOfWeek || lessonDate > endOfWeek) {
       return "not-this-week";
     }
 
-    // Parse lesson time
     const [hours, minutes] = startTime.split(":").map(Number);
     const lessonTime = hours * 60 + minutes;
 
-    // Check if lesson is past
     if (mondayBasedLessonDay < mondayBasedCurrentDay || mondayBasedLessonDay === mondayBasedCurrentDay && lessonTime < currentTime) {
       return "past";
     } else if (mondayBasedLessonDay >= mondayBasedCurrentDay) {
@@ -178,36 +194,36 @@ export function TeacherDashboard() {
     }
     return "not-this-week";
   };
+
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>;
   }
+
   return <div className="min-h-screen bg-background" data-area="dashboard" data-dashboard="teacher">
       <Header rightActions={<>
             <NotificationBell 
               userId={profile?.user_id || ""}
               teacherId={profile?.user_id || ""} 
               onNotificationClick={() => {
-                // Find the student that triggered the notification and open their homework dialog
                 if (selectedStudent) {
-                  // The StudentTopics component will handle opening homework dialog
                 }
               }}
             />
             <Button onClick={() => setShowGlobalTopics(true)} variant="outline" size="sm">
               <BookOpen className="h-4 w-4" />
-              <span className="hidden sm:inline ml-2">Konular</span>
+              <span className="hidden sm:inline ml-2">{t("dashboard.admin.topics")}</span>
             </Button>
             <LessonLinkDialog teacherId={profile?.user_id || ""} />
             <Button onClick={signOut} variant="outline" size="sm" disabled={signingOut}>
               <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline ml-2">{signingOut ? "Çıkış..." : "Çıkış"}</span>
+              <span className="hidden sm:inline ml-2">{signingOut ? t("auth.signingOut") : t("auth.signOut")}</span>
             </Button>
           </>}>
         <div className="text-center">
-          <h1 className="text-xl sm:text-2xl font-bold text-card-foreground">Öğretmen Paneli</h1>
-          <p className="text-sm sm:text-lg text-card-foreground/70 hidden sm:block">Hoş geldin, {profile?.full_name}</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-card-foreground">{t("dashboard.teacher.title")}</h1>
+          <p className="text-sm sm:text-lg text-card-foreground/70 hidden sm:block">{t("dashboard.teacher.welcome")}, {profile?.full_name}</p>
         </div>
       </Header>
 
@@ -221,25 +237,25 @@ export function TeacherDashboard() {
                   <div>
                     <CardTitle className="flex items-center gap-2">
                       <Users className="h-5 w-5" />
-                      Öğrencilerim
+                      {t("dashboard.teacher.myStudents")}
                     </CardTitle>
-                    <CardDescription>{students.length} öğrenci kayıtlı</CardDescription>
+                    <CardDescription>{students.length} {t("dashboard.teacher.studentsRegistered")}</CardDescription>
                   </div>
                   <div className="flex flex-wrap gap-2 lg:flex-col lg:items-end">
                     <Button onClick={() => setShowBalance(true)} variant="outline" size="sm">
                       <Wallet className="h-4 w-4" />
-                      <span className="ml-2 hidden sm:inline">Bakiye</span>
+                      <span className="ml-2 hidden sm:inline">{t("dashboard.teacher.balance")}</span>
                     </Button>
                     <Button onClick={() => setShowWeeklySchedule(true)} variant="outline" size="sm">
                       <Calendar className="h-4 w-4" />
-                      <span className="ml-2 hidden sm:inline">Derslerim</span>
+                      <span className="ml-2 hidden sm:inline">{t("dashboard.teacher.myLessons")}</span>
                     </Button>
                   </div>
                 </div>
               </CardHeader>
               <CardContent className="space-y-2">
                 {students.length === 0 ? <p className="text-sm text-muted-foreground text-center py-4">
-                    Henüz öğrenci yok. Başlamak için ilk öğrencinizi ekleyin!
+                    {t("dashboard.teacher.noStudents")}
                   </p> : students.map(student => <Card key={student.id} className={`cursor-pointer transition-colors hover:bg-accent ${selectedStudent?.id === student.id ? "ring-2 ring-primary" : ""}`} onClick={() => setSelectedStudent(student)}>
                       <CardContent className="p-3">
                         <div className="flex justify-between items-start">
@@ -259,7 +275,7 @@ export function TeacherDashboard() {
                                   });
                                   setShowStudentAbout(true);
                                 }}
-                                title="Öğrenci hakkında"
+                                title={t("dashboard.admin.aboutStudent")}
                               >
                                 <FileUser className="h-4 w-4" />
                               </Button>
@@ -296,9 +312,9 @@ export function TeacherDashboard() {
               <Card className="h-96 flex items-center justify-center">
                 <div className="text-center">
                   <BookOpen className="h-12 w-12 mx-auto opacity-50 mb-4" />
-                  <h3 className="text-lg font-medium mb-2">Bir Öğrenci Seç</h3>
+                  <h3 className="text-lg font-medium mb-2">{t("dashboard.teacher.selectStudent")}</h3>
                   <p className="opacity-70">
-                    Konuları ve ödevleri görüntülemek için listeden bir öğrenci seçin
+                    {t("dashboard.teacher.selectStudentDesc")}
                   </p>
                 </div>
               </Card>
