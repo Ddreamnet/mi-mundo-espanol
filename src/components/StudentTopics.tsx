@@ -11,6 +11,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import {
   ChevronDown,
@@ -82,6 +83,7 @@ export function StudentTopics({ student, teacherId }: StudentTopicsProps) {
   const [uploadDialogOpen, setUploadDialogOpen] = useState(false);
   const [listDialogOpen, setListDialogOpen] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   // ============================================================================
   // EFFECTS
@@ -196,8 +198,8 @@ export function StudentTopics({ student, teacherId }: StudentTopicsProps) {
       setTopics([...processedStudentTopics, ...processedGlobalTopics]);
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: "Konular getirilemedi",
+        title: t("common.error"),
+        description: t("messages.topicsLoadError"),
         variant: "destructive",
       });
     } finally {
@@ -247,14 +249,14 @@ export function StudentTopics({ student, teacherId }: StudentTopicsProps) {
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: `Kaynak ${!isCompleted ? "tamamlandı" : "tamamlanmadı olarak işaretlendi"}`,
+        title: t("common.success"),
+        description: t("studentTopics.resourceMarked", { status: !isCompleted ? t("studentTopics.completed") : t("studentTopics.notCompleted") }),
       });
 
       fetchTopics();
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -299,14 +301,14 @@ export function StudentTopics({ student, teacherId }: StudentTopicsProps) {
       }
 
       toast({
-        title: "Başarılı",
-        description: `Konu ${!isCompleted ? "tamamlandı" : "tamamlanmadı olarak işaretlendi"}`,
+        title: t("common.success"),
+        description: t("studentTopics.topicMarked", { status: !isCompleted ? t("studentTopics.completed") : t("studentTopics.notCompleted") }),
       });
 
       fetchTopics();
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -402,8 +404,8 @@ export function StudentTopics({ student, teacherId }: StudentTopicsProps) {
 
                 {/* Badge - removed delete button for teachers */}
                 <div className="flex items-center gap-2">
-                  {topic.is_completed && <Badge variant="secondary">Tamamlandı</Badge>}
-                  <Badge variant="outline">{topic.resources.length} kaynak</Badge>
+                  {topic.is_completed && <Badge variant="secondary">{t("studentTopics.completed")}</Badge>}
+                  <Badge variant="outline">{topic.resources.length} {t("common.resource")}</Badge>
                 </div>
               </div>
             </div>
@@ -412,12 +414,12 @@ export function StudentTopics({ student, teacherId }: StudentTopicsProps) {
             <CollapsibleContent className="mt-4">
               <div className="pl-8 space-y-3">
                 <div className="flex justify-between items-center">
-                  <h5 className="font-medium text-sm">Kaynaklar</h5>
+                  <h5 className="font-medium text-sm">{t("common.resources")}</h5>
                 </div>
 
                 {visibleResources.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    {topic.resources.length === 0 ? "Henüz kaynak yok." : "Görünür kaynak yok."}
+                    {topic.resources.length === 0 ? t("studentTopics.noResources") : t("studentTopics.noVisibleResources")}
                   </p>
                 ) : (
                   <div className="space-y-2">
@@ -462,9 +464,9 @@ export function StudentTopics({ student, teacherId }: StudentTopicsProps) {
         <CardHeader>
           <div className="flex justify-between items-center">
             <div>
-              <CardTitle>{student.profiles.full_name} için konular</CardTitle>
+              <CardTitle>{t("studentTopics.topicsFor", { name: student.profiles.full_name })}</CardTitle>
               <CardDescription>
-                {topics.filter((t) => t.is_completed).length} / {topics.length} konu tamamlandı
+                {topics.filter((t) => t.is_completed).length} / {topics.length} {t("studentTopics.topicsCompleted")}
               </CardDescription>
             </div>
 
@@ -480,7 +482,7 @@ export function StudentTopics({ student, teacherId }: StudentTopicsProps) {
                       onClick={() => setUploadDialogOpen(true)}
                     >
                       <Upload className="h-4 w-4" />
-                      <span className="text-xs font-medium">Yükle</span>
+                      <span className="text-xs font-medium">{t("common.upload")}</span>
                     </Button>
                     <Button
                       variant="outline"
@@ -489,7 +491,7 @@ export function StudentTopics({ student, teacherId }: StudentTopicsProps) {
                       onClick={() => setListDialogOpen(true)}
                     >
                       <ClipboardList className="h-4 w-4" />
-                      <span className="text-xs font-medium">Ödevler</span>
+                      <span className="text-xs font-medium">{t("dashboard.student.homework")}</span>
                     </Button>
                   </div>
                 </CardContent>
@@ -507,7 +509,7 @@ export function StudentTopics({ student, teacherId }: StudentTopicsProps) {
         <CardContent className="space-y-4">
           {topics.length === 0 ? (
             <div className="text-center py-8">
-              <p className="opacity-70">Henüz konu yok.</p>
+              <p className="opacity-70">{t("studentTopics.noTopics")}</p>
             </div>
           ) : (
             topics.map((topic) => <TopicCard key={topic.id} topic={topic} />)
@@ -524,8 +526,8 @@ export function StudentTopics({ student, teacherId }: StudentTopicsProps) {
         uploadedByUserId={teacherId}
         onSuccess={() => {
           toast({
-            title: "Başarılı",
-            description: "Ödev başarıyla yüklendi",
+            title: t("common.success"),
+            description: t("studentTopics.homeworkUploaded"),
           });
         }}
       />
