@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { BookOpen, ClipboardList } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { StudentTopicsContent } from "./StudentTopicsContent";
 import { HomeworkSection } from "./HomeworkSection";
 
@@ -36,39 +37,41 @@ export function StudentContentTabs({ student, teacherId }: StudentContentTabsPro
   const [activeTab, setActiveTab] = useState<string>("topics");
 
   return (
-    <div className="w-full">
-      <div className="flex gap-2 border-b border-border mb-4">
-        <Button
-          variant={activeTab === "topics" ? "tab-active" : "tab-inactive"}
-          className="rounded-b-none flex items-center gap-2"
-          onClick={() => setActiveTab("topics")}
-        >
-          <BookOpen className="h-4 w-4" />
-          Konular
-        </Button>
-        <Button
-          variant={activeTab === "homework" ? "tab-active" : "tab-inactive"}
-          className="rounded-b-none flex items-center gap-2"
-          onClick={() => setActiveTab("homework")}
-        >
-          <ClipboardList className="h-4 w-4" />
-          Ödevler
-        </Button>
-      </div>
-      
-      {activeTab === "topics" && (
-        <StudentTopicsContent student={student} teacherId={teacherId} />
-      )}
-      
-      {activeTab === "homework" && (
-        <HomeworkSection 
-          studentId={student.student_id}
-          teacherId={teacherId}
-          currentUserId={teacherId}
-          uploadedByUserId={teacherId}
-          isTeacher={true}
-        />
-      )}
-    </div>
+    <Card className="w-full">
+      <CardContent className="p-4">
+        <div className="flex gap-2 border-b border-card-foreground/10 mb-4">
+          <Button
+            variant={activeTab === "topics" ? "tab-active" : "tab-inactive"}
+            className="rounded-b-none flex items-center gap-2"
+            onClick={() => setActiveTab("topics")}
+          >
+            <BookOpen className="h-4 w-4" />
+            Konular
+          </Button>
+          <Button
+            variant={activeTab === "homework" ? "tab-active" : "tab-inactive"}
+            className="rounded-b-none flex items-center gap-2"
+            onClick={() => setActiveTab("homework")}
+          >
+            <ClipboardList className="h-4 w-4" />
+            Ödevler
+          </Button>
+        </div>
+        
+        {activeTab === "topics" && (
+          <StudentTopicsContent student={student} teacherId={teacherId} />
+        )}
+        
+        {activeTab === "homework" && (
+          <HomeworkSection 
+            studentId={student.student_id}
+            teacherId={teacherId}
+            currentUserId={teacherId}
+            uploadedByUserId={teacherId}
+            isTeacher={true}
+          />
+        )}
+      </CardContent>
+    </Card>
   );
 }
