@@ -239,7 +239,8 @@
       "titleRequired": "El título de la tarea es obligatorio",
       "selectFile": "Por favor selecciona al menos un archivo",
       "fileTooLarge": "el tamaño máximo es de 10MB",
-      "filesUploaded": "archivos subidos exitosamente"
+      "filesUploaded": "archivos subidos exitosamente",
+      "uploadError": "Error al subir tarea"
     },
     "editHomework": {
       "title": "Editar Tarea",
@@ -247,7 +248,10 @@
       "titleLabel": "Título de la Tarea",
       "titlePlaceholder": "Ej.: Ensayo de Inglés",
       "descriptionLabel": "Descripción",
-      "descriptionPlaceholder": "Información adicional sobre la tarea..."
+      "descriptionPlaceholder": "Información adicional sobre la tarea...",
+      "titleRequired": "El título de la tarea es obligatorio",
+      "updateSuccess": "Tarea actualizada",
+      "updateError": "Error al actualizar tarea"
     },
     "homeworkList": {
       "title": "Tareas",
@@ -396,10 +400,73 @@
       "sessionNotFound": "Sesión no encontrada. Por favor inicia sesión nuevamente."
     },
     "balance": {
+      "title": "Saldo",
+      "totalMinutes": "Minutos Totales",
+      "regularLessons": "Clases Regulares",
+      "trialLessons": "Clases de Prueba",
+      "paymentHistory": "Historial de Pagos",
+      "noPayments": "Aún no hay registros de pago.",
       "paymentDeleted": "Registro de pago eliminado",
       "paymentDeleteError": "Error al eliminar el registro de pago",
       "resetConfirmTitle": "Restablecer Saldo",
       "resetConfirmDesc": "Esto restablecerá todo el saldo del profesor (minutos totales, clases regulares, clases de prueba) y el saldo actual se guardará en el historial de pagos. ¿Estás seguro de que quieres continuar?"
+    },
+    "weeklySchedule": {
+      "title": "Horario Semanal",
+      "noLessons": "No hay clases esta semana.",
+      "exportImage": "Guardar como Imagen",
+      "downloadPng": "Descargar PNG",
+      "hour": "Hora",
+      "trialLesson": "Clase de Prueba",
+      "markComplete": "Marcar como Completada",
+      "markIncomplete": "Marcar como Incompleta",
+      "completeConfirmTitle": "Marcar Clase de Prueba",
+      "completeConfirmDesc": "¿Estás seguro de que quieres marcar esta clase de prueba como completada?",
+      "incompleteConfirmTitle": "Desmarcar Clase de Prueba",
+      "incompleteConfirmDesc": "¿Estás seguro de que quieres marcar esta clase de prueba como incompleta?",
+      "trialMarked": "Clase de prueba marcada como procesada",
+      "trialUnmarked": "Clase de prueba marcada como no procesada",
+      "operationFailed": "Operación fallida",
+      "scheduleLoadError": "Error al cargar el horario",
+      "pngDownloaded": "Horario descargado como PNG",
+      "pngError": "Error al crear PNG"
+    },
+    "createStudent": {
+      "title": "Crear Cuenta de Estudiante",
+      "emailLabel": "Correo del Estudiante",
+      "emailPlaceholder": "estudiante@ejemplo.com",
+      "namePlaceholder": "Nombre del Estudiante",
+      "tempPasswordLabel": "Contraseña Temporal",
+      "passwordPlaceholder": "Crear o ingresar contraseña",
+      "generateBtn": "Generar",
+      "lessonsPerWeekLabel": "Clases Semanales",
+      "lessonsUnit": "clases",
+      "scheduleLabel": "Horario de Clases",
+      "dayLabel": "Día",
+      "startTimeLabel": "Inicio",
+      "endTimeLabel": "Fin",
+      "noteLabel": "Nota",
+      "noteText": "El estudiante será creado con esta contraseña temporal. Por favor comparta esta información de manera segura con el estudiante.",
+      "createBtn": "Crear Cuenta",
+      "fillAllFields": "Por favor complete todos los campos",
+      "fillSchedule": "Complete todos los campos del horario",
+      "successMessage": "¡Cuenta de estudiante creada exitosamente! Contraseña temporal: {{password}}",
+      "createError": "Error al crear cuenta de estudiante"
+    },
+    "createTeacher": {
+      "title": "Crear Nuevo Profesor",
+      "nameLabel": "Nombre del Profesor",
+      "namePlaceholder": "Nombre Completo",
+      "emailLabel": "Correo",
+      "emailPlaceholder": "ejemplo@correo.com",
+      "passwordLabel": "Contraseña",
+      "passwordPlaceholder": "Mínimo 6 caracteres",
+      "creating": "Creando...",
+      "fillAllFields": "Por favor complete todos los campos",
+      "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
+      "sessionNotFound": "Sesión no encontrada",
+      "successMessage": "Profesor creado exitosamente",
+      "createError": "Error al crear profesor"
     },
     "pageSettings": "Configuración de Página"
   },
