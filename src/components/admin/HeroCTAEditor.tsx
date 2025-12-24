@@ -14,10 +14,10 @@ interface HeroContent {
   mainTitle: string;
   subtitle: string;
   imageUrl: string;
-  button1Text: string;
-  button1Link: string;
-  button2Text: string;
-  button2Link: string;
+  primaryButtonText: string;
+  primaryButtonLink: string;
+  secondaryButtonText: string;
+  secondaryButtonLink: string;
 }
 
 interface CTAContent {
@@ -31,10 +31,10 @@ const defaultHero: HeroContent = {
   mainTitle: "Mi Mundo Español",
   subtitle: "Senin İspanyolca Dünyan",
   imageUrl: "/lovable-uploads/2da228c0-e8c3-4d4d-ae77-9eeca2c98996.png",
-  button1Text: "Hemen Başla",
-  button1Link: "/iletisim",
-  button2Text: "Dersler Hakkında",
-  button2Link: "/dersler",
+  primaryButtonText: "Hemen Başla",
+  primaryButtonLink: "/iletisim",
+  secondaryButtonText: "Dersler Hakkında",
+  secondaryButtonLink: "/dersler",
 };
 
 const defaultCTA: CTAContent = {
@@ -154,31 +154,31 @@ export function HeroCTAEditor() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Buton 1 - Metin</Label>
+              <Label>Birincil Buton - Metin</Label>
               <Input
-                value={hero.button1Text}
-                onChange={(e) => setHero({ ...hero, button1Text: e.target.value })}
+                value={hero.primaryButtonText}
+                onChange={(e) => setHero({ ...hero, primaryButtonText: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label>Buton 1 - Link</Label>
+              <Label>Birincil Buton - Link</Label>
               <Input
-                value={hero.button1Link}
-                onChange={(e) => setHero({ ...hero, button1Link: e.target.value })}
+                value={hero.primaryButtonLink}
+                onChange={(e) => setHero({ ...hero, primaryButtonLink: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label>Buton 2 - Metin</Label>
+              <Label>İkincil Buton - Metin</Label>
               <Input
-                value={hero.button2Text}
-                onChange={(e) => setHero({ ...hero, button2Text: e.target.value })}
+                value={hero.secondaryButtonText}
+                onChange={(e) => setHero({ ...hero, secondaryButtonText: e.target.value })}
               />
             </div>
             <div className="space-y-2">
-              <Label>Buton 2 - Link</Label>
+              <Label>İkincil Buton - Link</Label>
               <Input
-                value={hero.button2Link}
-                onChange={(e) => setHero({ ...hero, button2Link: e.target.value })}
+                value={hero.secondaryButtonLink}
+                onChange={(e) => setHero({ ...hero, secondaryButtonLink: e.target.value })}
               />
             </div>
           </div>
