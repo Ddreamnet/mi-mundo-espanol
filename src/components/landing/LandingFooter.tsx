@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 
 // WhatsApp icon component
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -21,9 +22,9 @@ interface FooterContent {
 
 const defaultFooter: FooterContent = {
   links: [
+    { label: "Dersler", href: "/dersler" },
     { label: "İletişim", href: "/iletisim" },
-    { label: "SSS", href: "#sss" },
-    { label: "Gizlilik Politikası", href: "#gizlilik" },
+    { label: "Blog", href: "/blog" },
   ],
   socialLinks: [
     { icon: "instagram", href: "https://www.instagram.com/mi.mundo_espanol/", label: "Instagram" },
@@ -43,6 +44,9 @@ const getIcon = (iconName: string) => {
 };
 
 export function LandingFooter() {
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const { data: content } = useQuery({
     queryKey: ["page-content", "footer"],
     queryFn: async () => {
@@ -59,25 +63,48 @@ export function LandingFooter() {
 
   const footer = content ? { ...defaultFooter, ...content } : defaultFooter;
 
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (location.pathname === "/") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      navigate("/");
+    }
+  };
+
+  const handleLinkClick = (e: React.MouseEvent, href: string) => {
+    e.preventDefault();
+    if (href.startsWith("#")) {
+      if (location.pathname !== "/") {
+        navigate("/" + href);
+      } else {
+        const element = document.querySelector(href);
+        element?.scrollIntoView({ behavior: "smooth" });
+      }
+    } else {
+      navigate(href);
+    }
+  };
+
   return (
     <footer className="bg-[hsl(var(--landing-footer))] text-[hsl(var(--landing-footer-foreground))]">
       <div className="container mx-auto px-4 lg:px-8 py-6 lg:py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           {/* Logo & Brand */}
-          <a href="/">
+          <button onClick={handleLogoClick} className="bg-transparent border-none cursor-pointer p-0">
             <Logo size="md" />
-          </a>
+          </button>
 
           {/* Links */}
           <div className="flex items-center gap-6">
             {footer.links.map((link) => (
-              <a
+              <button
                 key={link.href}
-                href={link.href}
-                className="text-sm text-[hsl(var(--landing-footer-foreground)/0.8)] hover:text-[hsl(var(--primary))] transition-colors"
+                onClick={(e) => handleLinkClick(e, link.href)}
+                className="text-sm text-[hsl(var(--landing-footer-foreground)/0.8)] hover:text-[hsl(var(--primary))] transition-colors bg-transparent border-none cursor-pointer"
               >
                 {link.label}
-              </a>
+              </button>
             ))}
           </div>
 

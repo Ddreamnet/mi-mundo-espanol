@@ -49,15 +49,24 @@ export function LandingHeader() {
       });
     }
   };
+  const handleLogoClick = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (location.pathname === "/") {
+      window.scrollTo({ top: 0, behavior: "smooth" });
+    } else {
+      navigate("/");
+    }
+  };
+
   return (
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-[hsl(var(--landing-header))] shadow-md">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="flex items-center justify-between h-16 lg:h-20">
             {/* Logo & Brand */}
-            <a href="/">
+            <button onClick={handleLogoClick} className="bg-transparent border-none cursor-pointer p-0">
               <Logo size="md" />
-            </a>
+            </button>
 
             {/* Desktop Navigation - Center */}
             <nav className="hidden lg:flex items-center gap-8">
