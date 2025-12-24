@@ -631,6 +631,18 @@
       "saturday": "Cmt"
     }
   },
+  "lessonTracker": {
+    "completedLessons": "İşlenen Dersler",
+    "loadError": "Ders takibi yüklenemedi",
+    "daysNotLoaded": "Öğrenci ders günleri yüklenemedi. Lütfen sayfayı yenileyin.",
+    "datesCalculationError": "Ders tarihleri hesaplanamadı. Lütfen tekrar deneyin.",
+    "trackingNotFound": "Ders takip kaydı bulunamadı",
+    "lessonMarked": "{{number}}. ders işlendi olarak işaretlendi",
+    "lesson": "Ders {{number}}",
+    "lessonCancelled": "Ders {{number}} - İptal Edildi",
+    "markLessonTitle": "Dersi İşaretle",
+    "markLessonDescription": "{{name}} için {{number}}. dersi işlendi olarak işaretlemek istiyor musunuz?"
+  },
   "messages": {
     "topicCreated": "Konu başarıyla oluşturuldu",
     "topicUpdated": "Konu güncellendi",

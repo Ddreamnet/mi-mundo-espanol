@@ -4,6 +4,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { BookCheck, Ban } from "lucide-react";
 import { format } from "date-fns";
+import { useTranslation } from "react-i18next";
 
 interface StudentLessonTrackerProps {
   studentId: string;
@@ -21,6 +22,7 @@ interface LessonOverride {
 }
 
 export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
+  const { t } = useTranslation();
   const [lessonsPerWeek, setLessonsPerWeek] = useState<number>(1);
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const [lessonDates, setLessonDates] = useState<LessonDates>({});
@@ -219,7 +221,7 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
               <p className="text-2x1 font-bold">
                 {completedLessons.length}/{totalLessonsPerMonth}
               </p>
-              <p className="text-sm opacity-70">İşlenen Dersler</p>
+              <p className="text-sm opacity-70">{t("lessonTracker.completedLessons")}</p>
             </div>
           </div>
           <div className="flex flex-col gap-1.5 flex-1">
