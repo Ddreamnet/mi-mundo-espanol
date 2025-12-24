@@ -22,9 +22,10 @@ interface FooterContent {
 
 const defaultFooter: FooterContent = {
   links: [
-    { label: "Dersler", href: "/dersler" },
     { label: "İletişim", href: "/iletisim" },
+    { label: "SSS", href: "#sss" },
     { label: "Blog", href: "/blog" },
+    { label: "Gizlilik Politikası", href: "#gizlilik" },
   ],
   socialLinks: [
     { icon: "instagram", href: "https://www.instagram.com/mi.mundo_espanol/", label: "Instagram" },
