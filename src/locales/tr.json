@@ -45,7 +45,9 @@
     "pageTitle": "Dersler",
     "pageSubtitle": "İspanyolca öğrenme yolculuğunuz için hazırladığımız ders programları",
     "learnMore": "Detaylı Bilgi",
-    "imageAlt": "Ders görseli"
+    "imageAlt": "Ders görseli",
+    "lesson": "ders",
+    "lessonsCount": "ders"
   },
   "blog": {
     "pageTitle": "Blog",
@@ -81,7 +83,7 @@
   "common": {
     "loading": "Yükleniyor...",
     "profileLoading": "Profil yükleniyor...",
-    "error": "Bir hata oluştu",
+    "error": "Hata",
     "save": "Kaydet",
     "saving": "Kaydediliyor...",
     "cancel": "İptal",
@@ -105,7 +107,12 @@
     "noData": "Veri bulunamadı",
     "minutes": "dakika",
     "resource": "kaynak",
-    "resources": "kaynaklar"
+    "resources": "kaynaklar",
+    "download": "İndir",
+    "noTeacher": "Başka öğretmen yok",
+    "noStudentsForTeacher": "Bu öğretmene ait öğrenci yok",
+    "click": "Tıklayın",
+    "nameSurname": "Ad Soyad"
   },
   "auth": {
     "signUp": "Kayıt Ol",
@@ -153,7 +160,8 @@
       "addTopic": "Konu Ekle",
       "noStudentTopics": "Bu öğrenciye özel konu henüz eklenmemiş.",
       "moreLessons": "ders daha",
-      "aboutStudent": "Öğrenci hakkında"
+      "aboutStudent": "Öğrenci hakkında",
+      "createTeacher": "Oluştur"
     },
     "teacher": {
       "title": "Öğretmen Paneli",
@@ -190,10 +198,13 @@
     },
     "addTopic": {
       "title": "Yeni Konu Ekle",
-      "titleLabel": "Başlık",
-      "titlePlaceholder": "Konu başlığı",
-      "descriptionLabel": "Açıklama",
-      "descriptionPlaceholder": "Konu açıklaması (opsiyonel)"
+      "description": "Öğrenci için yeni bir öğrenme konusu oluşturun. Daha sonra kaynak ekleyebilirsiniz.",
+      "titleLabel": "Konu Başlığı",
+      "titlePlaceholder": "örn., Sebzeler, Meslekler, Günlük Rutinler",
+      "descriptionLabel": "Açıklama (Opsiyonel)",
+      "descriptionPlaceholder": "Bu konunun ne içerdiğinin kısa açıklaması...",
+      "addToEnd": "Sona ekle",
+      "createTopic": "Konu Oluştur"
     },
     "editResource": {
       "title": "Kaynağı Düzenle",
@@ -245,22 +256,89 @@
       "descriptionLabel": "Açıklama",
       "descriptionPlaceholder": "Ödev hakkında ek bilgiler..."
     },
+    "homeworkList": {
+      "title": "Ödevler",
+      "description": "Tüm ödevleri görüntüleyin",
+      "noHomework": "Henüz ödev yok",
+      "deleteTitle": "Ödevi Sil",
+      "deleteConfirm": "Bu ödevi ve tüm dosyalarını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+      "uploadedByStudent": "Öğrenci",
+      "uploadedByTeacher": "Öğretmen",
+      "homeworkDeleted": "Ödev silindi",
+      "deleteError": "Ödev silinemedi",
+      "downloadError": "Dosya indirilemedi"
+    },
     "editStudent": {
       "title": "Öğrenci Ayarları",
       "description": "Öğrencinin adını ve ders programını güncelleyin.",
-      "nameLabel": "Öğrenci Adı"
+      "nameLabel": "Öğrenci Adı",
+      "weeklyLessons": "Haftalık Ders Sayısı",
+      "lessonSchedule": "Ders Programı",
+      "dayLabel": "Gün",
+      "startLabel": "Başlangıç",
+      "endLabel": "Bitiş",
+      "noteLabel": "Not",
+      "notePlaceholder": "Not ekleyin",
+      "addLesson": "Ders Ekle",
+      "deleteStudent": "Öğrenciyi Sil",
+      "archiveStudent": "Arşivle",
+      "deleteConfirmTitle": "Öğrenciyi Sil",
+      "deleteConfirmDesc": "Bu öğrenciyi silmek istediğinize emin misiniz? Bu işlem geri alınamaz ve öğrencinin tüm verileri (konular, kaynaklar, ödevler) silinecektir.",
+      "archiveConfirmTitle": "Öğrenciyi Arşivle",
+      "archiveConfirmDesc": "Bu öğrenciyi arşivlemek istediğinize emin misiniz? Öğrenci listeden kaldırılacak ancak verileri korunacaktır.",
+      "studentDeleted": "Öğrenci ve tüm verileri silindi",
+      "studentArchived": "Öğrenci arşivlendi",
+      "deleteError": "Öğrenci silinemedi",
+      "archiveError": "Öğrenci arşivlenemedi"
     },
     "editTeacher": {
       "title": "Öğretmen Ayarları",
       "nameLabel": "Öğretmen Adı",
       "deleteTeacher": "Öğretmeni Sil",
-      "deleteConfirm": "adlı öğretmeni silmek istediğinize emin misiniz? Bu öğretmenin öğrencilerinin başka bir öğretmene atandığından emin olun. Bu işlem geri alınamaz ve öğretmenin tüm verileri (global konular, deneme dersleri, bakiye bilgileri) silinecektir."
+      "deleteConfirm": "adlı öğretmeni silmek istediğinize emin misiniz? Bu öğretmenin öğrencilerinin başka bir öğretmene atandığından emin olun. Bu işlem geri alınamaz ve öğretmenin tüm verileri (global konular, deneme dersleri, bakiye bilgileri) silinecektir.",
+      "studentAssignment": "Öğrenci Ataması",
+      "studentAssignmentDesc": "Bu öğretmene ait bir öğrenciyi başka bir öğretmene atayın",
+      "studentsCount": "Öğrenciler",
+      "targetTeacher": "Hedef Öğretmen",
+      "assignStudent": "Öğrenciyi Ata",
+      "studentAssigned": "Öğrenci başarıyla atandı",
+      "assignError": "Öğrenci atanamadı",
+      "teacherDeleted": "Öğretmen başarıyla silindi",
+      "deleteError": "Öğretmen silinemedi",
+      "teacherUpdated": "Öğretmen güncellendi",
+      "updateError": "Öğretmen güncellenemedi"
+    },
+    "addStudent": {
+      "title": "Öğrenci Ekle",
+      "description": "Sınıfınıza eklemek istediğiniz öğrencinin e-posta adresini girin. Öğrencinin platformda zaten bir hesabı olmalıdır.",
+      "emailLabel": "Öğrenci E-postası",
+      "emailPlaceholder": "ogrenci@example.com",
+      "lessonSchedule": "Ders Programı",
+      "addLesson": "Ders Ekle",
+      "maxLessons": "Haftada en fazla 6 ders ekleyebilirsiniz.",
+      "addStudentBtn": "Öğrenci Ekle"
     },
     "lessonLink": {
       "linkNote": "Bu link tüm öğrencilerinize gösterilecektir."
     },
     "lessonOverride": {
-      "title": "Ders Düzenle"
+      "title": "Ders Düzenle",
+      "newDate": "Yeni Tarih",
+      "newStartTime": "Yeni Başlangıç Saati",
+      "newEndTime": "Yeni Bitiş Saati",
+      "postponeToNext": "Sonraki Derse Aktar",
+      "cancelLesson": "Dersi İptal Et",
+      "revertToOriginal": "Orijinale Geri Dön",
+      "postponeConfirmTitle": "Dersi Aktar",
+      "postponeConfirmDesc": "Bu dersi sonraki derse aktarmak istediğinize emin misiniz?",
+      "cancelConfirmTitle": "Dersi İptal Et",
+      "cancelConfirmDesc": "Bu dersi iptal etmek istediğinize emin misiniz?",
+      "revertConfirmTitle": "Orijinale Geri Dön",
+      "revertConfirmDesc": "Bu dersi orijinal zamanına geri döndürmek istediğinize emin misiniz?",
+      "lessonUpdated": "Ders güncellendi",
+      "lessonCancelled": "Ders iptal edildi",
+      "lessonReverted": "Ders orijinal zamanına döndürüldü",
+      "updateError": "Ders güncellenemedi"
     },
     "globalTopics": {
       "title": "Global Konular",
@@ -271,10 +349,62 @@
       "sessionNotFound": "Oturum bilgisi bulunamadı. Lütfen tekrar giriş yapın."
     },
     "balance": {
+      "title": "Bakiye",
+      "totalMinutes": "Toplam Dakika",
+      "regularLessons": "Normal Dersler",
+      "trialLessons": "Deneme Dersleri",
+      "paymentHistory": "Ödeme Geçmişi",
+      "noPayments": "Henüz ödeme kaydı yok.",
       "paymentDeleted": "Ödeme kaydı silindi",
       "paymentDeleteError": "Ödeme kaydı silinirken hata oluştu",
       "resetConfirmTitle": "Bakiyeyi Sıfırla",
       "resetConfirmDesc": "Bu işlem öğretmenin tüm bakiyesini (toplam dakika, normal ders sayısı, deneme dersi sayısı) sıfırlayacak ve mevcut bakiye ödeme geçmişine kaydedilecek. Devam etmek istediğinize emin misiniz?"
+    },
+    "weeklySchedule": {
+      "title": "Haftalık Ders Programı",
+      "noLessons": "Bu hafta ders yok.",
+      "exportImage": "Resim Olarak Kaydet"
+    },
+    "createStudent": {
+      "title": "Öğrenci Oluştur",
+      "description": "Yeni bir öğrenci hesabı oluşturun.",
+      "emailLabel": "E-posta",
+      "emailPlaceholder": "ogrenci@example.com",
+      "passwordLabel": "Şifre",
+      "passwordPlaceholder": "En az 6 karakter",
+      "nameLabel": "Ad Soyad",
+      "namePlaceholder": "Ad Soyad",
+      "createBtn": "Öğrenci Oluştur",
+      "studentCreated": "Öğrenci başarıyla oluşturuldu",
+      "createError": "Öğrenci oluşturulamadı"
+    },
+    "createTeacher": {
+      "title": "Öğretmen Oluştur",
+      "description": "Yeni bir öğretmen hesabı oluşturun.",
+      "emailLabel": "E-posta",
+      "emailPlaceholder": "ogretmen@example.com",
+      "passwordLabel": "Şifre",
+      "passwordPlaceholder": "En az 6 karakter",
+      "nameLabel": "Ad Soyad",
+      "namePlaceholder": "Ad Soyad",
+      "createBtn": "Öğretmen Oluştur",
+      "teacherCreated": "Öğretmen başarıyla oluşturuldu",
+      "createError": "Öğretmen oluşturulamadı"
+    },
+    "trialLesson": {
+      "title": "Deneme Dersi Ekle",
+      "dateLabel": "Tarih",
+      "startLabel": "Başlangıç",
+      "endLabel": "Bitiş",
+      "addBtn": "Deneme Dersi Ekle",
+      "lessonAdded": "Deneme dersi eklendi",
+      "addError": "Deneme dersi eklenemedi"
+    },
+    "studentAbout": {
+      "title": "Öğrenci Hakkında",
+      "placeholder": "Öğrenci hakkında notlar...",
+      "saved": "Notlar kaydedildi",
+      "saveError": "Notlar kaydedilemedi"
     },
     "pageSettings": "Sayfa Ayarları"
   },
@@ -285,7 +415,16 @@
     "wednesday": "Çarşamba",
     "thursday": "Perşembe",
     "friday": "Cuma",
-    "saturday": "Cumartesi"
+    "saturday": "Cumartesi",
+    "short": {
+      "sunday": "Paz",
+      "monday": "Pzt",
+      "tuesday": "Sal",
+      "wednesday": "Çar",
+      "thursday": "Per",
+      "friday": "Cum",
+      "saturday": "Cmt"
+    }
   },
   "messages": {
     "topicCreated": "Konu başarıyla oluşturuldu",
@@ -300,6 +439,8 @@
     "globalTopicsLoadError": "Global konular getirilemedi",
     "orderUpdateError": "Sıra güncellenemedi",
     "resourceOrderError": "Kaynak sırası güncellenemedi",
-    "homeworkLoadError": "Ödev yüklenemedi"
+    "homeworkLoadError": "Ödevler yüklenemedi",
+    "studentUpdated": "Öğrenci güncellendi",
+    "studentUpdateError": "Öğrenci güncellenemedi"
   }
 }
