@@ -1,5 +1,6 @@
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { LandingFooter } from "@/components/landing/LandingFooter";
+import { useTranslation } from "react-i18next";
 import { Check, Phone, Mail, User, Users } from "lucide-react";
 import lessonsIllustration from "@/assets/lessons-illustration.png";
 import { useQuery } from "@tanstack/react-query";
@@ -55,6 +56,8 @@ const defaultLessons: LessonsContent = {
 };
 
 export default function Lessons() {
+  const { t } = useTranslation();
+
   const { data: pageContent } = useQuery({
     queryKey: ["page-content", "lessons"],
     queryFn: async () => {
@@ -108,10 +111,7 @@ export default function Lessons() {
                   
                   <ul className="space-y-4 pt-2">
                     {content.individualFeatures.map((feature, index) => (
-                      <li 
-                        key={index} 
-                        className="flex items-start gap-3 transition-all duration-300"
-                      >
+                      <li key={index} className="flex items-start gap-3 transition-all duration-300">
                         <div className="flex-shrink-0 mt-1 w-5 h-5 rounded-full bg-success/15 flex items-center justify-center border border-success/30">
                           <Check className="w-3 h-3 text-success" strokeWidth={3} />
                         </div>
@@ -144,10 +144,7 @@ export default function Lessons() {
                   
                   <ul className="space-y-4 pt-2">
                     {content.groupFeatures.map((feature, index) => (
-                      <li 
-                        key={index} 
-                        className="flex items-start gap-3 transition-all duration-300"
-                      >
+                      <li key={index} className="flex items-start gap-3 transition-all duration-300">
                         <div className="flex-shrink-0 mt-1 w-5 h-5 rounded-full bg-success/15 flex items-center justify-center border border-success/30">
                           <Check className="w-3 h-3 text-success" strokeWidth={3} />
                         </div>
@@ -198,7 +195,7 @@ export default function Lessons() {
               <div className="w-full max-w-[260px] lg:max-w-[300px]">
                 <img
                   src={lessonsIllustration}
-                  alt="İletişim"
+                  alt={t("contact.imageAlt")}
                   className="w-full h-auto"
                 />
               </div>

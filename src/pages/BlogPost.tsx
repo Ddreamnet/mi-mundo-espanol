@@ -1,7 +1,8 @@
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
-import { tr } from "date-fns/locale";
+import { tr, enUS, es } from "date-fns/locale";
 import { Calendar, Clock, ArrowLeft, Share2, Copy, Check } from "lucide-react";
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
@@ -11,8 +12,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-interface BlogPost {
+interface BlogPostData {
   id: string;
   title: string;
   slug: string;
@@ -23,10 +25,14 @@ interface BlogPost {
   created_at: string;
 }
 
+const localeMap = { tr, en: enUS, es };
+
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
+  const { t } = useTranslation();
+  const { language } = useLanguage();
 
   const { data: post, isLoading, error } = useQuery({
     queryKey: ["blog-post", slug],
@@ -39,19 +45,25 @@ export default function BlogPost() {
         .single();
 
       if (error) throw error;
-      return data as BlogPost;
+      return data as BlogPostData;
     },
     enabled: !!slug,
   });
 
   const formatDate = (dateString: string) => {
-    return format(new Date(dateString), "d MMMM yyyy", { locale: tr });
+    return format(new Date(dateString), "d MMMM yyyy", { locale: localeMap[language] || tr });
+  };
+
+  const getReadTimeText = (minutes: number) => {
+    if (language === "en") return `${minutes} min read`;
+    if (language === "es") return `${minutes} min de lectura`;
+    return `${minutes} dk okuma`;
   };
 
   const estimateReadTime = (content: string) => {
     const words = content.split(" ").length;
     const minutes = Math.max(2, Math.ceil(words / 200));
-    return `${minutes} dk okuma`;
+    return getReadTimeText(minutes);
   };
 
   const handleShare = async () => {
@@ -59,19 +71,40 @@ export default function BlogPost() {
     
     if (navigator.share) {
       try {
-        await navigator.share({
-          title: post?.title,
-          url: url,
-        });
+        await navigator.share({ title: post?.title, url });
       } catch {
-        // User cancelled or error
+        // User cancelled
       }
     } else {
       await navigator.clipboard.writeText(url);
       setCopied(true);
-      toast.success("Link kopyalandı!");
+      toast.success(language === "en" ? "Link copied!" : language === "es" ? "¡Enlace copiado!" : "Link kopyalandı!");
       setTimeout(() => setCopied(false), 2000);
     }
+  };
+
+  const getCopiedText = () => {
+    if (language === "en") return copied ? "Copied" : "Share";
+    if (language === "es") return copied ? "Copiado" : "Compartir";
+    return copied ? "Kopyalandı" : "Paylaş";
+  };
+
+  const getCopyLinkText = () => {
+    if (language === "en") return "Copy Link";
+    if (language === "es") return "Copiar Enlace";
+    return "Linki Kopyala";
+  };
+
+  const getAllPostsText = () => {
+    if (language === "en") return "All Posts";
+    if (language === "es") return "Todos los Artículos";
+    return "Tüm Yazılar";
+  };
+
+  const getOtherPostsText = () => {
+    if (language === "en") return "Other Posts";
+    if (language === "es") return "Otros Artículos";
+    return "Diğer Yazılar";
   };
 
   if (error) {
@@ -80,11 +113,15 @@ export default function BlogPost() {
         <LandingHeader />
         <div className="pt-32 pb-16 text-center">
           <div className="text-6xl mb-4">😕</div>
-          <h1 className="text-2xl font-bold text-foreground mb-2">Yazı bulunamadı</h1>
-          <p className="text-muted-foreground mb-6">Aradığınız yazı mevcut değil veya kaldırılmış olabilir.</p>
+          <h1 className="text-2xl font-bold text-foreground mb-2">{t("blog.notFound")}</h1>
+          <p className="text-muted-foreground mb-6">
+            {language === "en" ? "The post you are looking for does not exist or has been removed." : 
+             language === "es" ? "El artículo que buscas no existe o ha sido eliminado." : 
+             "Aradığınız yazı mevcut değil veya kaldırılmış olabilir."}
+          </p>
           <Button onClick={() => navigate("/blog")} variant="outline">
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Blog'a Dön
+            {t("blog.backToBlog")}
           </Button>
         </div>
         <LandingFooter />
@@ -107,16 +144,10 @@ export default function BlogPost() {
               <Skeleton className="h-5 w-24" />
             </div>
             <Skeleton className="h-80 w-full mb-8 rounded-xl" />
-            <div className="space-y-4">
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-full" />
-              <Skeleton className="h-4 w-5/6" />
-            </div>
           </div>
         </article>
       ) : post ? (
         <article className="pt-24 lg:pt-32 pb-16">
-          {/* Back Button */}
           <div className="container mx-auto px-4 lg:px-8 max-w-4xl mb-8">
             <Button
               variant="ghost"
@@ -124,20 +155,16 @@ export default function BlogPost() {
               className="text-muted-foreground hover:text-foreground -ml-2"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Tüm Yazılar
+              {getAllPostsText()}
             </Button>
           </div>
 
-          {/* Header */}
           <header className="container mx-auto px-4 lg:px-8 max-w-4xl mb-8">
-            <Badge variant="secondary" className="mb-4">
-              Blog
-            </Badge>
+            <Badge variant="secondary" className="mb-4">{t("blog.pageTitle")}</Badge>
             <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-6 leading-tight">
               {post.title}
             </h1>
 
-            {/* Meta */}
             <div className="flex flex-wrap items-center gap-4 text-muted-foreground mb-6">
               <div className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
@@ -147,22 +174,12 @@ export default function BlogPost() {
                 <Clock className="w-4 h-4" />
                 <span>{estimateReadTime(post.content)}</span>
               </div>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={handleShare}
-                className="ml-auto"
-              >
-                {copied ? (
-                  <Check className="w-4 h-4 mr-2 text-green-500" />
-                ) : (
-                  <Share2 className="w-4 h-4 mr-2" />
-                )}
-                {copied ? "Kopyalandı" : "Paylaş"}
+              <Button variant="ghost" size="sm" onClick={handleShare} className="ml-auto">
+                {copied ? <Check className="w-4 h-4 mr-2 text-green-500" /> : <Share2 className="w-4 h-4 mr-2" />}
+                {getCopiedText()}
               </Button>
             </div>
 
-            {/* Excerpt */}
             {post.excerpt && (
               <p className="text-lg text-muted-foreground leading-relaxed border-l-4 border-primary pl-4">
                 {post.excerpt}
@@ -170,55 +187,30 @@ export default function BlogPost() {
             )}
           </header>
 
-          {/* Cover Image */}
           {post.cover_image_url && (
             <div className="container mx-auto px-4 lg:px-8 max-w-5xl mb-12">
               <div className="relative rounded-2xl overflow-hidden shadow-xl">
-                <img
-                  src={post.cover_image_url}
-                  alt={post.title}
-                  className="w-full h-64 lg:h-96 object-cover"
-                />
+                <img src={post.cover_image_url} alt={post.title} className="w-full h-64 lg:h-96 object-cover" />
               </div>
             </div>
           )}
 
-          {/* Content */}
           <div className="container mx-auto px-4 lg:px-8 max-w-4xl">
             <div 
-              className="prose prose-lg max-w-none
-                prose-headings:text-foreground prose-headings:font-bold
-                prose-p:text-foreground/90 prose-p:leading-relaxed
-                prose-a:text-primary prose-a:no-underline hover:prose-a:underline
-                prose-strong:text-foreground
-                prose-ul:text-foreground/90 prose-ol:text-foreground/90
-                prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground
-                prose-img:rounded-xl prose-img:shadow-lg
-                dark:prose-invert"
+              className="prose prose-lg max-w-none prose-headings:text-foreground prose-headings:font-bold prose-p:text-foreground/90 prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:text-foreground prose-ul:text-foreground/90 prose-ol:text-foreground/90 prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground prose-img:rounded-xl prose-img:shadow-lg dark:prose-invert"
               dangerouslySetInnerHTML={{ __html: post.content }}
             />
           </div>
 
-          {/* Bottom Navigation */}
           <div className="container mx-auto px-4 lg:px-8 max-w-4xl mt-16 pt-8 border-t border-border">
             <div className="flex items-center justify-between">
-              <Button
-                variant="outline"
-                onClick={() => navigate("/blog")}
-              >
+              <Button variant="outline" onClick={() => navigate("/blog")}>
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Diğer Yazılar
+                {getOtherPostsText()}
               </Button>
-              <Button
-                variant="ghost"
-                onClick={handleShare}
-              >
-                {copied ? (
-                  <Check className="w-4 h-4 mr-2 text-green-500" />
-                ) : (
-                  <Copy className="w-4 h-4 mr-2" />
-                )}
-                Linki Kopyala
+              <Button variant="ghost" onClick={handleShare}>
+                {copied ? <Check className="w-4 h-4 mr-2 text-green-500" /> : <Copy className="w-4 h-4 mr-2" />}
+                {getCopyLinkText()}
               </Button>
             </div>
           </div>
