@@ -6,9 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { tr } from "date-fns/locale";
+import { tr, enUS, es } from "date-fns/locale";
 
 interface AdminNotification {
   id: string;
@@ -29,6 +31,10 @@ export function AdminNotificationBell({ adminId }: AdminNotificationBellProps) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation();
+  const { language } = useLanguage();
+  
+  const dateLocale = language === "tr" ? tr : language === "es" ? es : enUS;
 
   useEffect(() => {
     fetchNotifications();
@@ -68,7 +74,7 @@ export function AdminNotificationBell({ adminId }: AdminNotificationBellProps) {
           fetchNotifications();
           
           toast({
-            title: "Yeni Bildirim",
+            title: t("notifications.newNotification"),
             description: (payload.new as AdminNotification).message,
           });
         }
@@ -102,8 +108,8 @@ export function AdminNotificationBell({ adminId }: AdminNotificationBellProps) {
     } catch (error: any) {
       console.error('Error marking notifications as read:', error);
       toast({
-        title: "Hata",
-        description: "Bildirimler okundu olarak işaretlenemedi",
+        title: t("common.error"),
+        description: t("notifications.markReadError"),
         variant: "destructive",
       });
     }
@@ -135,11 +141,11 @@ export function AdminNotificationBell({ adminId }: AdminNotificationBellProps) {
           <CardHeader className="border-b bg-gradient-to-r from-secondary/30 to-secondary/50 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-semibold">Admin Bildirimleri</CardTitle>
+                <CardTitle className="text-lg font-semibold">{t("notifications.adminTitle")}</CardTitle>
                 <CardDescription className="mt-1">
                   {unreadCount > 0 
-                    ? `${unreadCount} okunmamış bildirim` 
-                    : "Tüm bildirimler okundu"}
+                    ? t("notifications.unreadCount", { count: unreadCount })
+                    : t("notifications.allRead")}
                 </CardDescription>
               </div>
               {unreadCount > 0 && (
@@ -156,9 +162,9 @@ export function AdminNotificationBell({ adminId }: AdminNotificationBellProps) {
                   <div className="rounded-full bg-muted p-4 mb-4">
                     <Bell className="h-8 w-8 opacity-50" />
                   </div>
-                  <p className="text-sm font-medium opacity-70">Henüz bildirim yok</p>
+                  <p className="text-sm font-medium opacity-70">{t("notifications.noNotifications")}</p>
                   <p className="text-xs opacity-60 mt-1 text-center">
-                    Öğrencilerin son dersleri yaklaştığında burada görünecek
+                    {t("notifications.lastLessonWillAppear")}
                   </p>
                 </div>
               ) : (
@@ -191,7 +197,7 @@ export function AdminNotificationBell({ adminId }: AdminNotificationBellProps) {
                           <div className="flex items-center gap-1.5 mt-2">
                             <Clock className="h-3 w-3 opacity-50" />
                             <p className="text-xs opacity-60">
-                              {format(new Date(notification.created_at), "dd MMM yyyy, HH:mm", { locale: tr })}
+                              {format(new Date(notification.created_at), "dd MMM yyyy, HH:mm", { locale: dateLocale })}
                             </p>
                           </div>
                         </div>
