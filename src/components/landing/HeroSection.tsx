@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { Link } from "react-router-dom";
 
 interface HeroContent {
   mainTitle: string;
@@ -72,10 +73,10 @@ export function HeroSection() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Button variant="landing-primary" size="lg" asChild>
-                <a href={hero.primaryButtonLink}>{hero.primaryButtonText}</a>
+                <Link to={hero.primaryButtonLink}>{hero.primaryButtonText}</Link>
               </Button>
               <Button variant="landing-secondary" size="lg" asChild>
-                <a href={hero.secondaryButtonLink}>{hero.secondaryButtonText}</a>
+                <Link to={hero.secondaryButtonLink}>{hero.secondaryButtonText}</Link>
               </Button>
             </div>
           </div>
