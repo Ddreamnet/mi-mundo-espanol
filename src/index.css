@@ -65,17 +65,26 @@
 }
 
 /* ============================================================================
-   DESIGN TOKEN SYSTEM - LIGHT MODE ONLY
+   DESIGN TOKEN SYSTEM
    ============================================================================
    All colors use HSL format: H S% L%
    Usage in Tailwind: hsl(var(--token-name))
+   
+   ARCHITECTURE:
+   - :root contains GLOBAL tokens (used by landing pages + fallback)
+   - [data-area="dashboard"] overrides tokens for dashboard-specific styling
+   - [data-dashboard="role"] overrides role-specific accents within dashboards
    ============================================================================ */
 
 @layer base {
+  /* ==========================================================================
+     GLOBAL TOKENS (Landing Pages & Public Pages)
+     These are the default values used outside of dashboard context
+     ========================================================================== */
   :root {
-    /* ========================================================================
-       BASE PALETTE - Core brand colors
-       ======================================================================== */
+    /* ------------------------------------------------------------------------
+       BASE PALETTE - Landing page theme (burgundy + cream)
+       ------------------------------------------------------------------------ */
     
     /* Main background - deep burgundy */
     --background: 1 85% 24%;
@@ -89,9 +98,9 @@
     --popover: 49 100% 97%;
     --popover-foreground: 1 85% 15%;
 
-    /* ========================================================================
-       SEMANTIC TOKENS - Shared across all dashboards
-       ======================================================================== */
+    /* ------------------------------------------------------------------------
+       SEMANTIC TOKENS
+       ------------------------------------------------------------------------ */
     
     /* Primary - warm gold accent */
     --primary: 42 70% 55%;
@@ -110,9 +119,9 @@
     --accent: 15 60% 45%;
     --accent-foreground: 42 42% 94%;
 
-    /* ========================================================================
+    /* ------------------------------------------------------------------------
        STATUS COLORS - Semantic feedback
-       ======================================================================== */
+       ------------------------------------------------------------------------ */
     
     /* Destructive - coral red */
     --destructive: 0 65% 50%;
@@ -126,9 +135,9 @@
     --warning: 38 90% 50%;
     --warning-foreground: 1 85% 15%;
 
-    /* ========================================================================
+    /* ------------------------------------------------------------------------
        OVERLAY & FORM ELEMENTS
-       ======================================================================== */
+       ------------------------------------------------------------------------ */
     
     /* Modal/Dialog overlay */
     --overlay: 0 0% 0% / 0.8;
@@ -138,9 +147,9 @@
     --ring: 42 70% 55%;
     --radius: 0.5rem;
 
-    /* ========================================================================
+    /* ------------------------------------------------------------------------
        BUTTON TOKENS - Centralized button theming
-       ======================================================================== */
+       ------------------------------------------------------------------------ */
     
     /* Primary Button - dark burgundy on light backgrounds */
     --btn-primary: 354 47% 20%;
@@ -179,9 +188,9 @@
     --btn-landing-header-foreground: 42 42% 94%;
     --btn-landing-header-hover: 354 47% 15%;
 
-    /* ========================================================================
+    /* ------------------------------------------------------------------------
        ICON TOKENS
-       ======================================================================== */
+       ------------------------------------------------------------------------ */
     
     /* Icons on dark background */
     --icon-default: 42 42% 94%;
@@ -192,9 +201,9 @@
     --icon-on-card: 1 85% 25%;
     --icon-on-card-muted: 1 50% 40%;
 
-    /* ========================================================================
+    /* ------------------------------------------------------------------------
        SIDEBAR TOKENS
-       ======================================================================== */
+       ------------------------------------------------------------------------ */
     
     --sidebar-background: 1 85% 18%;
     --sidebar-foreground: 42 42% 94%;
@@ -205,9 +214,9 @@
     --sidebar-border: 1 50% 28%;
     --sidebar-ring: 42 70% 55%;
 
-    /* ========================================================================
+    /* ------------------------------------------------------------------------
        CHART TOKENS
-       ======================================================================== */
+       ------------------------------------------------------------------------ */
     
     --chart-1: 42 70% 55%;
     --chart-2: 15 60% 45%;
@@ -215,9 +224,9 @@
     --chart-4: 30 50% 50%;
     --chart-5: 350 45% 45%;
 
-    /* ========================================================================
+    /* ------------------------------------------------------------------------
        LANDING PAGE TOKENS
-       ======================================================================== */
+       ------------------------------------------------------------------------ */
     
     --landing-header: 49 100% 97%;
     --landing-header-foreground: 1 85% 15%;
@@ -228,9 +237,9 @@
     --page-lessons: 228 43% 29%;
     --page-contact: 214 26% 31%;
 
-    /* ========================================================================
+    /* ------------------------------------------------------------------------
        NOTIFICATION HEADER TOKENS
-       ======================================================================== */
+       ------------------------------------------------------------------------ */
     
     /* Primary notification header gradient */
     --notification-header-from: var(--primary);
@@ -240,20 +249,19 @@
     --notification-admin-header-from: var(--secondary);
     --notification-admin-header-to: var(--secondary);
 
-    /* ========================================================================
-       ROLE ACCENT TOKENS - Default (Admin)
-       Used for branding highlights, not the whole palette
-       ======================================================================== */
+    /* ------------------------------------------------------------------------
+       ROLE ACCENT TOKENS - Default values (used outside dashboard)
+       ------------------------------------------------------------------------ */
     
     --role-accent: 42 70% 55%;
     --role-accent-hover: 42 70% 50%;
     --role-accent-foreground: 1 85% 15%;
 
-    /* ========================================================================
+    /* ------------------------------------------------------------------------
        SCHEDULE COLOR TOKENS
        For student identification in schedule views
        Each set has: background, text, border, hover
-       ======================================================================== */
+       ------------------------------------------------------------------------ */
     
     /* Schedule Color 1 - Rose */
     --schedule-1-bg: 350 100% 94%;
@@ -322,24 +330,47 @@
     --schedule-trial-hover: 50 100% 80%;
   }
 
-  /* ========================================================================
+  /* ==========================================================================
+     DASHBOARD SCOPE TOKENS
+     These override global tokens ONLY within dashboard context.
+     Add data-area="dashboard" to the dashboard container to activate.
+     ========================================================================== */
+  [data-area="dashboard"] {
+    /* ------------------------------------------------------------------------
+       DASHBOARD BASE PALETTE
+       Override these to change the dashboard theme without affecting landing
+       ------------------------------------------------------------------------ */
+    
+    /* Dashboard uses the same tokens as global for now.
+       To customize dashboard separately, override values here:
+       
+       --background: <your-dashboard-bg>;
+       --foreground: <your-dashboard-fg>;
+       --card: <your-dashboard-card>;
+       --card-foreground: <your-dashboard-card-fg>;
+       etc.
+    */
+  }
+
+  /* ==========================================================================
      ROLE-SPECIFIC ACCENT OVERRIDES
-     Apply via data-dashboard attribute on dashboard container
-     ======================================================================== */
+     Apply via data-dashboard attribute on dashboard container.
+     These work within the [data-area="dashboard"] scope.
+     ========================================================================== */
   
-  [data-dashboard="admin"] {
+  [data-area="dashboard"][data-dashboard="admin"] {
     --role-accent: 42 70% 55%;
     --role-accent-hover: 42 70% 50%;
     --role-accent-foreground: 1 85% 15%;
   }
 
-  [data-dashboard="teacher"] {
+  [data-area="dashboard"][data-dashboard="teacher"] {
     --role-accent: 15 60% 45%;
     --role-accent-hover: 15 60% 40%;
     --role-accent-foreground: 42 42% 94%;
   }
 
-  [data-dashboard="student"] {
+  [data-area="dashboard"][data-dashboard="student"] {
     --role-accent: 142 70% 40%;
     --role-accent-hover: 142 70% 35%;
     --role-accent-foreground: 42 42% 94%;
