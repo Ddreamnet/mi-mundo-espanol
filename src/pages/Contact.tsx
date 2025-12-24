@@ -70,7 +70,7 @@ export default function Contact() {
             <div>
               {/* Header */}
               <div className="mb-12">
-                <h1 className="text-5xl lg:text-6xl font-montserrat font-bold text-[hsl(var(--landing-header-foreground))] mb-4 tracking-tight">
+                <h1 className="text-5xl lg:text-6xl font-montserrat font-bold text-[hsl(42_42%_94%)] mb-4 tracking-tight">
                   {content.pageTitle}
                 </h1>
                 <div className="flex items-center gap-3">

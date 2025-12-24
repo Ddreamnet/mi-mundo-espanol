@@ -81,15 +81,8 @@ export default function SSS() {
             <div className="inline-flex items-center justify-center p-3 rounded-full bg-primary/15 mb-4">
               <HelpCircle className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-montserrat font-bold text-[hsl(1_85%_24%)] mb-4">
-              {content.pageTitle.includes(" ") ? (
-                <>
-                  {content.pageTitle.split(" ").slice(0, -1).join(" ")}{" "}
-                  <span className="text-primary">{content.pageTitle.split(" ").pop()}</span>
-                </>
-              ) : (
-                content.pageTitle
-              )}
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-montserrat font-bold text-[hsl(42_42%_94%)] mb-4">
+              {content.pageTitle}
             </h1>
             <p className="text-lg text-[hsl(1_85%_24%/0.8)] max-w-2xl mx-auto">
               {content.pageSubtitle}
