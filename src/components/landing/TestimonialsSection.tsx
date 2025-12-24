@@ -1,36 +1,41 @@
 import { useState, useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Testimonial {
   id: string;
   quote: string;
+  author_name: string | null;
 }
 
-// Dummy testimonials - ileride admin panelinden gelecek
-const testimonials: Testimonial[] = [
+// Fallback testimonials
+const defaultTestimonials: Testimonial[] = [
   {
     id: "1",
-    quote:
-      "Mi Mundo Español ile İspanyolca öğrenmek hayatımın en iyi kararlarından biri oldu. Öğretmenim sayesinde kısa sürede konuşma becerim inanılmaz gelişti.",
+    quote: "Mi Mundo Español ile İspanyolca öğrenmek hayatımın en iyi kararlarından biri oldu. Öğretmenim sayesinde kısa sürede konuşma becerim inanılmaz gelişti.",
+    author_name: null,
   },
   {
     id: "2",
-    quote:
-      "DELE sınavına hazırlanırken aldığım destek paha biçilemezdi. Birebir ders formatı sayesinde eksiklerimi hızlıca kapattım.",
+    quote: "DELE sınavına hazırlanırken aldığım destek paha biçilemezdi. Birebir ders formatı sayesinde eksiklerimi hızlıca kapattım.",
+    author_name: null,
   },
   {
     id: "3",
     quote: "Online ders imkanı benim için büyük kolaylık sağladı. Esnek saatler ve kaliteli eğitim bir arada.",
+    author_name: null,
   },
   {
     id: "4",
     quote: "Sıfırdan başladım ve şimdi İspanya'da rahatça iletişim kurabiliyorum. Teşekkürler Mi Mundo Español!",
+    author_name: null,
   },
   {
     id: "5",
-    quote:
-      "Anadili İspanyolca olan bir eğitmenden ders almak gerçekten fark yaratıyor. Aksanımı ve telaffuzumu çok geliştirdim.",
+    quote: "Anadili İspanyolca olan bir eğitmenden ders almak gerçekten fark yaratıyor. Aksanımı ve telaffuzumu çok geliştirdim.",
+    author_name: null,
   },
 ];
 
@@ -39,13 +44,29 @@ export function TestimonialsSection() {
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const isDragging = useRef(false);
 
+  const { data: dbTestimonials } = useQuery({
+    queryKey: ["testimonials-public"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("testimonials")
+        .select("id, quote, author_name")
+        .eq("is_active", true)
+        .order("order_index");
+      if (error) throw error;
+      return data as Testimonial[];
+    },
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const testimonials = dbTestimonials && dbTestimonials.length > 0 ? dbTestimonials : defaultTestimonials;
+
   const handlePrev = useCallback(() => {
     setActiveIndex((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1));
-  }, []);
+  }, [testimonials.length]);
 
   const handleNext = useCallback(() => {
     setActiveIndex((prev) => (prev === testimonials.length - 1 ? 0 : prev + 1));
-  }, []);
+  }, [testimonials.length]);
 
   // Mouse events
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -97,7 +118,6 @@ export function TestimonialsSection() {
     const diff = index - activeIndex;
     const normalizedDiff = (diff + testimonials.length) % testimonials.length;
 
-    // Determine position: -2, -1, 0, 1, 2
     let position = normalizedDiff;
     if (normalizedDiff > 2) {
       position = normalizedDiff - testimonials.length;
@@ -135,7 +155,6 @@ export function TestimonialsSection() {
       };
     }
 
-    // Far cards
     const translateX = position < 0 ? "-175%" : "175%";
     return {
       opacity: 0.3,
@@ -155,7 +174,6 @@ export function TestimonialsSection() {
         {/* Desktop Carousel */}
         <div className="hidden md:block relative">
           <div className="flex items-center justify-center">
-            {/* Left Arrow */}
             <Button
               variant="ghost"
               size="icon"
@@ -166,15 +184,12 @@ export function TestimonialsSection() {
               <ChevronLeft className="h-6 w-6" />
             </Button>
 
-            {/* Cards Container */}
             <div
               className="relative h-[320px] w-full max-w-4xl flex items-center justify-center cursor-grab active:cursor-grabbing select-none"
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
-              onMouseLeave={() => {
-                dragStart.current = null;
-              }}
+              onMouseLeave={() => { dragStart.current = null; }}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
@@ -198,7 +213,6 @@ export function TestimonialsSection() {
               })}
             </div>
 
-            {/* Right Arrow */}
             <Button
               variant="ghost"
               size="icon"
@@ -210,7 +224,6 @@ export function TestimonialsSection() {
             </Button>
           </div>
 
-          {/* Dots Indicator */}
           <div className="flex justify-center gap-2 mt-8">
             {testimonials.map((_, index) => (
               <button
@@ -225,7 +238,7 @@ export function TestimonialsSection() {
           </div>
         </div>
 
-        {/* Mobile Carousel - Single Card Focus */}
+        {/* Mobile Carousel */}
         <div className="md:hidden relative">
           <div className="flex items-center justify-center gap-4">
             <Button
@@ -253,7 +266,6 @@ export function TestimonialsSection() {
             </Button>
           </div>
 
-          {/* Mobile Dots */}
           <div className="flex justify-center gap-2 mt-6">
             {testimonials.map((_, index) => (
               <button
@@ -275,14 +287,12 @@ export function TestimonialsSection() {
 function TestimonialCard({ quote }: { quote: string }) {
   return (
     <div className="relative pt-10">
-      {/* Avatar Circle - Half outside, half inside */}
       <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
         <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-xl ring-4 ring-background">
           <User className="h-10 w-10 text-primary-foreground" />
         </div>
       </div>
 
-      {/* Card */}
       <div className="bg-card rounded-2xl shadow-xl pt-14 pb-8 px-6 border border-border/50">
         <blockquote className="text-card-foreground/80 text-center leading-relaxed">
           <span className="text-primary text-2xl font-serif">"</span>

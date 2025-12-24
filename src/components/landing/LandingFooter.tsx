@@ -1,6 +1,8 @@
 import { Instagram, Facebook } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
 
 // WhatsApp icon component
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -11,30 +13,51 @@ function WhatsAppIcon({ className }: { className?: string }) {
   );
 }
 
-export function LandingFooter() {
-  const footerLinks = [
+interface FooterContent {
+  links: { label: string; href: string }[];
+  socialLinks: { icon: string; href: string; label: string }[];
+  copyrightText: string;
+}
+
+const defaultFooter: FooterContent = {
+  links: [
     { label: "İletişim", href: "/iletisim" },
     { label: "SSS", href: "#sss" },
     { label: "Gizlilik Politikası", href: "#gizlilik" },
-  ];
+  ],
+  socialLinks: [
+    { icon: "instagram", href: "https://www.instagram.com/mi.mundo_espanol/", label: "Instagram" },
+    { icon: "facebook", href: "#", label: "Facebook" },
+    { icon: "whatsapp", href: "https://wa.me/+905304721875", label: "WhatsApp" },
+  ],
+  copyrightText: "Mi Mundo Español. Tüm hakları saklıdır.",
+};
 
-  const socialLinks = [
-    {
-      icon: Instagram,
-      href: "https://www.instagram.com/mi.mundo_espanol/",
-      label: "Instagram",
+const getIcon = (iconName: string) => {
+  switch (iconName) {
+    case "instagram": return Instagram;
+    case "facebook": return Facebook;
+    case "whatsapp": return WhatsAppIcon;
+    default: return Instagram;
+  }
+};
+
+export function LandingFooter() {
+  const { data: content } = useQuery({
+    queryKey: ["page-content", "footer"],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("page_contents")
+        .select("content")
+        .eq("page_key", "footer")
+        .maybeSingle();
+      if (error) throw error;
+      return data?.content as unknown as FooterContent | null;
     },
-    {
-      icon: Facebook,
-      href: "#",
-      label: "Facebook",
-    },
-    {
-      icon: WhatsAppIcon,
-      href: "https://wa.me/+905304721875",
-      label: "WhatsApp",
-    },
-  ];
+    staleTime: 1000 * 60 * 5,
+  });
+
+  const footer = content ? { ...defaultFooter, ...content } : defaultFooter;
 
   return (
     <footer className="bg-[hsl(var(--landing-footer))] text-[hsl(var(--landing-footer-foreground))]">
@@ -47,7 +70,7 @@ export function LandingFooter() {
 
           {/* Links */}
           <div className="flex items-center gap-6">
-            {footerLinks.map((link) => (
+            {footer.links.map((link) => (
               <a
                 key={link.href}
                 href={link.href}
@@ -60,26 +83,29 @@ export function LandingFooter() {
 
           {/* Social Icons */}
           <div className="flex items-center gap-2">
-            {socialLinks.map((social) => (
-              <Button
-                key={social.label}
-                variant="ghost"
-                size="icon"
-                asChild
-                className="h-9 w-9 text-[hsl(var(--landing-footer-foreground))] hover:bg-[hsl(var(--background)/0.1)] hover:text-[hsl(var(--primary))]"
-              >
-                <a href={social.href} target="_blank" rel="noopener noreferrer" aria-label={social.label}>
-                  <social.icon className="w-5 h-5" />
-                </a>
-              </Button>
-            ))}
+            {footer.socialLinks.map((social) => {
+              const Icon = getIcon(social.icon);
+              return (
+                <Button
+                  key={social.label}
+                  variant="ghost"
+                  size="icon"
+                  asChild
+                  className="h-9 w-9 text-[hsl(var(--landing-footer-foreground))] hover:bg-[hsl(var(--background)/0.1)] hover:text-[hsl(var(--primary))]"
+                >
+                  <a href={social.href} target="_blank" rel="noopener noreferrer" aria-label={social.label}>
+                    <Icon className="w-5 h-5" />
+                  </a>
+                </Button>
+              );
+            })}
           </div>
         </div>
 
         {/* Bottom Bar */}
         <div className="mt-6 pt-4 border-t border-[hsl(var(--background)/0.15)]">
           <p className="text-center text-xs text-[hsl(var(--landing-footer-foreground)/0.5)]">
-            © {new Date().getFullYear()} Mi Mundo Español. Tüm hakları saklıdır.
+            © {new Date().getFullYear()} {footer.copyrightText}
           </p>
         </div>
       </div>
