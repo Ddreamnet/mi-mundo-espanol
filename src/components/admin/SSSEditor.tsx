@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -27,6 +28,7 @@ const defaultSSS: SSSContent = {
 };
 
 export function SSSEditor() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<SSSContent>(defaultSSS);
 
@@ -71,10 +73,10 @@ export function SSSEditor() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["page-content", "sss"] });
-      toast.success("SSS sayfası güncellendi");
+      toast.success(t("editors.sss.pageUpdated"));
     },
     onError: () => {
-      toast.error("Kaydetme başarısız");
+      toast.error(t("editors.sss.saveFailed"));
     },
   });
 
@@ -103,7 +105,7 @@ export function SSSEditor() {
   };
 
   if (isLoading) {
-    return <div className="p-4 text-center text-muted-foreground">Yükleniyor...</div>;
+    return <div className="p-4 text-center text-muted-foreground">{t("common.loading")}</div>;
   }
 
   return (
@@ -113,25 +115,25 @@ export function SSSEditor() {
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
             <HelpCircle className="h-5 w-5" />
-            Sayfa Ayarları
+            {t("dialogs.pageSettings")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Sayfa Başlığı</Label>
+              <Label>{t("editors.sss.pageTitle")}</Label>
               <Input
                 value={formData.pageTitle}
                 onChange={(e) => setFormData({ ...formData, pageTitle: e.target.value })}
-                placeholder="Sıkça Sorulan Sorular"
+                placeholder={t("editors.sss.pageTitlePlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label>Alt Başlık</Label>
+              <Label>{t("editors.sss.subtitle")}</Label>
               <Input
                 value={formData.pageSubtitle}
                 onChange={(e) => setFormData({ ...formData, pageSubtitle: e.target.value })}
-                placeholder="En çok merak edilen sorular"
+                placeholder={t("editors.sss.subtitlePlaceholder")}
               />
             </div>
           </div>
@@ -142,17 +144,17 @@ export function SSSEditor() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">Sorular ({formData.items.length})</CardTitle>
+            <CardTitle className="text-lg">{t("editors.sss.questions")} ({formData.items.length})</CardTitle>
             <Button onClick={addItem} size="sm" variant="outline">
               <Plus className="h-4 w-4 mr-1" />
-              Soru Ekle
+              {t("editors.sss.addQuestion")}
             </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {formData.items.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
-              Henüz soru eklenmemiş. "Soru Ekle" butonuna tıklayarak başlayın.
+              {t("editors.sss.noQuestions")}
             </p>
           ) : (
             formData.items.map((item, index) => (
@@ -164,19 +166,19 @@ export function SSSEditor() {
                   <GripVertical className="h-5 w-5 text-muted-foreground mt-2 cursor-move" />
                   <div className="flex-1 space-y-3">
                     <div className="space-y-2">
-                      <Label className="text-sm">Soru {index + 1}</Label>
+                      <Label className="text-sm">{t("editors.sss.question")} {index + 1}</Label>
                       <Input
                         value={item.question}
                         onChange={(e) => updateItem(index, "question", e.target.value)}
-                        placeholder="Soru giriniz..."
+                        placeholder={t("editors.sss.questionPlaceholder")}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm">Cevap</Label>
+                      <Label className="text-sm">{t("editors.sss.answer")}</Label>
                       <Textarea
                         value={item.answer}
                         onChange={(e) => updateItem(index, "answer", e.target.value)}
-                        placeholder="Cevap giriniz..."
+                        placeholder={t("editors.sss.answerPlaceholder")}
                         rows={3}
                       />
                     </div>
@@ -200,7 +202,7 @@ export function SSSEditor() {
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={saveMutation.isPending}>
           <Save className="h-4 w-4 mr-2" />
-          {saveMutation.isPending ? "Kaydediliyor..." : "Kaydet"}
+          {saveMutation.isPending ? t("common.saving") : t("common.save")}
         </Button>
       </div>
     </div>

@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link as LinkIcon, Save } from "lucide-react";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
@@ -16,6 +17,7 @@ export function LessonLinkDialog({ teacherId }: LessonLinkDialogProps) {
   const [lessonLink, setLessonLink] = useState("");
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   useEffect(() => {
     if (open) {
@@ -54,14 +56,14 @@ export function LessonLinkDialog({ teacherId }: LessonLinkDialogProps) {
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Ders linki kaydedildi",
+        title: t("common.success"),
+        description: t("dialogs.lessonLink.saved"),
       });
       setOpen(false);
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: "Link kaydedilemedi",
+        title: t("common.error"),
+        description: t("dialogs.lessonLink.saveError"),
         variant: "destructive",
       });
     } finally {
@@ -74,16 +76,16 @@ export function LessonLinkDialog({ teacherId }: LessonLinkDialogProps) {
       <DialogTrigger asChild>
         <Button variant="outline" size="sm">
           <LinkIcon className="h-4 w-4" />
-          <span className="hidden sm:inline ml-2">Link</span>
+          <span className="hidden sm:inline ml-2">{t("dialogs.lessonLink.link")}</span>
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Ders Linki</DialogTitle>
+          <DialogTitle>{t("dialogs.lessonLink.title")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="lesson-link">Zoom, Google Meet veya başka bir ders linki</Label>
+            <Label htmlFor="lesson-link">{t("dialogs.lessonLink.description")}</Label>
             <Input
               id="lesson-link"
               type="url"
@@ -92,12 +94,12 @@ export function LessonLinkDialog({ teacherId }: LessonLinkDialogProps) {
               onChange={(e) => setLessonLink(e.target.value)}
             />
             <p className="text-xs text-muted-foreground">
-              Bu link tüm öğrencilerinize gösterilecektir.
+              {t("dialogs.lessonLink.linkNote")}
             </p>
           </div>
           <Button onClick={handleSave} disabled={loading} className="w-full">
             <Save className="h-4 w-4 mr-2" />
-            {loading ? "Kaydediliyor..." : "Kaydet"}
+            {loading ? t("common.saving") : t("common.save")}
           </Button>
         </div>
       </DialogContent>

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, GripVertical, Save, LayoutTemplate, X } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -41,10 +42,12 @@ function SortableZigzag({
   section,
   onUpdate,
   onDelete,
+  t,
 }: {
   section: ZigzagSection;
   onUpdate: (id: string, data: Partial<ZigzagSection>) => void;
   onDelete: (id: string) => void;
+  t: (key: string) => string;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: section.id,
@@ -107,11 +110,11 @@ function SortableZigzag({
           <div className="flex-1 space-y-4">
             <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
-                <Label className="text-xs text-muted-foreground">Başlık</Label>
+                <Label className="text-xs text-muted-foreground">{t("editors.zigzag.title")}</Label>
                 <Input
                   value={localTitle}
                   onChange={(e) => setLocalTitle(e.target.value)}
-                  placeholder="Bölüm başlığı..."
+                  placeholder={t("editors.zigzag.titlePlaceholder")}
                 />
               </div>
               <div className="flex items-center gap-3 pt-5">
@@ -120,27 +123,27 @@ function SortableZigzag({
                     checked={section.image_on_left}
                     onCheckedChange={(checked) => onUpdate(section.id, { image_on_left: checked })}
                   />
-                  <Label className="text-xs text-muted-foreground whitespace-nowrap">Görsel solda</Label>
+                  <Label className="text-xs text-muted-foreground whitespace-nowrap">{t("editors.zigzag.imageOnLeft")}</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <Switch
                     checked={section.is_active}
                     onCheckedChange={(checked) => onUpdate(section.id, { is_active: checked })}
                   />
-                  <Label className="text-xs text-muted-foreground">Aktif</Label>
+                  <Label className="text-xs text-muted-foreground">{t("editors.zigzag.active")}</Label>
                 </div>
               </div>
             </div>
 
             <ImageUpload
-              label="Bölüm Görseli"
+              label={t("editors.zigzag.sectionImage")}
               value={localImageUrl}
               onChange={setLocalImageUrl}
               folder="zigzag"
             />
 
             <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Maddeler</Label>
+              <Label className="text-xs text-muted-foreground">{t("editors.zigzag.items")}</Label>
               <div className="space-y-2">
                 {localItems.map((item, index) => (
                   <div key={index} className="flex gap-2">
@@ -163,7 +166,7 @@ function SortableZigzag({
                   <Input
                     value={newItem}
                     onChange={(e) => setNewItem(e.target.value)}
-                    placeholder="Yeni madde ekle..."
+                    placeholder={t("editors.zigzag.addItemPlaceholder")}
                     onKeyDown={(e) => e.key === "Enter" && addItem()}
                     className="flex-1"
                   />
@@ -176,7 +179,7 @@ function SortableZigzag({
           </div>
 
           <div className="flex flex-col gap-2 pt-2">
-            <Button variant="outline" size="icon" onClick={handleSave} className="h-8 w-8" title="Kaydet">
+            <Button variant="outline" size="icon" onClick={handleSave} className="h-8 w-8" title={t("common.save")}>
               <Save className="h-4 w-4" />
             </Button>
             <Button
@@ -184,7 +187,7 @@ function SortableZigzag({
               size="icon"
               onClick={() => onDelete(section.id)}
               className="h-8 w-8 text-destructive hover:text-destructive"
-              title="Sil"
+              title={t("common.delete")}
             >
               <Trash2 className="h-4 w-4" />
             </Button>
@@ -197,6 +200,7 @@ function SortableZigzag({
 
 export function ZigzagEditor() {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
   const sensors = useSensors(
@@ -223,20 +227,20 @@ export function ZigzagEditor() {
     mutationFn: async () => {
       const maxOrder = sections.length > 0 ? Math.max(...sections.map((s) => s.order_index)) : -1;
       const { error } = await supabase.from("zigzag_sections").insert({
-        title: "Yeni Bölüm",
-        items: ["Madde 1", "Madde 2"],
+        title: t("editors.zigzag.newSection"),
+        items: [t("editors.zigzag.item1"), t("editors.zigzag.item2")],
         order_index: maxOrder + 1,
         is_active: true,
-        image_on_left: sections.length % 2 === 1, // Alternatif
+        image_on_left: sections.length % 2 === 1,
       });
       if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-zigzag-sections"] });
-      toast({ title: "Başarılı", description: "Yeni bölüm eklendi" });
+      toast({ title: t("common.success"), description: t("editors.zigzag.sectionAdded") });
     },
     onError: (error: any) => {
-      toast({ title: "Hata", description: error.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -247,10 +251,10 @@ export function ZigzagEditor() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-zigzag-sections"] });
-      toast({ title: "Başarılı", description: "Bölüm güncellendi" });
+      toast({ title: t("common.success"), description: t("editors.zigzag.sectionUpdated") });
     },
     onError: (error: any) => {
-      toast({ title: "Hata", description: error.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -261,10 +265,10 @@ export function ZigzagEditor() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-zigzag-sections"] });
-      toast({ title: "Başarılı", description: "Bölüm silindi" });
+      toast({ title: t("common.success"), description: t("editors.zigzag.sectionDeleted") });
     },
     onError: (error: any) => {
-      toast({ title: "Hata", description: error.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -308,23 +312,23 @@ export function ZigzagEditor() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="font-semibold text-lg">Zigzag Bölümleri</h3>
+          <h3 className="font-semibold text-lg">{t("editors.zigzag.zigzagSections")}</h3>
           <p className="text-sm text-muted-foreground">
-            Ana sayfadaki içerik bölümlerini yönetin
+            {t("editors.zigzag.manageSections")}
           </p>
         </div>
         <Button onClick={() => addMutation.mutate()} disabled={addMutation.isPending}>
           <Plus className="h-4 w-4 mr-2" />
-          Yeni Bölüm
+          {t("editors.zigzag.newSection")}
         </Button>
       </div>
 
       {sections.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
           <LayoutTemplate className="h-12 w-12 mb-4" />
-          <p>Henüz bölüm eklenmemiş</p>
+          <p>{t("editors.zigzag.noSections")}</p>
           <Button variant="outline" className="mt-4" onClick={() => addMutation.mutate()}>
-            İlk bölümü ekle
+            {t("editors.zigzag.addFirstSection")}
           </Button>
         </div>
       ) : (
@@ -336,6 +340,7 @@ export function ZigzagEditor() {
                 section={section}
                 onUpdate={(id, data) => updateMutation.mutate({ id, data })}
                 onDelete={(id) => deleteMutation.mutate(id)}
+                t={t}
               />
             ))}
           </SortableContext>
