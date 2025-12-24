@@ -11,12 +11,12 @@
   "hero": {
     "mainTitle": "Mi Mundo Español",
     "subtitle": "Tu Mundo en Español",
-    "primaryButton": "Empezar Ahora",
+    "primaryButton": "Comenzar",
     "secondaryButton": "Sobre las Clases"
   },
   "cta": {
-    "title": "¿Listo? ¡Contáctanos Ahora!",
-    "description": "Comienza tu viaje de aprendizaje del español hoy. Alcanza tus metas con planes de lecciones personalizados e instrucción individual.",
+    "title": "¿Listo para empezar? ¡Obtén información ahora!",
+    "description": "Comienza tu viaje de aprendizaje de español hoy. Alcanza tus objetivos con planes de lecciones personalizados y entrenamiento individual.",
     "button": "Contacto"
   },
   "footer": {
@@ -35,7 +35,7 @@
     "instagram": "Instagram",
     "facebook": "Facebook",
     "whatsappContact": "Contactar por WhatsApp",
-    "imageAlt": "Ilustración de Contacto"
+    "imageAlt": "Ilustración de contacto"
   },
   "sss": {
     "pageTitle": "Preguntas Frecuentes",
@@ -43,17 +43,18 @@
   },
   "lessons": {
     "pageTitle": "Clases",
-    "pageSubtitle": "Programas de clases que hemos preparado para tu viaje de aprendizaje del español",
-    "learnMore": "Más Información",
-    "imageAlt": "Imagen de la clase"
+    "pageSubtitle": "Programas de lecciones que hemos preparado para tu viaje de aprendizaje de español",
+    "learnMore": "Más información",
+    "imageAlt": "Imagen de la lección"
   },
   "blog": {
     "pageTitle": "Blog",
-    "pageSubtitle": "Contenido para ayudarte en tu viaje de aprendizaje del español",
-    "readMore": "Leer Más",
-    "noPosts": "Aún no hay publicaciones.",
+    "pageSubtitle": "Contenido para ayudarte en tu viaje de aprendizaje de español",
+    "readMore": "Leer más",
+    "noPosts": "No hay publicaciones de blog todavía.",
     "backToBlog": "Volver al Blog",
-    "notFound": "Publicación no encontrada"
+    "notFound": "Publicación no encontrada",
+    "minRead": "min de lectura"
   },
   "privacy": {
     "pageTitle": "Política de Privacidad",
@@ -62,31 +63,243 @@
   "login": {
     "title": "Iniciar Sesión",
     "description": "Inicia sesión en tu cuenta de Mi Mundo Español",
-    "email": "Correo Electrónico",
+    "email": "Correo electrónico",
     "emailPlaceholder": "ejemplo@email.com",
     "password": "Contraseña",
     "passwordPlaceholder": "••••••••",
     "submit": "Iniciar Sesión",
     "loading": "Iniciando sesión...",
     "error": "Error",
-    "emailPasswordRequired": "El correo y la contraseña son obligatorios.",
+    "emailPasswordRequired": "Se requiere correo electrónico y contraseña.",
     "success": "Éxito",
-    "successMessage": "Sesión iniciada. Redirigiendo...",
-    "loginFailed": "Error de Inicio de Sesión",
+    "successMessage": "Has iniciado sesión. Redirigiendo...",
+    "loginFailed": "Inicio de Sesión Fallido",
     "genericError": "Ocurrió un error al iniciar sesión.",
-    "invalidCredentials": "Correo o contraseña incorrectos.",
-    "emailNotConfirmed": "Tu correo electrónico aún no ha sido verificado."
+    "invalidCredentials": "Correo electrónico o contraseña inválidos.",
+    "emailNotConfirmed": "Tu dirección de correo electrónico aún no ha sido confirmada."
   },
   "common": {
     "loading": "Cargando...",
+    "profileLoading": "Cargando perfil...",
     "error": "Ocurrió un error",
     "save": "Guardar",
+    "saving": "Guardando...",
     "cancel": "Cancelar",
     "delete": "Eliminar",
     "edit": "Editar",
     "add": "Agregar",
     "close": "Cerrar",
     "confirm": "Confirmar",
-    "back": "Atrás"
+    "back": "Atrás",
+    "create": "Crear",
+    "update": "Actualizar",
+    "updating": "Actualizando...",
+    "success": "Éxito",
+    "saveAll": "Guardar Todo",
+    "saveChanges": "Guardar Cambios",
+    "reset": "Restablecer",
+    "resetAndSave": "Restablecer y Guardar",
+    "upload": "Subir",
+    "uploading": "Subiendo...",
+    "selectFile": "Seleccionar Archivo",
+    "noData": "No se encontraron datos",
+    "minutes": "minutos",
+    "resource": "recurso",
+    "resources": "recursos"
+  },
+  "auth": {
+    "signUp": "Registrarse",
+    "signIn": "Iniciar Sesión",
+    "signOut": "Cerrar Sesión",
+    "signingOut": "Cerrando sesión...",
+    "signedOut": "Sesión cerrada",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "fullName": "Nombre Completo",
+    "emailPlaceholder": "Ingresa tu correo electrónico",
+    "passwordPlaceholder": "Ingresa tu contraseña",
+    "namePlaceholder": "Ingresa tu nombre completo",
+    "iAmA": "Soy un...",
+    "selectRole": "Selecciona tu rol",
+    "student": "Estudiante",
+    "teacher": "Profesor",
+    "alreadyHaveAccount": "¿Ya tienes una cuenta?",
+    "accountCreated": "¡Cuenta creada exitosamente! Ahora puedes iniciar sesión."
+  },
+  "dashboard": {
+    "admin": {
+      "title": "Panel de Administración",
+      "welcome": "Bienvenido",
+      "pages": "Páginas",
+      "topics": "Temas",
+      "teachers": "Profesores",
+      "teachersRegistered": "profesores registrados",
+      "noTeachers": "No hay profesores todavía.",
+      "selectTeacher": "Seleccionar un Profesor",
+      "selectTeacherDesc": "Selecciona un profesor de la lista para ver detalles",
+      "students": "Estudiantes",
+      "schedule": "Horario",
+      "payments": "Pagos",
+      "createStudent": "Crear Estudiante",
+      "noActiveStudents": "Este profesor no tiene estudiantes activos todavía.",
+      "archivedStudents": "Estudiantes Archivados",
+      "restore": "Restaurar",
+      "studentRestored": "Estudiante restaurado exitosamente",
+      "processedTopics": "Temas Procesados",
+      "resourcesProcessed": "recursos procesados",
+      "topicsFull": "temas completos",
+      "noProcessedResources": "No hay recursos procesados todavía.",
+      "studentSpecificTopics": "Temas Específicos del Estudiante",
+      "addTopic": "Agregar Tema",
+      "noStudentTopics": "No se han agregado temas específicos para este estudiante.",
+      "moreLessons": "más clases",
+      "aboutStudent": "Sobre el estudiante"
+    },
+    "teacher": {
+      "title": "Panel del Profesor",
+      "welcome": "Bienvenido",
+      "myStudents": "Mis Estudiantes",
+      "studentsRegistered": "estudiantes registrados",
+      "noStudents": "No hay estudiantes todavía. ¡Agrega tu primer estudiante para comenzar!",
+      "balance": "Saldo",
+      "myLessons": "Mis Clases",
+      "selectStudent": "Seleccionar un Estudiante",
+      "selectStudentDesc": "Selecciona un estudiante de la lista para ver temas y tareas"
+    },
+    "student": {
+      "title": "Mi Panel de Aprendizaje",
+      "welcome": "Bienvenido",
+      "processedTopics": "Temas Procesados",
+      "totalResources": "Total de Recursos",
+      "topics": "Temas",
+      "homework": "Tareas",
+      "whatWeLearned": "Lo que Aprendimos",
+      "learningMaterials": "Tus materiales de aprendizaje",
+      "noResourcesYet": "No hay recursos para mostrar en este tema todavía.",
+      "noLearningActivity": "No Hay Actividad de Aprendizaje Todavía",
+      "teacherWillAssign": "Tu profesor te asignará temas y recursos para explorar."
+    }
+  },
+  "dialogs": {
+    "editTopic": {
+      "title": "Editar Tema",
+      "titleLabel": "Título",
+      "titlePlaceholder": "Título del tema",
+      "descriptionLabel": "Descripción",
+      "descriptionPlaceholder": "Descripción del tema (opcional)"
+    },
+    "addTopic": {
+      "title": "Agregar Nuevo Tema",
+      "titleLabel": "Título",
+      "titlePlaceholder": "Título del tema",
+      "descriptionLabel": "Descripción",
+      "descriptionPlaceholder": "Descripción del tema (opcional)"
+    },
+    "editResource": {
+      "title": "Editar Recurso",
+      "titleLabel": "Título",
+      "titlePlaceholder": "Título del recurso",
+      "descriptionLabel": "Descripción",
+      "descriptionPlaceholder": "Descripción del recurso (opcional)",
+      "typeLabel": "Tipo de Recurso",
+      "typePlaceholder": "Seleccionar tipo de recurso",
+      "urlLabel": "URL del Recurso",
+      "urlPlaceholder": "https://...",
+      "types": {
+        "video": "Video",
+        "pdf": "PDF",
+        "document": "Documento",
+        "link": "Enlace"
+      }
+    },
+    "addResource": {
+      "title": "Agregar Nuevo Recurso",
+      "titleLabel": "Título",
+      "titlePlaceholder": "Título del recurso",
+      "descriptionLabel": "Descripción",
+      "descriptionPlaceholder": "Descripción del recurso (opcional)",
+      "typeLabel": "Tipo de Recurso",
+      "typePlaceholder": "Seleccionar tipo de recurso",
+      "urlLabel": "URL del Recurso",
+      "urlPlaceholder": "https://..."
+    },
+    "uploadHomework": {
+      "title": "Subir Tarea",
+      "description": "Sube tu tarea con título, descripción y archivos",
+      "titleLabel": "Título de la Tarea",
+      "titlePlaceholder": "Ej.: Ensayo de Inglés",
+      "descriptionLabel": "Descripción",
+      "descriptionPlaceholder": "Información adicional sobre la tarea...",
+      "filesLabel": "Archivos",
+      "supportedFormats": "Formatos soportados: JPG, PNG, WEBP, PDF, DOCX (Máx. 10MB)",
+      "titleRequired": "El título de la tarea es obligatorio",
+      "selectFile": "Por favor selecciona al menos un archivo",
+      "fileTooLarge": "el tamaño máximo es de 10MB",
+      "filesUploaded": "archivos subidos exitosamente"
+    },
+    "editHomework": {
+      "title": "Editar Tarea",
+      "description": "Actualizar título y descripción de la tarea",
+      "titleLabel": "Título de la Tarea",
+      "titlePlaceholder": "Ej.: Ensayo de Inglés",
+      "descriptionLabel": "Descripción",
+      "descriptionPlaceholder": "Información adicional sobre la tarea..."
+    },
+    "editStudent": {
+      "title": "Configuración del Estudiante",
+      "description": "Actualizar nombre del estudiante y horario de clases.",
+      "nameLabel": "Nombre del Estudiante"
+    },
+    "editTeacher": {
+      "title": "Configuración del Profesor",
+      "nameLabel": "Nombre del Profesor",
+      "deleteTeacher": "Eliminar Profesor",
+      "deleteConfirm": "¿Estás seguro de que quieres eliminar a este profesor? Asegúrate de que los estudiantes del profesor hayan sido asignados a otro profesor. Esta acción no se puede deshacer y se eliminarán todos los datos del profesor (temas globales, clases de prueba, información de saldo)."
+    },
+    "lessonLink": {
+      "linkNote": "Este enlace se mostrará a todos tus estudiantes."
+    },
+    "lessonOverride": {
+      "title": "Editar Clase"
+    },
+    "globalTopics": {
+      "title": "Temas Globales",
+      "expandAll": "Expandir Todo",
+      "collapseAll": "Contraer Todo",
+      "noTopics": "No se han agregado temas todavía.",
+      "addFirstTopic": "Agrega tu primer tema global.",
+      "sessionNotFound": "Sesión no encontrada. Por favor inicia sesión nuevamente."
+    },
+    "balance": {
+      "paymentDeleted": "Registro de pago eliminado",
+      "paymentDeleteError": "Error al eliminar el registro de pago",
+      "resetConfirmTitle": "Restablecer Saldo",
+      "resetConfirmDesc": "Esto restablecerá todo el saldo del profesor (minutos totales, clases regulares, clases de prueba) y el saldo actual se guardará en el historial de pagos. ¿Estás seguro de que quieres continuar?"
+    },
+    "pageSettings": "Configuración de Página"
+  },
+  "days": {
+    "sunday": "Domingo",
+    "monday": "Lunes",
+    "tuesday": "Martes",
+    "wednesday": "Miércoles",
+    "thursday": "Jueves",
+    "friday": "Viernes",
+    "saturday": "Sábado"
+  },
+  "messages": {
+    "topicCreated": "Tema creado exitosamente",
+    "topicUpdated": "Tema actualizado",
+    "topicDeleted": "Tema eliminado",
+    "resourceAdded": "Recurso agregado exitosamente",
+    "resourceUpdated": "Recurso actualizado",
+    "resourceDeleted": "Recurso eliminado",
+    "teachersLoadError": "Error al cargar profesores",
+    "studentsLoadError": "Error al cargar estudiantes",
+    "topicsLoadError": "Error al cargar temas",
+    "globalTopicsLoadError": "Error al obtener temas globales",
+    "orderUpdateError": "Error al actualizar el orden",
+    "resourceOrderError": "Error al actualizar el orden de recursos",
+    "homeworkLoadError": "Error al cargar tareas"
   }
 }
