@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useRef } from "react";
 import { ChevronLeft, ChevronRight, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -33,6 +33,8 @@ const testimonials: Testimonial[] = [
 
 export function TestimonialsSection() {
   const [activeIndex, setActiveIndex] = useState(0);
+  const dragStart = useRef<{ x: number; y: number } | null>(null);
+  const isDragging = useRef(false);
 
   const handlePrev = useCallback(() => {
     setActiveIndex((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1));
@@ -41,6 +43,52 @@ export function TestimonialsSection() {
   const handleNext = useCallback(() => {
     setActiveIndex((prev) => (prev === testimonials.length - 1 ? 0 : prev + 1));
   }, []);
+
+  // Mouse events
+  const handleMouseDown = (e: React.MouseEvent) => {
+    dragStart.current = { x: e.clientX, y: e.clientY };
+    isDragging.current = false;
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (dragStart.current) {
+      const diffX = Math.abs(e.clientX - dragStart.current.x);
+      if (diffX > 10) isDragging.current = true;
+    }
+  };
+
+  const handleMouseUp = (e: React.MouseEvent) => {
+    if (dragStart.current && isDragging.current) {
+      const diffX = e.clientX - dragStart.current.x;
+      if (diffX > 50) handlePrev();
+      else if (diffX < -50) handleNext();
+    }
+    dragStart.current = null;
+    isDragging.current = false;
+  };
+
+  // Touch events
+  const handleTouchStart = (e: React.TouchEvent) => {
+    dragStart.current = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+    isDragging.current = false;
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (dragStart.current) {
+      const diffX = Math.abs(e.touches[0].clientX - dragStart.current.x);
+      if (diffX > 10) isDragging.current = true;
+    }
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    if (dragStart.current && isDragging.current) {
+      const diffX = e.changedTouches[0].clientX - dragStart.current.x;
+      if (diffX > 50) handlePrev();
+      else if (diffX < -50) handleNext();
+    }
+    dragStart.current = null;
+    isDragging.current = false;
+  };
 
   const getCardStyle = (index: number) => {
     const diff = index - activeIndex;
@@ -116,7 +164,16 @@ export function TestimonialsSection() {
             </Button>
 
             {/* Cards Container */}
-            <div className="relative h-[320px] w-full max-w-4xl flex items-center justify-center">
+            <div 
+              className="relative h-[320px] w-full max-w-4xl flex items-center justify-center cursor-grab active:cursor-grabbing select-none"
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={() => { dragStart.current = null; }}
+              onTouchStart={handleTouchStart}
+              onTouchMove={handleTouchMove}
+              onTouchEnd={handleTouchEnd}
+            >
               {testimonials.map((testimonial, index) => {
                 const style = getCardStyle(index);
                 return (
