@@ -11,8 +11,12 @@ const badgeVariants = cva(
         default: "border-transparent bg-primary text-primary-foreground",
         secondary: "border-transparent bg-secondary text-secondary-foreground",
         destructive: "border-transparent bg-destructive text-destructive-foreground",
-        outline: "border-border text-foreground",
-        success: "border-transparent bg-accent text-accent-foreground",
+        outline: "border-card-foreground/20 text-card-foreground bg-transparent",
+        success: "border-transparent bg-success text-success-foreground",
+        // Role accent badge - uses role-specific colors
+        accent: "border-transparent bg-role-accent text-role-accent-foreground",
+        // Muted variant for subtle badges
+        muted: "border-transparent bg-muted text-muted-foreground",
       },
     },
     defaultVariants: {

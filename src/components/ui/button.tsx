@@ -9,26 +9,28 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        // Primary button - uses centralized btn-primary colors
+        // Primary button - dark burgundy, high contrast on cream surfaces
         default: "bg-btn-primary text-btn-primary-foreground hover:bg-btn-primary-hover active:opacity-90 shadow-sm",
-        // Destructive button
-        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/85 active:bg-destructive/75 shadow-sm",
-        // Outline button - for dark backgrounds (header), light bg with dark text
-        outline: "bg-btn-outline border border-btn-outline-border text-btn-outline-foreground hover:bg-btn-outline-hover",
-        // Secondary button - uses centralized btn-secondary colors
+        // Destructive button - red, high visibility
+        destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 active:bg-destructive/80 shadow-sm",
+        // Outline button - transparent with visible border
+        outline: "border-2 border-btn-outline-border bg-transparent text-btn-outline-foreground hover:bg-btn-outline-hover hover:border-btn-outline-border",
+        // Secondary button - muted burgundy
         secondary: "bg-btn-secondary text-btn-secondary-foreground hover:bg-btn-secondary-hover active:opacity-90 shadow-sm",
-        // Ghost button - uses centralized btn-ghost colors
+        // Ghost button - minimal, subtle hover
         ghost: "text-btn-ghost-foreground hover:bg-btn-ghost-hover",
         // Link button
         link: "text-primary underline-offset-4 hover:underline",
-        // Card variant - for buttons on light card backgrounds
-        card: "bg-card-foreground/10 text-card-foreground hover:bg-card-foreground/20 border border-card-foreground/20",
-        // Card ghost variant - for ghost buttons on card backgrounds
-        "card-ghost": "text-card-foreground hover:bg-card-foreground/10",
+        // Card variant - for buttons on light card backgrounds (dashboard)
+        card: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm",
+        // Card ghost variant - ghost on card backgrounds
+        "card-ghost": "text-card-foreground hover:bg-muted",
+        // Card outline variant - outlined button on cards
+        "card-outline": "border-2 border-muted-foreground/30 bg-transparent text-card-foreground hover:bg-muted hover:border-muted-foreground/40",
         // Tab inactive variant - for inactive tabs on light card backgrounds
-        "tab-inactive": "bg-card-foreground/10 text-card-foreground border border-card-foreground/20 hover:bg-card-foreground/20 font-medium",
+        "tab-inactive": "bg-muted text-card-foreground border border-muted-foreground/20 hover:bg-muted/80 font-medium",
         // Tab active variant - for active tabs
-        "tab-active": "bg-btn-primary text-btn-primary-foreground hover:bg-btn-primary-hover active:opacity-90 shadow-md border-2 border-btn-primary font-semibold",
+        "tab-active": "bg-btn-primary text-btn-primary-foreground hover:bg-btn-primary-hover active:opacity-90 shadow-md border-2 border-transparent font-semibold",
         // Landing page primary button - light cream bg for dark background
         "landing-primary": "bg-btn-landing-primary text-btn-landing-primary-foreground hover:bg-btn-landing-primary-hover active:opacity-90 shadow-lg font-semibold",
         // Landing page secondary button - dark burgundy bg for dark background
