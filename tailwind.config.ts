@@ -11,6 +11,10 @@ export default {
         "2xl": "1400px",
       },
     },
+    fontFamily: {
+      montserrat: ["Montserrat", "sans-serif"],
+      yesteryear: ["Yesteryear", "cursive"],
+    },
     extend: {
       colors: {
         // Core semantic colors

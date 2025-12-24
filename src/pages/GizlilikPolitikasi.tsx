@@ -70,7 +70,16 @@ export default function GizlilikPolitikasi() {
     staleTime: 1000 * 60 * 5,
   });
 
-  const content = pageContent ? { ...defaultPrivacy, ...pageContent } : defaultPrivacy;
+  // Merge with defaults, ensuring sections from DB override defaults
+  const content: PrivacyContent = pageContent 
+    ? { 
+        ...defaultPrivacy, 
+        ...pageContent,
+        sections: pageContent.sections && pageContent.sections.length > 0 
+          ? pageContent.sections 
+          : defaultPrivacy.sections 
+      } 
+    : defaultPrivacy;
 
   return (
     <div className="min-h-screen bg-page-lessons">
@@ -83,7 +92,7 @@ export default function GizlilikPolitikasi() {
             <div className="inline-flex items-center justify-center p-3 rounded-full bg-primary/15 mb-4">
               <Shield className="w-8 h-8 text-primary" />
             </div>
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-[hsl(1_85%_24%)] mb-4">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-montserrat font-bold text-[hsl(1_85%_24%)] mb-4">
               {content.pageTitle.includes(" ") ? (
                 <>
                   {content.pageTitle.split(" ").slice(0, -1).join(" ")}{" "}

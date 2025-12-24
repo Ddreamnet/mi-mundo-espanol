@@ -94,7 +94,7 @@ export function StudentAboutDialog({
     editable: !isReadOnly,
     editorProps: {
       attributes: {
-        class: "prose prose-sm max-w-none min-h-[150px] p-4 focus:outline-none",
+        class: "prose prose-sm max-w-none min-h-[150px] p-4 focus:outline-none [&_*]:text-popover-foreground [&_p]:text-popover-foreground [&_h1]:text-popover-foreground [&_h2]:text-popover-foreground [&_h3]:text-popover-foreground [&_li]:text-popover-foreground",
       },
     },
     onUpdate: ({ editor }) => {

@@ -67,7 +67,7 @@ export default function Blog() {
             <Badge variant="secondary" className="mb-4">
               Blog
             </Badge>
-            <h1 className="text-3xl lg:text-5xl font-bold text-foreground mb-4">
+            <h1 className="text-3xl lg:text-5xl font-montserrat font-bold text-foreground mb-4">
               Eğitim Dünyasından
               <span className="text-primary block mt-2">Güncel Yazılar</span>
             </h1>
