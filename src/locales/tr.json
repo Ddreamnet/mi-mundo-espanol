@@ -431,8 +431,23 @@
     },
     "weeklySchedule": {
       "title": "Haftalık Ders Programı",
-      "noLessons": "Bu hafta ders yok.",
-      "exportImage": "Resim Olarak Kaydet"
+      "noLessons": "Henüz planlanmış ders yok",
+      "exportImage": "Resim Olarak Kaydet",
+      "downloadPng": "PNG İndir",
+      "hour": "Saat",
+      "trialLesson": "Deneme Dersi",
+      "markComplete": "İşlendi Olarak İşaretle",
+      "markIncomplete": "İşlendiyi Geri Al",
+      "completeConfirmTitle": "Deneme Dersini İşle",
+      "completeConfirmDesc": "Bu deneme dersini işlendi olarak işaretlemek istediğinize emin misiniz?",
+      "incompleteConfirmTitle": "İşlendiyi Geri Al",
+      "incompleteConfirmDesc": "Bu deneme dersinin işlendiğini geri almak istediğinize emin misiniz?",
+      "trialMarked": "Deneme dersi işlendi olarak işaretlendi",
+      "trialUnmarked": "Deneme dersi işlenmedi olarak işaretlendi",
+      "operationFailed": "İşlem başarısız oldu",
+      "scheduleLoadError": "Ders programı yüklenemedi",
+      "pngDownloaded": "Ders programı PNG olarak indirildi",
+      "pngError": "PNG oluşturulamadı"
     },
     "createStudent": {
       "title": "Öğrenci Hesabı Oluştur",

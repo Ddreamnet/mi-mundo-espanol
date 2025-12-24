@@ -49,8 +49,10 @@ export function WeeklyScheduleDialog({
   const {
     toast
   } = useToast();
+  const { t } = useTranslation();
+  const { daysOfWeek } = useLanguage();
   const { overrides, isLessonCancelled, getLessonOverride, refetch: refetchOverrides } = useLessonOverrides(teacherId);
-  const DAYS = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
+  const DAYS = daysOfWeek.map(d => d.label);
   useEffect(() => {
     if (open && teacherId) {
       fetchSchedule();
@@ -139,8 +141,8 @@ export function WeeklyScheduleDialog({
       setStudentColors(colors);
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: "Ders programı yüklenemedi",
+        title: t("common.error"),
+        description: t("dialogs.weeklySchedule.scheduleLoadError"),
         variant: "destructive"
       });
     } finally {
@@ -268,14 +270,14 @@ export function WeeklyScheduleDialog({
       // Update teacher balance
       await updateTeacherBalance(selectedTrialLesson);
       toast({
-        title: "Başarılı",
-        description: "Deneme dersi işlendi olarak işaretlendi"
+        title: t("common.success"),
+        description: t("dialogs.weeklySchedule.trialMarked")
       });
       await fetchSchedule();
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: "İşlem başarısız oldu",
+        title: t("common.error"),
+        description: t("dialogs.weeklySchedule.operationFailed"),
         variant: "destructive"
       });
     } finally {
@@ -298,14 +300,14 @@ export function WeeklyScheduleDialog({
       // Subtract from teacher balance
       await subtractFromTeacherBalance(selectedTrialLesson);
       toast({
-        title: "Başarılı",
-        description: "Deneme dersi işlenmedi olarak işaretlendi"
+        title: t("common.success"),
+        description: t("dialogs.weeklySchedule.trialUnmarked")
       });
       await fetchSchedule();
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: "İşlem başarısız oldu",
+        title: t("common.error"),
+        description: t("dialogs.weeklySchedule.operationFailed"),
         variant: "destructive"
       });
     } finally {
@@ -380,13 +382,13 @@ export function WeeklyScheduleDialog({
         studentColors
       });
       toast({
-        title: "Başarılı",
-        description: "Ders programı PNG olarak indirildi"
+        title: t("common.success"),
+        description: t("dialogs.weeklySchedule.pngDownloaded")
       });
     } catch (error) {
       toast({
-        title: "Hata",
-        description: "PNG oluşturulamadı",
+        title: t("common.error"),
+        description: t("dialogs.weeklySchedule.pngError"),
         variant: "destructive"
       });
     }
@@ -395,10 +397,10 @@ export function WeeklyScheduleDialog({
       <DialogContent className="max-w-6xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center justify-between">
-            <DialogTitle>Haftalık Ders Programı</DialogTitle>
+            <DialogTitle>{t("dialogs.weeklySchedule.title")}</DialogTitle>
             {lessons.length > 0 && <Button onClick={handleExportPNG} size="sm" variant="outline" className="mx-0 mr-[15px]">
                 <Download className="h-4 w-4 mr-2" />
-                PNG İndir
+                {t("dialogs.weeklySchedule.downloadPng")}
               </Button>}
           </div>
         </DialogHeader>
@@ -406,12 +408,12 @@ export function WeeklyScheduleDialog({
         {loading ? <div className="flex items-center justify-center py-8">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </div> : lessons.length === 0 ? <div className="text-center py-8 opacity-70">
-            Henüz planlanmış ders yok
+            {t("dialogs.weeklySchedule.noLessons")}
           </div> : <div className="overflow-x-auto">
             <table className="w-full border-collapse min-w-[900px]">
               <thead>
                 <tr>
-                  <th className="border bg-primary/10 p-2 text-sm font-semibold w-24">Saat</th>
+                  <th className="border bg-primary/10 p-2 text-sm font-semibold w-24">{t("dialogs.weeklySchedule.hour")}</th>
                   {DAYS.map(day => <th key={day} className="border bg-primary/10 p-2 text-sm font-semibold">
                       {day}
                     </th>)}
@@ -437,7 +439,7 @@ export function WeeklyScheduleDialog({
                               </div>
                             </div> : trialLesson ? <div onClick={() => !processing && handleTrialLessonClick(trialLesson)} className={`p-2 rounded border-2 transition-all ${processing ? "cursor-not-allowed opacity-50" : "cursor-pointer hover:opacity-80"} ${trialLesson.is_completed ? "bg-destructive/10 border-destructive/20 opacity-30" : "bg-destructive/20 border-destructive/50"}`}>
                               <div className={`font-medium text-xs mb-1 ${trialLesson.is_completed ? "text-destructive/50" : "text-destructive"}`}>
-                                Deneme Dersi
+                                {t("dialogs.weeklySchedule.trialLesson")}
                               </div>
                               <div className={`text-[10px] font-mono ${trialLesson.is_completed ? "text-destructive/50" : "text-destructive"}`}>
                                 {formatTime(trialLesson.start_time)} - {formatTime(trialLesson.end_time)}
@@ -454,14 +456,14 @@ export function WeeklyScheduleDialog({
       <AlertDialog open={confirmAction === "complete"} onOpenChange={open => !open && setConfirmAction(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Deneme Dersini İşle</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.weeklySchedule.completeConfirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Bu deneme dersini işlendi olarak işaretlemek istediğinize emin misiniz?
+              {t("dialogs.weeklySchedule.completeConfirmDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>İptal</AlertDialogCancel>
-            <AlertDialogAction onClick={handleMarkComplete}>İşlendi Olarak İşaretle</AlertDialogAction>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleMarkComplete}>{t("dialogs.weeklySchedule.markComplete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -469,14 +471,14 @@ export function WeeklyScheduleDialog({
       <AlertDialog open={confirmAction === "incomplete"} onOpenChange={open => !open && setConfirmAction(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>İşlediyi Geri Al</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.weeklySchedule.incompleteConfirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Bu deneme dersinin işlendiğini geri almak istediğinize emin misiniz?
+              {t("dialogs.weeklySchedule.incompleteConfirmDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>İptal</AlertDialogCancel>
-            <AlertDialogAction onClick={handleMarkIncomplete}>İşlendiyi Geri Al</AlertDialogAction>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleMarkIncomplete}>{t("dialogs.weeklySchedule.markIncomplete")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>

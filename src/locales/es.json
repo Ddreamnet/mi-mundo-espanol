@@ -96,6 +96,10 @@
     "updating": "Actualizando...",
     "success": "Éxito",
     "saveAll": "Guardar Todo",
+    "info": "Información",
+    "warning": "Advertencia",
+    "click": "Clic",
+    "download": "Descargar",
     "saveChanges": "Guardar Cambios",
     "reset": "Restablecer",
     "resetAndSave": "Restablecer y Guardar",
@@ -105,7 +109,10 @@
     "noData": "No se encontraron datos",
     "minutes": "minutos",
     "resource": "recurso",
-    "resources": "recursos"
+    "resources": "recursos",
+    "noTeacher": "No hay otro profesor",
+    "noStudentsForTeacher": "No hay estudiantes para este profesor",
+    "nameSurname": "Nombre Completo"
   },
   "auth": {
     "signUp": "Registrarse",
@@ -153,7 +160,8 @@
       "addTopic": "Agregar Tema",
       "noStudentTopics": "No se han agregado temas específicos para este estudiante.",
       "moreLessons": "más clases",
-      "aboutStudent": "Sobre el estudiante"
+      "aboutStudent": "Sobre el estudiante",
+      "createTeacher": "Crear"
     },
     "teacher": {
       "title": "Panel del Profesor",
@@ -468,6 +476,21 @@
       "successMessage": "Profesor creado exitosamente",
       "createError": "Error al crear profesor"
     },
+    "trialLesson": {
+      "title": "Agregar Clase de Prueba",
+      "dateLabel": "Fecha",
+      "startLabel": "Inicio",
+      "endLabel": "Fin",
+      "addBtn": "Agregar Clase de Prueba",
+      "lessonAdded": "Clase de prueba agregada",
+      "addError": "Error al agregar clase de prueba"
+    },
+    "studentAbout": {
+      "title": "Sobre el Estudiante",
+      "placeholder": "Notas sobre el estudiante...",
+      "saved": "Notas guardadas",
+      "saveError": "Error al guardar notas"
+    },
     "pageSettings": "Configuración de Página"
   },
   "days": {
@@ -477,7 +500,16 @@
     "wednesday": "Miércoles",
     "thursday": "Jueves",
     "friday": "Viernes",
-    "saturday": "Sábado"
+    "saturday": "Sábado",
+    "short": {
+      "sunday": "Dom",
+      "monday": "Lun",
+      "tuesday": "Mar",
+      "wednesday": "Mié",
+      "thursday": "Jue",
+      "friday": "Vie",
+      "saturday": "Sáb"
+    }
   },
   "messages": {
     "topicCreated": "Tema creado exitosamente",
@@ -492,6 +524,8 @@
     "globalTopicsLoadError": "Error al obtener temas globales",
     "orderUpdateError": "Error al actualizar el orden",
     "resourceOrderError": "Error al actualizar el orden de recursos",
-    "homeworkLoadError": "Error al cargar tareas"
+    "homeworkLoadError": "Error al cargar tareas",
+    "studentUpdated": "Estudiante actualizado",
+    "studentUpdateError": "Error al actualizar estudiante"
   }
 }
