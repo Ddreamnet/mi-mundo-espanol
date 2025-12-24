@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Upload, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface UploadHomeworkDialogProps {
   open: boolean;
@@ -30,6 +31,7 @@ export function UploadHomeworkDialog({
   const [files, setFiles] = useState<File[]>([]);
   const [uploading, setUploading] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation();
 
   const acceptedFileTypes = "image/jpeg,image/jpg,image/png,image/webp,application/pdf,.docx,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
@@ -43,8 +45,8 @@ export function UploadHomeworkDialog({
         // Check file size (max 10MB)
         if (file.size > 10 * 1024 * 1024) {
           toast({
-            title: "Hata",
-            description: `${file.name} boyutu en fazla 10MB olabilir`,
+            title: t("common.error"),
+            description: `${file.name} ${t("dialogs.uploadHomework.fileTooLarge")}`,
             variant: "destructive",
           });
           continue;
@@ -66,8 +68,8 @@ export function UploadHomeworkDialog({
   const handleSubmit = async () => {
     if (!title.trim()) {
       toast({
-        title: "Hata",
-        description: "Ödev başlığı zorunludur",
+        title: t("common.error"),
+        description: t("dialogs.uploadHomework.titleRequired"),
         variant: "destructive",
       });
       return;
@@ -75,8 +77,8 @@ export function UploadHomeworkDialog({
 
     if (files.length === 0) {
       toast({
-        title: "Hata",
-        description: "Lütfen en az bir dosya seçin",
+        title: t("common.error"),
+        description: t("dialogs.uploadHomework.selectFile"),
         variant: "destructive",
       });
       return;
@@ -128,8 +130,8 @@ export function UploadHomeworkDialog({
       if (insertError) throw insertError;
 
       toast({
-        title: "Başarılı",
-        description: `${files.length} dosya başarıyla yüklendi`,
+        title: t("common.success"),
+        description: `${files.length} ${t("dialogs.uploadHomework.filesUploaded")}`,
       });
 
       // Reset form
@@ -141,8 +143,8 @@ export function UploadHomeworkDialog({
     } catch (error: any) {
       console.error("Upload error:", error);
       toast({
-        title: "Hata",
-        description: error.message || "Ödev yüklenemedi",
+        title: t("common.error"),
+        description: error.message || t("dialogs.uploadHomework.uploadError"),
         variant: "destructive",
       });
     } finally {
@@ -154,38 +156,38 @@ export function UploadHomeworkDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Ödev Yükle</DialogTitle>
+          <DialogTitle>{t("dialogs.uploadHomework.title")}</DialogTitle>
           <DialogDescription>
-            Ödevinizi başlık, açıklama ve dosya ile yükleyin
+            {t("dialogs.uploadHomework.description")}
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="title">Ödev Başlığı *</Label>
+            <Label htmlFor="title">{t("dialogs.uploadHomework.titleLabel")} *</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Örn: İngilizce Kompozisyon"
+              placeholder={t("dialogs.uploadHomework.titlePlaceholder")}
               disabled={uploading}
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="description">Açıklama</Label>
+            <Label htmlFor="description">{t("dialogs.uploadHomework.descriptionLabel")}</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Ödev hakkında ek bilgiler..."
+              placeholder={t("dialogs.uploadHomework.descriptionPlaceholder")}
               rows={3}
               disabled={uploading}
             />
           </div>
 
           <div className="space-y-2">
-            <Label>Dosyalar *</Label>
+            <Label>{t("dialogs.uploadHomework.filesLabel")} *</Label>
             <Input
               type="file"
               accept={acceptedFileTypes}
@@ -214,7 +216,7 @@ export function UploadHomeworkDialog({
               </div>
             )}
             <p className="text-xs opacity-60">
-              Desteklenen formatlar: JPG, PNG, WEBP, PDF, DOCX (Maks. 10MB)
+              {t("dialogs.uploadHomework.supportedFormats")}
             </p>
           </div>
         </div>
@@ -225,18 +227,18 @@ export function UploadHomeworkDialog({
             onClick={() => onOpenChange(false)}
             disabled={uploading}
           >
-            İptal
+            {t("common.cancel")}
           </Button>
           <Button onClick={handleSubmit} disabled={uploading}>
             {uploading ? (
               <>
                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-primary-foreground mr-2" />
-                Yükleniyor...
+                {t("common.uploading")}
               </>
             ) : (
               <>
                 <Upload className="h-4 w-4 mr-2" />
-                Yükle
+                {t("common.upload")}
               </>
             )}
           </Button>

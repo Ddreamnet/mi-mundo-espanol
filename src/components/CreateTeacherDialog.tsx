@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { useTranslation } from "react-i18next";
 
 interface CreateTeacherDialogProps {
   open: boolean;
@@ -27,17 +28,18 @@ export function CreateTeacherDialog({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+  const { t } = useTranslation();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
     if (!fullName.trim() || !email.trim() || !password.trim()) {
-      toast.error("Lütfen tüm alanları doldurun");
+      toast.error(t("dialogs.createTeacher.fillAllFields"));
       return;
     }
 
     if (password.length < 6) {
-      toast.error("Şifre en az 6 karakter olmalıdır");
+      toast.error(t("dialogs.createTeacher.passwordMinLength"));
       return;
     }
 
@@ -48,7 +50,7 @@ export function CreateTeacherDialog({
       const { data: { session } } = await supabase.auth.getSession();
       
       if (!session) {
-        toast.error("Oturum bulunamadı");
+        toast.error(t("dialogs.createTeacher.sessionNotFound"));
         return;
       }
 
@@ -62,14 +64,14 @@ export function CreateTeacherDialog({
       });
 
       if (response.error) {
-        throw new Error(response.error.message || 'Öğretmen oluşturulamadı');
+        throw new Error(response.error.message || t("dialogs.createTeacher.createError"));
       }
 
       if (response.data?.error) {
         throw new Error(response.data.error);
       }
 
-      toast.success("Öğretmen başarıyla oluşturuldu");
+      toast.success(t("dialogs.createTeacher.successMessage"));
       setFullName("");
       setEmail("");
       setPassword("");
@@ -77,7 +79,7 @@ export function CreateTeacherDialog({
       onSuccess();
     } catch (error: any) {
       console.error("Error creating teacher:", error);
-      toast.error(error.message || "Öğretmen oluşturulurken hata oluştu");
+      toast.error(error.message || t("dialogs.createTeacher.createError"));
     } finally {
       setLoading(false);
     }
@@ -87,39 +89,39 @@ export function CreateTeacherDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Yeni Öğretmen Oluştur</DialogTitle>
+          <DialogTitle>{t("dialogs.createTeacher.title")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="fullName">Öğretmen Adı</Label>
+              <Label htmlFor="fullName">{t("dialogs.createTeacher.nameLabel")}</Label>
               <Input
                 id="fullName"
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
-                placeholder="Ad Soyad"
+                placeholder={t("dialogs.createTeacher.namePlaceholder")}
                 disabled={loading}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">E-posta</Label>
+              <Label htmlFor="email">{t("dialogs.createTeacher.emailLabel")}</Label>
               <Input
                 id="email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="ornek@email.com"
+                placeholder={t("dialogs.createTeacher.emailPlaceholder")}
                 disabled={loading}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Şifre</Label>
+              <Label htmlFor="password">{t("dialogs.createTeacher.passwordLabel")}</Label>
               <Input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="En az 6 karakter"
+                placeholder={t("dialogs.createTeacher.passwordPlaceholder")}
                 disabled={loading}
               />
             </div>
@@ -131,10 +133,10 @@ export function CreateTeacherDialog({
               onClick={() => onOpenChange(false)}
               disabled={loading}
             >
-              İptal
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Oluşturuluyor..." : "Oluştur"}
+              {loading ? t("dialogs.createTeacher.creating") : t("common.create")}
             </Button>
           </DialogFooter>
         </form>
