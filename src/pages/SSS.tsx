@@ -91,7 +91,7 @@ export default function SSS() {
                 content.pageTitle
               )}
             </h1>
-            <p className="text-lg text-[hsl(1_85%_24%)]/80 max-w-2xl mx-auto">
+            <p className="text-lg text-[hsl(1_85%_24%/0.8)] max-w-2xl mx-auto">
               {content.pageSubtitle}
             </p>
           </div>
@@ -108,7 +108,7 @@ export default function SSS() {
                   <AccordionTrigger className="text-left font-semibold text-[hsl(1_85%_24%)] hover:text-primary hover:no-underline py-4">
                     {item.question}
                   </AccordionTrigger>
-                  <AccordionContent className="text-[hsl(1_85%_24%)]/80 pb-4 leading-relaxed">
+                  <AccordionContent className="text-[hsl(1_85%_24%/0.8)] pb-4 leading-relaxed">
                     {item.answer}
                   </AccordionContent>
                 </AccordionItem>
