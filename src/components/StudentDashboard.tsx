@@ -4,6 +4,7 @@
 // Bu bileşen öğrencilerin kendi öğrenme materyallerini ve ödevlerini görüntülemesini sağlar.
 
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -60,6 +61,8 @@ interface Resource {
 // ============================================================================
 
 export function StudentDashboard() {
+  const { t } = useTranslation();
+  
   // ============================================================================
   // STATE YÖNETİMİ
   // ============================================================================
@@ -188,8 +191,8 @@ export function StudentDashboard() {
       setTopics(allTopics);
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: "Konular getirilemedi",
+        title: t("common.error"),
+        description: t("messages.topicsLoadError"),
         variant: "destructive",
       });
     } finally {
@@ -271,14 +274,14 @@ export function StudentDashboard() {
             />
             <Button onClick={signOut} variant="outline" size="sm" disabled={signingOut}>
               <LogOut className="h-4 w-4" />
-              <span className="hidden sm:inline ml-2">{signingOut ? "Çıkış..." : "Çıkış"}</span>
+              <span className="hidden sm:inline ml-2">{signingOut ? t("auth.signingOut") : t("auth.signOut")}</span>
             </Button>
           </>
         }
       >
         <div className="text-center">
-          <h1 className="text-xl sm:text-2xl font-bold text-card-foreground">Öğrenme Panelim</h1>
-          <p className="text-sm sm:text-lg text-card-foreground/70 hidden sm:block">Hoş geldin, {profile?.full_name}</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-card-foreground">{t("dashboard.student.title")}</h1>
+          <p className="text-sm sm:text-lg text-card-foreground/70 hidden sm:block">{t("dashboard.student.welcome")}, {profile?.full_name}</p>
         </div>
       </Header>
 
@@ -292,7 +295,7 @@ export function StudentDashboard() {
                 <BookOpen className="h-8 w-8" />
                 <div>
                   <p className="text-2xl font-bold">{allActiveTopics.length}</p>
-                  <p className="text-sm opacity-70">İşlenen Konular</p>
+                  <p className="text-sm opacity-70">{t("dashboard.student.processedTopics")}</p>
                 </div>
               </div>
             </CardContent>
@@ -307,7 +310,7 @@ export function StudentDashboard() {
                   <p className="text-2xl font-bold">
                     {topics.reduce((acc, topic) => acc + getVisibleResources(topic).length, 0)}
                   </p>
-                  <p className="text-sm opacity-70">Toplam Kaynak</p>
+                  <p className="text-sm opacity-70">{t("dashboard.student.totalResources")}</p>
                 </div>
               </div>
             </CardContent>
@@ -330,7 +333,7 @@ export function StudentDashboard() {
                 onClick={() => setActiveTab("topics")}
               >
                 <BookOpen className="h-4 w-4" />
-                Konular
+                {t("dashboard.student.topics")}
               </Button>
               <Button
                 variant={activeTab === "homework" ? "tab-active" : "tab-inactive"}
@@ -338,7 +341,7 @@ export function StudentDashboard() {
                 onClick={() => setActiveTab("homework")}
               >
                 <ClipboardList className="h-4 w-4" />
-                Ödevler
+                {t("dashboard.student.homework")}
               </Button>
             </div>
 
@@ -349,9 +352,9 @@ export function StudentDashboard() {
                   <div className="space-y-3">
                     <div className="flex items-center gap-2 mb-2">
                       <BookOpen className="h-5 w-5 text-card-foreground" />
-                      <h3 className="text-lg font-semibold text-card-foreground">Öğrendiklerimiz</h3>
+                      <h3 className="text-lg font-semibold text-card-foreground">{t("dashboard.student.whatWeLearned")}</h3>
                     </div>
-                    <p className="text-sm text-card-foreground/70 mb-4">Öğrenme materyallerin</p>
+                    <p className="text-sm text-card-foreground/70 mb-4">{t("dashboard.student.learningMaterials")}</p>
                     {allActiveTopics.map((topic) => {
                       const visibleResources = getVisibleResources(topic);
 
@@ -376,17 +379,17 @@ export function StudentDashboard() {
                                 </div>
                               </CollapsibleTrigger>
                               <div className="flex items-center gap-2">
-                                <Badge variant="outline">{visibleResources.length} kaynak</Badge>
+                                <Badge variant="outline">{visibleResources.length} {t("common.resource")}</Badge>
                               </div>
                             </div>
 
                             {/* Kaynaklar */}
                             <CollapsibleContent className="mt-4">
                               <div className="pl-6 space-y-2">
-                                <h5 className="font-medium text-sm">Kaynaklar</h5>
+                                <h5 className="font-medium text-sm">{t("common.resources")}</h5>
                                 {visibleResources.length === 0 ? (
                                   <p className="text-sm opacity-70">
-                                    Bu konu için henüz gösterilecek kaynak bulunmuyor.
+                                    {t("dashboard.student.noResourcesYet")}
                                   </p>
                                 ) : (
                                   <div className="space-y-2">
@@ -433,9 +436,9 @@ export function StudentDashboard() {
                 ) : (
                   <div className="text-center py-12">
                     <BookOpen className="h-12 w-12 mx-auto opacity-50 mb-4" />
-                    <h3 className="text-lg font-medium mb-2">Henüz Öğrenme Aktivitesi Yok</h3>
+                    <h3 className="text-lg font-medium mb-2">{t("dashboard.student.noLearningActivity")}</h3>
                     <p className="opacity-70">
-                      Öğretmeniniz size keşfetmeniz için konular ve kaynaklar atayacak.
+                      {t("dashboard.student.teacherWillAssign")}
                     </p>
                   </div>
                 )}
@@ -444,12 +447,11 @@ export function StudentDashboard() {
 
             {/* Ödevler Tab */}
             {activeTab === "homework" && (
-              <HomeworkSection
-                studentId={profile?.user_id || ""}
+              <HomeworkSection 
+                studentId={profile?.user_id || ""} 
                 teacherId={teacherId}
                 currentUserId={profile?.user_id || ""}
                 uploadedByUserId={profile?.user_id || ""}
-                isTeacher={false}
               />
             )}
           </CardContent>
