@@ -9,6 +9,7 @@ import { Loader2, Trash2, UserCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { useTranslation } from "react-i18next";
 
 interface EditTeacherDialogProps {
   open: boolean;
@@ -25,6 +26,7 @@ export function EditTeacherDialog({
   teacherId,
   currentName,
 }: EditTeacherDialogProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [transferLoading, setTransferLoading] = useState(false);
@@ -86,8 +88,8 @@ export function EditTeacherDialog({
 
     if (!name.trim()) {
       toast({
-        title: "Hata",
-        description: "Öğretmen adı gereklidir",
+        title: t("common.error"),
+        description: t("dialogs.editTeacher.nameRequired"),
         variant: "destructive",
       });
       return;
@@ -104,16 +106,16 @@ export function EditTeacherDialog({
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Öğretmen bilgileri güncellendi",
+        title: t("common.success"),
+        description: t("dialogs.editTeacher.updateSuccess"),
       });
 
       onTeacherUpdated();
       onOpenChange(false);
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: error.message || "Öğretmen bilgileri güncellenemedi",
+        title: t("common.error"),
+        description: error.message || t("dialogs.editTeacher.updateError"),
         variant: "destructive",
       });
     } finally {
@@ -124,8 +126,8 @@ export function EditTeacherDialog({
   const handleTransferStudent = async () => {
     if (!selectedStudent || !selectedTeacher) {
       toast({
-        title: "Uyarı",
-        description: "Lütfen bir öğrenci ve hedef öğretmen seçin",
+        title: t("common.warning"),
+        description: t("dialogs.editTeacher.selectBoth"),
         variant: "destructive",
       });
       return;
@@ -135,7 +137,7 @@ export function EditTeacherDialog({
     try {
       // Get student info
       const student = students.find((s) => s.id === selectedStudent);
-      if (!student) throw new Error("Öğrenci bulunamadı");
+      if (!student) throw new Error(t("dialogs.editTeacher.studentNotFound"));
 
       const studentUserId = student.profiles.user_id;
 
@@ -183,8 +185,8 @@ export function EditTeacherDialog({
         .eq("teacher_id", teacherId);
 
       toast({
-        title: "Başarılı",
-        description: `${student.profiles.full_name} adlı öğrenci yeni öğretmene atandı`,
+        title: t("common.success"),
+        description: t("dialogs.editTeacher.transferSuccess", { name: student.profiles.full_name }),
       });
 
       fetchStudents();
@@ -193,8 +195,8 @@ export function EditTeacherDialog({
       onTeacherUpdated();
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: error.message || "Öğrenci atanamadı",
+        title: t("common.error"),
+        description: error.message || t("dialogs.editTeacher.transferError"),
         variant: "destructive",
       });
     } finally {
@@ -215,8 +217,8 @@ export function EditTeacherDialog({
 
       if (students && students.length > 0) {
         toast({
-          title: "Uyarı",
-          description: `Bu öğretmenin ${students.length} öğrencisi var. Öğretmeni silmeden önce öğrencileri başka bir öğretmene atayın veya silin.`,
+          title: t("common.warning"),
+          description: t("dialogs.editTeacher.hasStudentsWarning", { count: students.length }),
           variant: "destructive",
         });
         setLoading(false);
@@ -249,16 +251,16 @@ export function EditTeacherDialog({
       await supabase.from("profiles").delete().eq("user_id", teacherId);
 
       toast({
-        title: "Başarılı",
-        description: "Öğretmen ve tüm verileri silindi",
+        title: t("common.success"),
+        description: t("dialogs.editTeacher.deleteSuccess"),
       });
 
       onTeacherUpdated();
       onOpenChange(false);
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: error.message || "Öğretmen silinemedi",
+        title: t("common.error"),
+        description: error.message || t("dialogs.editTeacher.deleteError"),
         variant: "destructive",
       });
     } finally {
@@ -270,18 +272,18 @@ export function EditTeacherDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Öğretmen Ayarları</DialogTitle>
+          <DialogTitle>{t("dialogs.editTeacher.title")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Öğretmen Adı</Label>
+            <Label htmlFor="name">{t("dialogs.editTeacher.nameLabel")}</Label>
             <Input
               id="name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Ad Soyad"
+              placeholder={t("dialogs.editTeacher.namePlaceholder")}
               required
             />
           </div>
@@ -291,17 +293,17 @@ export function EditTeacherDialog({
           {/* Öğrenci Atama Bölümü */}
           <div className="space-y-4 pt-2">
             <div>
-              <Label className="text-base font-medium">Öğrenci Ataması</Label>
+              <Label className="text-base font-medium">{t("dialogs.editTeacher.studentTransfer")}</Label>
               <p className="text-sm text-muted-foreground">
-                Bu öğretmene ait bir öğrenciyi başka bir öğretmene atayın
+                {t("dialogs.editTeacher.studentTransferDescription")}
               </p>
             </div>
 
             <Collapsible>
               <CollapsibleTrigger asChild>
                 <Button variant="outline" className="w-full justify-between">
-                  Öğrenciler ({students.length})
-                  <span className="text-xs text-muted-foreground">Tıklayın</span>
+                  {t("dialogs.editTeacher.students")} ({students.length})
+                  <span className="text-xs text-muted-foreground">{t("common.click")}</span>
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
@@ -309,7 +311,7 @@ export function EditTeacherDialog({
                   <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3">
                     {students.length === 0 ? (
                       <p className="text-sm text-muted-foreground text-center py-4">
-                        Bu öğretmene ait öğrenci yok
+                        {t("dialogs.editTeacher.noStudents")}
                       </p>
                     ) : (
                       students.map((student) => (
@@ -329,8 +331,8 @@ export function EditTeacherDialog({
             <Collapsible>
               <CollapsibleTrigger asChild>
                 <Button variant="outline" className="w-full justify-between">
-                  Hedef Öğretmen ({teachers.length})
-                  <span className="text-xs text-muted-foreground">Tıklayın</span>
+                  {t("dialogs.editTeacher.targetTeacher")} ({teachers.length})
+                  <span className="text-xs text-muted-foreground">{t("common.click")}</span>
                 </Button>
               </CollapsibleTrigger>
               <CollapsibleContent className="mt-2">
@@ -338,7 +340,7 @@ export function EditTeacherDialog({
                   <div className="space-y-2 max-h-48 overflow-y-auto border rounded-md p-3">
                     {teachers.length === 0 ? (
                       <p className="text-sm text-muted-foreground text-center py-4">
-                        Başka öğretmen yok
+                        {t("dialogs.editTeacher.noOtherTeachers")}
                       </p>
                     ) : (
                       teachers.map((teacher) => (
@@ -363,7 +365,7 @@ export function EditTeacherDialog({
             >
               {transferLoading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               <UserCheck className="h-4 w-4 mr-2" />
-              Öğrenciyi Ata
+              {t("dialogs.editTeacher.assignStudent")}
             </Button>
           </div>
 
@@ -373,9 +375,9 @@ export function EditTeacherDialog({
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-base font-medium text-destructive">Tehlikeli Alan</Label>
+                <Label className="text-base font-medium text-destructive">{t("dialogs.editTeacher.dangerZone")}</Label>
                 <p className="text-sm text-muted-foreground">
-                  Öğretmeni kalıcı olarak silmek için aşağıdaki butona tıklayın.
+                  {t("dialogs.editTeacher.dangerZoneDescription")}
                 </p>
               </div>
             </div>
@@ -384,7 +386,7 @@ export function EditTeacherDialog({
               variant="destructive"
               onClick={() => {
                 const confirmed = window.confirm(
-                  `${currentName} adlı öğretmeni silmek istediğinize emin misiniz? Bu öğretmenin öğrencilerinin başka bir öğretmene atandığından emin olun. Bu işlem geri alınamaz ve öğretmenin tüm verileri (global konular, deneme dersleri, bakiye bilgileri) silinecektir.`
+                  t("dialogs.editTeacher.deleteConfirmation", { name: currentName })
                 );
                 if (confirmed) {
                   handleDeleteTeacher();
@@ -394,17 +396,17 @@ export function EditTeacherDialog({
               className="w-full"
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Öğretmeni Sil
+              {t("dialogs.editTeacher.deleteTeacher")}
             </Button>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-              İptal
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Kaydet
+              {t("common.save")}
             </Button>
           </div>
         </form>

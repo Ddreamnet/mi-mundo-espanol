@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2, Plus, Trash2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface StudentLesson {
   dayOfWeek: number;
@@ -18,20 +19,21 @@ interface AddStudentDialogProps {
   onAddStudent: (studentEmail: string, lessons: StudentLesson[]) => Promise<void>;
 }
 
-const daysOfWeek = [
-  { value: 1, label: "Pazartesi" },
-  { value: 2, label: "Salı" },
-  { value: 3, label: "Çarşamba" },
-  { value: 4, label: "Perşembe" },
-  { value: 5, label: "Cuma" },
-  { value: 6, label: "Cumartesi" },
-  { value: 0, label: "Pazar" },
-];
-
 export function AddStudentDialog({ open, onOpenChange, onAddStudent }: AddStudentDialogProps) {
+  const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [lessons, setLessons] = useState<StudentLesson[]>([{ dayOfWeek: 1, startTime: "", endTime: "" }]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const daysOfWeek = [
+    { value: 1, label: t("days.monday") },
+    { value: 2, label: t("days.tuesday") },
+    { value: 3, label: t("days.wednesday") },
+    { value: 4, label: t("days.thursday") },
+    { value: 5, label: t("days.friday") },
+    { value: 6, label: t("days.saturday") },
+    { value: 0, label: t("days.sunday") },
+  ];
 
   const addLesson = () => {
     if (lessons.length < 6) {
@@ -76,28 +78,27 @@ export function AddStudentDialog({ open, onOpenChange, onAddStudent }: AddStuden
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Öğrenci Ekle</DialogTitle>
+          <DialogTitle>{t("dialogs.addStudent.title")}</DialogTitle>
           <DialogDescription>
-            Sınıfınıza eklemek istediğiniz öğrencinin e-posta adresini girin. Öğrencinin platformda zaten bir hesabı
-            olmalıdır.
+            {t("dialogs.addStudent.description")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="email">Öğrenci E-postası</Label>
+            <Label htmlFor="email">{t("dialogs.addStudent.emailLabel")}</Label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="ogrenci@example.com"
+              placeholder={t("dialogs.addStudent.emailPlaceholder")}
               required
             />
           </div>
 
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <Label className="text-base font-medium">Ders Programı</Label>
+              <Label className="text-base font-medium">{t("dialogs.addStudent.scheduleLabel")}</Label>
               <Button
                 type="button"
                 variant="outline"
@@ -107,14 +108,14 @@ export function AddStudentDialog({ open, onOpenChange, onAddStudent }: AddStuden
                 className="flex items-center gap-2"
               >
                 <Plus className="h-4 w-4" />
-                Ders Ekle
+                {t("dialogs.addStudent.addLesson")}
               </Button>
             </div>
 
             {lessons.map((lesson, index) => (
               <div key={index} className="grid grid-cols-4 gap-3 p-4 border rounded-lg">
                 <div className="space-y-2">
-                  <Label>Gün</Label>
+                  <Label>{t("dialogs.addStudent.dayLabel")}</Label>
                   <Select
                     value={lesson.dayOfWeek.toString()}
                     onValueChange={(value) => updateLesson(index, "dayOfWeek", Number(value))}
@@ -133,7 +134,7 @@ export function AddStudentDialog({ open, onOpenChange, onAddStudent }: AddStuden
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Başlangıç</Label>
+                  <Label>{t("dialogs.addStudent.startTimeLabel")}</Label>
                   <Input
                     type="time"
                     value={lesson.startTime}
@@ -143,7 +144,7 @@ export function AddStudentDialog({ open, onOpenChange, onAddStudent }: AddStuden
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Bitiş</Label>
+                  <Label>{t("dialogs.addStudent.endTimeLabel")}</Label>
                   <Input
                     type="time"
                     value={lesson.endTime}
@@ -167,16 +168,16 @@ export function AddStudentDialog({ open, onOpenChange, onAddStudent }: AddStuden
               </div>
             ))}
 
-            <p className="text-sm opacity-70">Haftada en fazla 6 ders ekleyebilirsiniz.</p>
+            <p className="text-sm opacity-70">{t("dialogs.addStudent.maxLessonsInfo")}</p>
           </div>
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-              İptal
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={isLoading || !isFormValid()}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Öğrenci Ekle
+              {t("dialogs.addStudent.submit")}
             </Button>
           </div>
         </form>
