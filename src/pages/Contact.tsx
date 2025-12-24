@@ -85,12 +85,14 @@ export default function Contact() {
               <div className="space-y-6">
                 {content.contactItems.map((item, index) => {
                   const Icon = getIcon(item.icon);
+                  const href = item.href || "#";
+                  const isExternal = href.startsWith("http");
                   return (
                     <a
                       key={index}
-                      href={item.href}
-                      target={item.href.startsWith("http") ? "_blank" : undefined}
-                      rel={item.href.startsWith("http") ? "noopener noreferrer" : undefined}
+                      href={href}
+                      target={isExternal ? "_blank" : undefined}
+                      rel={isExternal ? "noopener noreferrer" : undefined}
                       className="group flex items-center gap-5 py-3 border-b border-border/30 hover:border-primary/50 transition-all duration-300"
                     >
                       <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary group-hover:scale-110 transition-all duration-300">
