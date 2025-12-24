@@ -45,7 +45,9 @@
     "pageTitle": "Clases",
     "pageSubtitle": "Programas de lecciones que hemos preparado para tu viaje de aprendizaje de español",
     "learnMore": "Más información",
-    "imageAlt": "Imagen de la lección"
+    "imageAlt": "Imagen de la lección",
+    "lesson": "clase",
+    "lessonsCount": "clases"
   },
   "blog": {
     "pageTitle": "Blog",
@@ -225,15 +227,33 @@
       }
     },
     "addResource": {
-      "title": "Agregar Nuevo Recurso",
-      "titleLabel": "Título",
-      "titlePlaceholder": "Título del recurso",
-      "descriptionLabel": "Descripción",
-      "descriptionPlaceholder": "Descripción del recurso (opcional)",
+      "title": "Agregar Recurso de Aprendizaje",
+      "titleLabel": "Título del Recurso",
+      "titlePlaceholder": "ej., Lista de Vocabulario de Vegetales",
+      "descriptionLabel": "Descripción (Opcional)",
+      "descriptionPlaceholder": "Una breve descripción de este recurso...",
       "typeLabel": "Tipo de Recurso",
       "typePlaceholder": "Seleccionar tipo de recurso",
-      "urlLabel": "URL del Recurso",
-      "urlPlaceholder": "https://..."
+      "urlLabel": "URL del Enlace Web",
+      "urlPlaceholder": "https://ejemplo.com",
+      "fileUpload": "Subir Archivo",
+      "dragDrop": "Arrastra y suelta tu archivo aquí o haz clic para explorar",
+      "selectFileBtn": "Seleccionar Archivo",
+      "addLink": "Agregar Enlace",
+      "uploadResource": "Subir Recurso",
+      "successMessage": "Recurso subido exitosamente",
+      "urlRequired": "Por favor proporcione una URL para el enlace web",
+      "topicDescription": "Agregar un nuevo recurso de aprendizaje al tema \"{topic}\".",
+      "topicDescriptionDefault": "Agregar un nuevo recurso de aprendizaje a este tema.",
+      "topicDescriptionDetails": "Puede ser un PDF, video, enlace u otro material.",
+      "types": {
+        "pdf": "Documento PDF",
+        "video": "Video",
+        "image": "Imagen",
+        "link": "Enlace Web",
+        "document": "Documento",
+        "other": "Otro"
+      }
     },
     "uploadHomework": {
       "title": "Subir Tarea",
@@ -408,8 +428,9 @@
       "sessionNotFound": "Sesión no encontrada. Por favor inicia sesión nuevamente."
     },
     "balance": {
-      "title": "Saldo",
+      "title": "Estado del Saldo",
       "totalMinutes": "Minutos Totales",
+      "totalProcessedTime": "Tiempo Total Procesado",
       "regularLessons": "Clases Regulares",
       "trialLessons": "Clases de Prueba",
       "paymentHistory": "Historial de Pagos",
@@ -417,7 +438,32 @@
       "paymentDeleted": "Registro de pago eliminado",
       "paymentDeleteError": "Error al eliminar el registro de pago",
       "resetConfirmTitle": "Restablecer Saldo",
-      "resetConfirmDesc": "Esto restablecerá todo el saldo del profesor (minutos totales, clases regulares, clases de prueba) y el saldo actual se guardará en el historial de pagos. ¿Estás seguro de que quieres continuar?"
+      "resetConfirmDesc": "Esto restablecerá todo el saldo del profesor (minutos totales, clases regulares, clases de prueba) y el saldo actual se guardará en el historial de pagos. ¿Estás seguro de que quieres continuar?",
+      "balanceLoadError": "Error al cargar información del saldo",
+      "autoAddNote": "Cada clase procesada se agrega automáticamente a tu saldo según la duración de la clase",
+      "lesson": "clase",
+      "lessons": "clases",
+      "balanceManagement": "Gestión de Saldo",
+      "balanceManagementDesc": "Agregar o restar minutos del saldo del profesor",
+      "addMinutes": "Agregar Minutos",
+      "addMinutesPlaceholder": "Minutos a agregar",
+      "add": "Agregar",
+      "subtractMinutes": "Restar Minutos",
+      "subtractMinutesPlaceholder": "Minutos a restar",
+      "subtract": "Restar",
+      "resetBalance": "Restablecer Saldo",
+      "resetBalanceNote": "Restablecer el saldo después de que el profesor haya sido pagado",
+      "minutesAdded": "{{minutes}} minutos agregados",
+      "minutesSubtracted": "{{minutes}} minutos restados",
+      "balanceReset": "Saldo restablecido y pago registrado",
+      "invalidMinutes": "Por favor ingrese un valor de minutos válido",
+      "insufficientBalance": "Saldo insuficiente",
+      "addMinutesError": "Error al agregar minutos",
+      "subtractMinutesError": "Error al restar minutos",
+      "resetError": "Error al restablecer saldo",
+      "pastPayments": "Registros de pagos anteriores",
+      "totalBalance": "Saldo Total",
+      "delete": "Eliminar"
     },
     "weeklySchedule": {
       "title": "Horario Semanal",
