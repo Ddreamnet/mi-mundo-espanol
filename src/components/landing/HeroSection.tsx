@@ -6,20 +6,22 @@ interface HeroContent {
   mainTitle: string;
   subtitle: string;
   imageUrl: string;
-  button1Text: string;
-  button1Link: string;
-  button2Text: string;
-  button2Link: string;
+  primaryButtonText: string;
+  primaryButtonLink: string;
+  secondaryButtonText: string;
+  secondaryButtonLink: string;
 }
+
+const defaultImageUrl = "/lovable-uploads/2da228c0-e8c3-4d4d-ae77-9eeca2c98996.png";
 
 const defaultHero: HeroContent = {
   mainTitle: "Mi Mundo Español",
   subtitle: "Senin İspanyolca Dünyan",
-  imageUrl: "/lovable-uploads/2da228c0-e8c3-4d4d-ae77-9eeca2c98996.png",
-  button1Text: "Hemen Başla",
-  button1Link: "/iletisim",
-  button2Text: "Dersler Hakkında",
-  button2Link: "/dersler",
+  imageUrl: defaultImageUrl,
+  primaryButtonText: "Hemen Başla",
+  primaryButtonLink: "/iletisim",
+  secondaryButtonText: "Dersler Hakkında",
+  secondaryButtonLink: "/dersler",
 };
 
 export function HeroSection() {
@@ -38,6 +40,9 @@ export function HeroSection() {
   });
 
   const hero = content ? { ...defaultHero, ...content } : defaultHero;
+  
+  // Boş imageUrl varsa default görseli kullan
+  const imageUrl = hero.imageUrl && hero.imageUrl.trim() !== '' ? hero.imageUrl : defaultImageUrl;
 
   return (
     <section id="hero" className="pt-20 lg:pt-24">
@@ -47,7 +52,7 @@ export function HeroSection() {
           <div className="order-2 lg:order-1">
             <img
               alt={hero.mainTitle}
-              src={hero.imageUrl}
+              src={imageUrl}
               className="w-full aspect-[4/3] object-contain"
             />
           </div>
@@ -74,10 +79,10 @@ export function HeroSection() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
               <Button variant="landing-primary" size="lg" asChild>
-                <a href={hero.button1Link}>{hero.button1Text}</a>
+                <a href={hero.primaryButtonLink}>{hero.primaryButtonText}</a>
               </Button>
               <Button variant="landing-secondary" size="lg" asChild>
-                <a href={hero.button2Link}>{hero.button2Text}</a>
+                <a href={hero.secondaryButtonLink}>{hero.secondaryButtonText}</a>
               </Button>
             </div>
           </div>
