@@ -6,9 +6,11 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { tr } from "date-fns/locale";
+import { tr, enUS, es } from "date-fns/locale";
 
 interface Notification {
   id: string;
@@ -35,6 +37,10 @@ export function NotificationBell({ userId, teacherId, studentId, isStudent = fal
   const [unreadCount, setUnreadCount] = useState(0);
   const [open, setOpen] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation();
+  const { language } = useLanguage();
+  
+  const dateLocale = language === "tr" ? tr : language === "es" ? es : enUS;
 
   useEffect(() => {
     // Guard: Don't fetch if userId is missing or empty (e.g., during logout)
@@ -107,11 +113,11 @@ export function NotificationBell({ userId, teacherId, studentId, isStudent = fal
         },
         (payload) => {
           console.log('New notification received:', payload);
-          fetchNotifications(); // Yeni bildirim geldiğinde listeyi güncelle
+          fetchNotifications();
           
           toast({
-            title: "Yeni Ödev",
-            description: isStudent ? "Öğretmeniniz yeni bir dosya yükledi" : "Bir öğrenciniz yeni ödev yükledi",
+            title: t("notifications.newHomework"),
+            description: isStudent ? t("notifications.teacherUploadedFile") : t("notifications.studentUploadedHomework"),
           });
         }
       )
@@ -145,8 +151,8 @@ export function NotificationBell({ userId, teacherId, studentId, isStudent = fal
     } catch (error: any) {
       console.error('Error marking notifications as read:', error);
       toast({
-        title: "Hata",
-        description: "Bildirimler okundu olarak işaretlenemedi",
+        title: t("common.error"),
+        description: t("notifications.markReadError"),
         variant: "destructive",
       });
     }
@@ -184,11 +190,11 @@ export function NotificationBell({ userId, teacherId, studentId, isStudent = fal
           <CardHeader className="border-b bg-gradient-to-r from-primary/5 to-primary/10 pb-4">
             <div className="flex items-center justify-between">
               <div>
-                <CardTitle className="text-lg font-semibold">Bildirimler</CardTitle>
+                <CardTitle className="text-lg font-semibold">{t("notifications.title")}</CardTitle>
                 <CardDescription className="mt-1">
                   {unreadCount > 0 
-                    ? `${unreadCount} okunmamış bildirim` 
-                    : "Tüm bildirimler okundu"}
+                    ? t("notifications.unreadCount", { count: unreadCount })
+                    : t("notifications.allRead")}
                 </CardDescription>
               </div>
               {unreadCount > 0 && (
@@ -205,8 +211,8 @@ export function NotificationBell({ userId, teacherId, studentId, isStudent = fal
                   <div className="rounded-full bg-muted p-4 mb-4">
                     <Bell className="h-8 w-8 opacity-50" />
                   </div>
-                  <p className="text-sm font-medium opacity-70">Henüz bildirim yok</p>
-                  <p className="text-xs opacity-60 mt-1">Yeni ödev yüklendiğinde burada görünecek</p>
+                  <p className="text-sm font-medium opacity-70">{t("notifications.noNotifications")}</p>
+                  <p className="text-xs opacity-60 mt-1">{t("notifications.newHomeworkWillAppear")}</p>
                 </div>
               ) : (
                 <div className="divide-y">
@@ -234,15 +240,15 @@ export function NotificationBell({ userId, teacherId, studentId, isStudent = fal
                               ? 'font-semibold' 
                               : 'font-medium opacity-70'
                           }`}>
-                            {notification.profiles?.full_name || (isStudent ? 'Öğretmen' : 'Öğrenci')}
+                            {notification.profiles?.full_name || (isStudent ? t("notifications.teacher") : t("notifications.student"))}
                           </p>
                           <p className="text-sm opacity-70 mt-0.5">
-                            {isStudent ? "Yeni bir dosya yükledi" : "Yeni bir ödev yükledi"}
+                            {isStudent ? t("notifications.uploadedFile") : t("notifications.uploadedHomework")}
                           </p>
                           <div className="flex items-center gap-1.5 mt-2">
                             <Calendar className="h-3 w-3 opacity-50" />
                             <p className="text-xs opacity-60">
-                              {format(new Date(notification.created_at), "dd MMM yyyy, HH:mm", { locale: tr })}
+                              {format(new Date(notification.created_at), "dd MMM yyyy, HH:mm", { locale: dateLocale })}
                             </p>
                           </div>
                         </div>

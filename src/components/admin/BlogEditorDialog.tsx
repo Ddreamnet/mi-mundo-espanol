@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -54,6 +55,7 @@ function slugify(text: string): string {
 
 export function BlogEditorDialog({ open, onOpenChange, post }: BlogEditorDialogProps) {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const { profile } = useAuth();
   const queryClient = useQueryClient();
 
@@ -107,9 +109,9 @@ export function BlogEditorDialog({ open, onOpenChange, post }: BlogEditorDialogP
     mutationFn: async () => {
       const content = editor?.getHTML() || "";
       
-      if (!title.trim()) throw new Error("Başlık zorunludur");
-      if (!slug.trim()) throw new Error("URL zorunludur");
-      if (!content.trim()) throw new Error("İçerik zorunludur");
+      if (!title.trim()) throw new Error(t("editors.blog.titleRequired"));
+      if (!slug.trim()) throw new Error(t("editors.blog.urlRequired"));
+      if (!content.trim()) throw new Error(t("editors.blog.contentRequired"));
 
       const postData = {
         title: title.trim(),
@@ -136,13 +138,13 @@ export function BlogEditorDialog({ open, onOpenChange, post }: BlogEditorDialogP
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-blog-posts"] });
       toast({
-        title: "Başarılı",
-        description: post ? "Blog yazısı güncellendi" : "Blog yazısı oluşturuldu",
+        title: t("common.success"),
+        description: post ? t("editors.blog.postUpdated") : t("editors.blog.postCreated"),
       });
       onOpenChange(false);
     },
     onError: (error: any) => {
-      toast({ title: "Hata", description: error.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -150,23 +152,23 @@ export function BlogEditorDialog({ open, onOpenChange, post }: BlogEditorDialogP
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>{post ? "Blog Yazısını Düzenle" : "Yeni Blog Yazısı"}</DialogTitle>
+          <DialogTitle>{post ? t("editors.blog.editPost") : t("editors.blog.newPost")}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-6">
           <div className="grid gap-4">
             <div className="space-y-2">
-              <Label htmlFor="title">Başlık</Label>
+              <Label htmlFor="title">{t("editors.blog.title")}</Label>
               <Input
                 id="title"
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
-                placeholder="Yazı başlığı..."
+                placeholder={t("editors.blog.titlePlaceholder")}
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="slug">URL</Label>
+              <Label htmlFor="slug">{t("editors.blog.url")}</Label>
               <div className="flex gap-2">
                 <span className="text-sm text-muted-foreground flex items-center">/blog/</span>
                 <Input
@@ -176,25 +178,25 @@ export function BlogEditorDialog({ open, onOpenChange, post }: BlogEditorDialogP
                     setSlug(e.target.value);
                     setAutoSlug(false);
                   }}
-                  placeholder="yazi-url"
+                  placeholder={t("editors.blog.urlPlaceholder")}
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="excerpt">Özet (SEO için)</Label>
+              <Label htmlFor="excerpt">{t("editors.blog.excerpt")}</Label>
               <Textarea
                 id="excerpt"
                 value={excerpt}
                 onChange={(e) => setExcerpt(e.target.value)}
-                placeholder="Kısa özet (160 karakter)..."
+                placeholder={t("editors.blog.excerptPlaceholder")}
                 className="resize-none"
                 rows={2}
               />
             </div>
 
             <ImageUpload
-              label="Kapak Görseli"
+              label={t("editors.blog.coverImage")}
               value={coverImageUrl}
               onChange={setCoverImageUrl}
               folder="blog"
@@ -202,7 +204,7 @@ export function BlogEditorDialog({ open, onOpenChange, post }: BlogEditorDialogP
           </div>
 
           <div className="space-y-2">
-            <Label>İçerik</Label>
+            <Label>{t("editors.blog.content")}</Label>
             <div className="border rounded-md">
               <div className="flex gap-1 p-2 border-b bg-muted/50 flex-wrap">
                 <Button
@@ -291,17 +293,17 @@ export function BlogEditorDialog({ open, onOpenChange, post }: BlogEditorDialogP
               />
               <Label htmlFor="publish" className="flex items-center gap-2">
                 <Eye className="h-4 w-4" />
-                Yayınla
+                {t("editors.blog.publish")}
               </Label>
             </div>
 
             <div className="flex gap-2">
               <Button variant="outline" onClick={() => onOpenChange(false)}>
-                İptal
+                {t("common.cancel")}
               </Button>
               <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending}>
                 <Save className="h-4 w-4 mr-2" />
-                {saveMutation.isPending ? "Kaydediliyor..." : "Kaydet"}
+                {saveMutation.isPending ? t("common.saving") : t("common.save")}
               </Button>
             </div>
           </div>

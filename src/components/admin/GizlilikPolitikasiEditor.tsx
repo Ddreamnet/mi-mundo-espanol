@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -29,6 +30,7 @@ const defaultPrivacy: PrivacyContent = {
 };
 
 export function GizlilikPolitikasiEditor() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<PrivacyContent>(defaultPrivacy);
 
@@ -73,10 +75,10 @@ export function GizlilikPolitikasiEditor() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["page-content", "gizlilik-politikasi"] });
-      toast.success("Gizlilik Politikası güncellendi");
+      toast.success(t("editors.privacy.pageUpdated"));
     },
     onError: () => {
-      toast.error("Kaydetme başarısız");
+      toast.error(t("editors.privacy.saveFailed"));
     },
   });
 
@@ -111,7 +113,7 @@ export function GizlilikPolitikasiEditor() {
   };
 
   if (isLoading) {
-    return <div className="p-4 text-center text-muted-foreground">Yükleniyor...</div>;
+    return <div className="p-4 text-center text-muted-foreground">{t("common.loading")}</div>;
   }
 
   return (
@@ -121,36 +123,36 @@ export function GizlilikPolitikasiEditor() {
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
             <Shield className="h-5 w-5" />
-            Sayfa Ayarları
+            {t("dialogs.pageSettings")}
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label>Sayfa Başlığı</Label>
+              <Label>{t("editors.privacy.pageTitle")}</Label>
               <Input
                 value={formData.pageTitle}
                 onChange={(e) => setFormData({ ...formData, pageTitle: e.target.value })}
-                placeholder="Gizlilik Politikası"
+                placeholder={t("editors.privacy.pageTitlePlaceholder")}
               />
             </div>
             <div className="space-y-2">
-              <Label>Alt Başlık</Label>
+              <Label>{t("editors.privacy.subtitle")}</Label>
               <Input
                 value={formData.pageSubtitle}
                 onChange={(e) => setFormData({ ...formData, pageSubtitle: e.target.value })}
-                placeholder="Kişisel verilerinizin korunması"
+                placeholder={t("editors.privacy.subtitlePlaceholder")}
               />
             </div>
           </div>
           <div className="space-y-2">
-            <Label>Son Güncelleme Tarihi</Label>
+            <Label>{t("editors.privacy.lastUpdated")}</Label>
             <Input
               value={formData.lastUpdated}
               onChange={(e) => setFormData({ ...formData, lastUpdated: e.target.value })}
-              placeholder="24 Aralık 2024"
+              placeholder={t("editors.privacy.lastUpdatedPlaceholder")}
             />
-            <p className="text-xs text-muted-foreground">Kaydet butonuna basıldığında otomatik güncellenir</p>
+            <p className="text-xs text-muted-foreground">{t("editors.privacy.autoUpdateNote")}</p>
           </div>
         </CardContent>
       </Card>
@@ -159,17 +161,17 @@ export function GizlilikPolitikasiEditor() {
       <Card>
         <CardHeader className="pb-3">
           <div className="flex items-center justify-between">
-            <CardTitle className="text-lg">Bölümler ({formData.sections.length})</CardTitle>
+            <CardTitle className="text-lg">{t("editors.privacy.sections")} ({formData.sections.length})</CardTitle>
             <Button onClick={addSection} size="sm" variant="outline">
               <Plus className="h-4 w-4 mr-1" />
-              Bölüm Ekle
+              {t("editors.privacy.addSection")}
             </Button>
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {formData.sections.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">
-              Henüz bölüm eklenmemiş. "Bölüm Ekle" butonuna tıklayarak başlayın.
+              {t("editors.privacy.noSections")}
             </p>
           ) : (
             formData.sections.map((section, index) => (
@@ -181,19 +183,19 @@ export function GizlilikPolitikasiEditor() {
                   <GripVertical className="h-5 w-5 text-muted-foreground mt-2 cursor-move" />
                   <div className="flex-1 space-y-3">
                     <div className="space-y-2">
-                      <Label className="text-sm">Bölüm Başlığı {index + 1}</Label>
+                      <Label className="text-sm">{t("editors.privacy.sectionTitle")} {index + 1}</Label>
                       <Input
                         value={section.title}
                         onChange={(e) => updateSection(index, "title", e.target.value)}
-                        placeholder="Bölüm başlığı giriniz..."
+                        placeholder={t("editors.privacy.sectionTitlePlaceholder")}
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label className="text-sm">İçerik</Label>
+                      <Label className="text-sm">{t("editors.privacy.content")}</Label>
                       <Textarea
                         value={section.content}
                         onChange={(e) => updateSection(index, "content", e.target.value)}
-                        placeholder="Bölüm içeriği giriniz..."
+                        placeholder={t("editors.privacy.contentPlaceholder")}
                         rows={4}
                       />
                     </div>
@@ -217,7 +219,7 @@ export function GizlilikPolitikasiEditor() {
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={saveMutation.isPending}>
           <Save className="h-4 w-4 mr-2" />
-          {saveMutation.isPending ? "Kaydediliyor..." : "Kaydet"}
+          {saveMutation.isPending ? t("common.saving") : t("common.save")}
         </Button>
       </div>
     </div>
