@@ -79,7 +79,7 @@ export default function Lessons() {
         <div className="container mx-auto px-4 lg:px-8">
           {/* Page Title */}
           <div className="text-center mb-12 lg:mb-16">
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-montserrat font-bold text-foreground mb-4">
               {content.pageTitle.includes(" ") ? (
                 <>
                   {content.pageTitle.split(" ").slice(0, -1).join(" ")}{" "}
