@@ -8,6 +8,8 @@ import { Download, Calendar } from "lucide-react";
 import { exportScheduleAsPNG } from "./ScheduleExportCanvas";
 import { useLessonOverrides, getLessonDateForCurrentWeek, LessonOverride } from "@/hooks/useLessonOverrides";
 import { format, startOfWeek, addDays } from "date-fns";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface StudentLesson {
   id: string;

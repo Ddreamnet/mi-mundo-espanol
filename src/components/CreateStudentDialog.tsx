@@ -7,22 +7,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, UserPlus } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface StudentLesson {
   dayOfWeek: number;
   startTime: string;
   endTime: string;
 }
-
-const daysOfWeek = [
-  { value: 1, label: "Pazartesi" },
-  { value: 2, label: "Salı" },
-  { value: 3, label: "Çarşamba" },
-  { value: 4, label: "Perşembe" },
-  { value: 5, label: "Cuma" },
-  { value: 6, label: "Cumartesi" },
-  { value: 0, label: "Pazar" },
-];
 
 interface CreateStudentDialogProps {
   open: boolean;
@@ -39,6 +31,8 @@ export function CreateStudentDialog({ open, onOpenChange, onStudentCreated, teac
   const [lessons, setLessons] = useState<StudentLesson[]>([{ dayOfWeek: 1, startTime: "", endTime: "" }]);
   const [loading, setLoading] = useState(false);
   const { toast } = useToast();
+  const { t } = useTranslation();
+  const { daysOfWeek } = useLanguage();
 
   useEffect(() => {
     if (lessonsPerWeek > lessons.length) {
@@ -63,8 +57,8 @@ export function CreateStudentDialog({ open, onOpenChange, onStudentCreated, teac
 
     if (!email || !name || !tempPassword) {
       toast({
-        title: "Hata",
-        description: "Lütfen tüm alanları doldurun",
+        title: t("common.error"),
+        description: t("dialogs.createStudent.fillAllFields"),
         variant: "destructive",
       });
       return;
@@ -72,8 +66,8 @@ export function CreateStudentDialog({ open, onOpenChange, onStudentCreated, teac
 
     if (!lessons.every((lesson) => lesson.dayOfWeek !== undefined && lesson.startTime && lesson.endTime)) {
       toast({
-        title: "Hata",
-        description: "Tüm ders programı alanlarını doldurun",
+        title: t("common.error"),
+        description: t("dialogs.createStudent.fillSchedule"),
         variant: "destructive",
       });
       return;
@@ -101,7 +95,7 @@ export function CreateStudentDialog({ open, onOpenChange, onStudentCreated, teac
       const result = data as any;
       if (result?.error) {
         toast({
-          title: "Hata",
+          title: t("common.error"),
           description: result.error,
           variant: "destructive",
         });
@@ -109,8 +103,8 @@ export function CreateStudentDialog({ open, onOpenChange, onStudentCreated, teac
       }
 
       toast({
-        title: "Başarılı",
-        description: `Öğrenci hesabı başarıyla oluşturuldu! Geçici şifre: ${tempPassword}`,
+        title: t("common.success"),
+        description: t("dialogs.createStudent.successMessage", { password: tempPassword }),
       });
 
       setEmail("");
@@ -122,8 +116,8 @@ export function CreateStudentDialog({ open, onOpenChange, onStudentCreated, teac
       onOpenChange(false);
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: error.message || "Öğrenci hesabı oluşturulamadı",
+        title: t("common.error"),
+        description: error.message || t("dialogs.createStudent.createError"),
         variant: "destructive",
       });
     } finally {
@@ -146,54 +140,54 @@ export function CreateStudentDialog({ open, onOpenChange, onStudentCreated, teac
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <UserPlus className="h-5 w-5" />
-            Öğrenci Hesabı Oluştur
+            {t("dialogs.createStudent.title")}
           </DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="email">Öğrenci E-postası</Label>
+            <Label htmlFor="email">{t("dialogs.createStudent.emailLabel")}</Label>
             <Input
               id="email"
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="ogrenci@example.com"
+              placeholder={t("dialogs.createStudent.emailPlaceholder")}
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="name">Ad Soyad</Label>
+            <Label htmlFor="name">{t("common.nameSurname")}</Label>
             <Input
               id="name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Öğrenci Adı"
+              placeholder={t("dialogs.createStudent.namePlaceholder")}
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="password">Geçici Şifre</Label>
+            <Label htmlFor="password">{t("dialogs.createStudent.tempPasswordLabel")}</Label>
             <div className="flex gap-2">
               <Input
                 id="password"
                 type="text"
                 value={tempPassword}
                 onChange={(e) => setTempPassword(e.target.value)}
-                placeholder="Şifre oluştur veya gir"
+                placeholder={t("dialogs.createStudent.passwordPlaceholder")}
                 required
               />
               <Button type="button" variant="outline" onClick={generatePassword} className="shrink-0">
-                Oluştur
+                {t("dialogs.createStudent.generateBtn")}
               </Button>
             </div>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="lessonsPerWeek">Haftalık Ders Sayısı</Label>
+            <Label htmlFor="lessonsPerWeek">{t("dialogs.createStudent.lessonsPerWeekLabel")}</Label>
             <Select
               value={lessonsPerWeek.toString()}
               onValueChange={(value) => setLessonsPerWeek(Number(value))}
@@ -204,7 +198,7 @@ export function CreateStudentDialog({ open, onOpenChange, onStudentCreated, teac
               <SelectContent>
                 {[1, 2, 3, 4, 5, 6, 7].map((num) => (
                   <SelectItem key={num} value={num.toString()}>
-                    {num} ders
+                    {num} {t("dialogs.createStudent.lessonsUnit")}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -212,11 +206,11 @@ export function CreateStudentDialog({ open, onOpenChange, onStudentCreated, teac
           </div>
 
           <div className="space-y-3">
-            <Label className="text-base font-medium">Ders Programı</Label>
+            <Label className="text-base font-medium">{t("dialogs.createStudent.scheduleLabel")}</Label>
             {lessons.map((lesson, index) => (
               <div key={index} className="grid grid-cols-3 gap-3 p-3 border rounded-lg">
                 <div className="space-y-2">
-                  <Label>Gün</Label>
+                  <Label>{t("dialogs.createStudent.dayLabel")}</Label>
                   <Select
                     value={lesson.dayOfWeek.toString()}
                     onValueChange={(value) => updateLesson(index, "dayOfWeek", Number(value))}
@@ -235,7 +229,7 @@ export function CreateStudentDialog({ open, onOpenChange, onStudentCreated, teac
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Başlangıç</Label>
+                  <Label>{t("dialogs.createStudent.startTimeLabel")}</Label>
                   <Input
                     type="time"
                     value={lesson.startTime}
@@ -245,7 +239,7 @@ export function CreateStudentDialog({ open, onOpenChange, onStudentCreated, teac
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Bitiş</Label>
+                  <Label>{t("dialogs.createStudent.endTimeLabel")}</Label>
                   <Input
                     type="time"
                     value={lesson.endTime}
@@ -259,14 +253,13 @@ export function CreateStudentDialog({ open, onOpenChange, onStudentCreated, teac
 
           <div className="bg-muted/50 p-3 rounded-lg">
             <p className="text-sm opacity-70">
-              <strong>Not:</strong> Öğrenci bu geçici şifre ile oluşturulacak. Lütfen bu bilgileri öğrenci ile güvenli
-              şekilde paylaşın.
+              <strong>{t("dialogs.createStudent.noteLabel")}:</strong> {t("dialogs.createStudent.noteText")}
             </p>
           </div>
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-              İptal
+              {t("common.cancel")}
             </Button>
             <Button
               type="submit"
@@ -274,7 +267,7 @@ export function CreateStudentDialog({ open, onOpenChange, onStudentCreated, teac
               className="transition-all duration-150 hover:scale-105 active:scale-95"
             >
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Hesap Oluştur
+              {t("dialogs.createStudent.createBtn")}
             </Button>
           </div>
         </form>
