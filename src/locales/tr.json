@@ -101,7 +101,7 @@
     "info": "Bilgi",
     "warning": "Uyarı",
     "click": "Tıklayın",
-    "download": "İndir"
+    "download": "İndir",
     "saveChanges": "Değişiklikleri Kaydet",
     "reset": "Sıfırla",
     "resetAndSave": "Sıfırla ve Kaydet",
@@ -112,10 +112,8 @@
     "minutes": "dakika",
     "resource": "kaynak",
     "resources": "kaynaklar",
-    "download": "İndir",
     "noTeacher": "Başka öğretmen yok",
     "noStudentsForTeacher": "Bu öğretmene ait öğrenci yok",
-    "click": "Tıklayın",
     "nameSurname": "Ad Soyad"
   },
   "auth": {
