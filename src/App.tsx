@@ -10,6 +10,8 @@ import { StudentDashboard } from "@/components/StudentDashboard";
 import { AdminDashboard } from "@/components/AdminDashboard";
 import Contact from "./pages/Contact";
 import Lessons from "./pages/Lessons";
+import SSS from "./pages/SSS";
+import GizlilikPolitikasi from "./pages/GizlilikPolitikasi";
 import Blog from "./pages/Blog";
 import BlogPost from "./pages/BlogPost";
 import NotFound from "./pages/NotFound";
@@ -69,6 +71,8 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/dersler" element={<Lessons />} />
+      <Route path="/sss" element={<SSS />} />
+      <Route path="/gizlilik-politikasi" element={<GizlilikPolitikasi />} />
       <Route path="/blog" element={<Blog />} />
       <Route path="/blog/:slug" element={<BlogPost />} />
       <Route path="/iletisim" element={<Contact />} />
