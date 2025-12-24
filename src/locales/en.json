@@ -45,7 +45,9 @@
     "pageTitle": "Lessons",
     "pageSubtitle": "Lesson programs we have prepared for your Spanish learning journey",
     "learnMore": "Learn More",
-    "imageAlt": "Lesson image"
+    "imageAlt": "Lesson image",
+    "lesson": "lesson",
+    "lessonsCount": "lessons"
   },
   "blog": {
     "pageTitle": "Blog",
@@ -81,7 +83,7 @@
   "common": {
     "loading": "Loading...",
     "profileLoading": "Loading profile...",
-    "error": "An error occurred",
+    "error": "Error",
     "save": "Save",
     "saving": "Saving...",
     "cancel": "Cancel",
@@ -105,7 +107,12 @@
     "noData": "No data found",
     "minutes": "minutes",
     "resource": "resource",
-    "resources": "resources"
+    "resources": "resources",
+    "download": "Download",
+    "noTeacher": "No other teacher",
+    "noStudentsForTeacher": "No students for this teacher",
+    "click": "Click",
+    "nameSurname": "Full Name"
   },
   "auth": {
     "signUp": "Sign Up",
@@ -153,7 +160,8 @@
       "addTopic": "Add Topic",
       "noStudentTopics": "No student-specific topics added yet.",
       "moreLessons": "more lessons",
-      "aboutStudent": "About student"
+      "aboutStudent": "About student",
+      "createTeacher": "Create"
     },
     "teacher": {
       "title": "Teacher Panel",
@@ -190,10 +198,13 @@
     },
     "addTopic": {
       "title": "Add New Topic",
-      "titleLabel": "Title",
-      "titlePlaceholder": "Topic title",
-      "descriptionLabel": "Description",
-      "descriptionPlaceholder": "Topic description (optional)"
+      "description": "Create a new learning topic for the student. You can add resources later.",
+      "titleLabel": "Topic Title",
+      "titlePlaceholder": "e.g., Vegetables, Professions, Daily Routines",
+      "descriptionLabel": "Description (Optional)",
+      "descriptionPlaceholder": "Brief description of what this topic contains...",
+      "addToEnd": "Add to end",
+      "createTopic": "Create Topic"
     },
     "editResource": {
       "title": "Edit Resource",
@@ -245,22 +256,89 @@
       "descriptionLabel": "Description",
       "descriptionPlaceholder": "Additional information about the homework..."
     },
+    "homeworkList": {
+      "title": "Homework",
+      "description": "View all homework",
+      "noHomework": "No homework yet",
+      "deleteTitle": "Delete Homework",
+      "deleteConfirm": "Are you sure you want to delete this homework and all its files? This action cannot be undone.",
+      "uploadedByStudent": "Student",
+      "uploadedByTeacher": "Teacher",
+      "homeworkDeleted": "Homework deleted",
+      "deleteError": "Failed to delete homework",
+      "downloadError": "Failed to download file"
+    },
     "editStudent": {
       "title": "Student Settings",
       "description": "Update student name and lesson schedule.",
-      "nameLabel": "Student Name"
+      "nameLabel": "Student Name",
+      "weeklyLessons": "Weekly Lessons",
+      "lessonSchedule": "Lesson Schedule",
+      "dayLabel": "Day",
+      "startLabel": "Start",
+      "endLabel": "End",
+      "noteLabel": "Note",
+      "notePlaceholder": "Add a note",
+      "addLesson": "Add Lesson",
+      "deleteStudent": "Delete Student",
+      "archiveStudent": "Archive",
+      "deleteConfirmTitle": "Delete Student",
+      "deleteConfirmDesc": "Are you sure you want to delete this student? This action cannot be undone and all student data (topics, resources, homework) will be deleted.",
+      "archiveConfirmTitle": "Archive Student",
+      "archiveConfirmDesc": "Are you sure you want to archive this student? The student will be removed from the list but their data will be preserved.",
+      "studentDeleted": "Student and all data deleted",
+      "studentArchived": "Student archived",
+      "deleteError": "Failed to delete student",
+      "archiveError": "Failed to archive student"
     },
     "editTeacher": {
       "title": "Teacher Settings",
       "nameLabel": "Teacher Name",
       "deleteTeacher": "Delete Teacher",
-      "deleteConfirm": "Are you sure you want to delete this teacher? Make sure the teacher's students have been assigned to another teacher. This action cannot be undone and all teacher data (global topics, trial lessons, balance information) will be deleted."
+      "deleteConfirm": "Are you sure you want to delete this teacher? Make sure the teacher's students have been assigned to another teacher. This action cannot be undone and all teacher data (global topics, trial lessons, balance information) will be deleted.",
+      "studentAssignment": "Student Assignment",
+      "studentAssignmentDesc": "Assign a student from this teacher to another teacher",
+      "studentsCount": "Students",
+      "targetTeacher": "Target Teacher",
+      "assignStudent": "Assign Student",
+      "studentAssigned": "Student assigned successfully",
+      "assignError": "Failed to assign student",
+      "teacherDeleted": "Teacher deleted successfully",
+      "deleteError": "Failed to delete teacher",
+      "teacherUpdated": "Teacher updated",
+      "updateError": "Failed to update teacher"
+    },
+    "addStudent": {
+      "title": "Add Student",
+      "description": "Enter the email address of the student you want to add to your class. The student must already have an account on the platform.",
+      "emailLabel": "Student Email",
+      "emailPlaceholder": "student@example.com",
+      "lessonSchedule": "Lesson Schedule",
+      "addLesson": "Add Lesson",
+      "maxLessons": "You can add up to 6 lessons per week.",
+      "addStudentBtn": "Add Student"
     },
     "lessonLink": {
       "linkNote": "This link will be shown to all your students."
     },
     "lessonOverride": {
-      "title": "Edit Lesson"
+      "title": "Edit Lesson",
+      "newDate": "New Date",
+      "newStartTime": "New Start Time",
+      "newEndTime": "New End Time",
+      "postponeToNext": "Postpone to Next Lesson",
+      "cancelLesson": "Cancel Lesson",
+      "revertToOriginal": "Revert to Original",
+      "postponeConfirmTitle": "Postpone Lesson",
+      "postponeConfirmDesc": "Are you sure you want to postpone this lesson to the next one?",
+      "cancelConfirmTitle": "Cancel Lesson",
+      "cancelConfirmDesc": "Are you sure you want to cancel this lesson?",
+      "revertConfirmTitle": "Revert to Original",
+      "revertConfirmDesc": "Are you sure you want to revert this lesson to its original time?",
+      "lessonUpdated": "Lesson updated",
+      "lessonCancelled": "Lesson cancelled",
+      "lessonReverted": "Lesson reverted to original time",
+      "updateError": "Failed to update lesson"
     },
     "globalTopics": {
       "title": "Global Topics",
@@ -271,10 +349,62 @@
       "sessionNotFound": "Session not found. Please log in again."
     },
     "balance": {
+      "title": "Balance",
+      "totalMinutes": "Total Minutes",
+      "regularLessons": "Regular Lessons",
+      "trialLessons": "Trial Lessons",
+      "paymentHistory": "Payment History",
+      "noPayments": "No payment records yet.",
       "paymentDeleted": "Payment record deleted",
       "paymentDeleteError": "Error deleting payment record",
       "resetConfirmTitle": "Reset Balance",
       "resetConfirmDesc": "This will reset the teacher's entire balance (total minutes, regular lessons, trial lessons) and the current balance will be saved to payment history. Are you sure you want to continue?"
+    },
+    "weeklySchedule": {
+      "title": "Weekly Schedule",
+      "noLessons": "No lessons this week.",
+      "exportImage": "Save as Image"
+    },
+    "createStudent": {
+      "title": "Create Student",
+      "description": "Create a new student account.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "student@example.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "At least 6 characters",
+      "nameLabel": "Full Name",
+      "namePlaceholder": "Full Name",
+      "createBtn": "Create Student",
+      "studentCreated": "Student created successfully",
+      "createError": "Failed to create student"
+    },
+    "createTeacher": {
+      "title": "Create Teacher",
+      "description": "Create a new teacher account.",
+      "emailLabel": "Email",
+      "emailPlaceholder": "teacher@example.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "At least 6 characters",
+      "nameLabel": "Full Name",
+      "namePlaceholder": "Full Name",
+      "createBtn": "Create Teacher",
+      "teacherCreated": "Teacher created successfully",
+      "createError": "Failed to create teacher"
+    },
+    "trialLesson": {
+      "title": "Add Trial Lesson",
+      "dateLabel": "Date",
+      "startLabel": "Start",
+      "endLabel": "End",
+      "addBtn": "Add Trial Lesson",
+      "lessonAdded": "Trial lesson added",
+      "addError": "Failed to add trial lesson"
+    },
+    "studentAbout": {
+      "title": "About Student",
+      "placeholder": "Notes about the student...",
+      "saved": "Notes saved",
+      "saveError": "Failed to save notes"
     },
     "pageSettings": "Page Settings"
   },
@@ -285,7 +415,16 @@
     "wednesday": "Wednesday",
     "thursday": "Thursday",
     "friday": "Friday",
-    "saturday": "Saturday"
+    "saturday": "Saturday",
+    "short": {
+      "sunday": "Sun",
+      "monday": "Mon",
+      "tuesday": "Tue",
+      "wednesday": "Wed",
+      "thursday": "Thu",
+      "friday": "Fri",
+      "saturday": "Sat"
+    }
   },
   "messages": {
     "topicCreated": "Topic created successfully",
@@ -300,6 +439,8 @@
     "globalTopicsLoadError": "Failed to fetch global topics",
     "orderUpdateError": "Failed to update order",
     "resourceOrderError": "Failed to update resource order",
-    "homeworkLoadError": "Failed to load homework"
+    "homeworkLoadError": "Failed to load homework",
+    "studentUpdated": "Student updated",
+    "studentUpdateError": "Failed to update student"
   }
 }
