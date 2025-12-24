@@ -109,16 +109,14 @@ export default function Blog() {
             </div>
           ) : filteredPosts && filteredPosts.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-              {filteredPosts.map((post, index) => (
+              {filteredPosts.map((post) => (
                 <Card
                   key={post.id}
-                  className={`group overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-border/50 ${
-                    index === 0 ? "md:col-span-2 lg:col-span-2" : ""
-                  }`}
+                  className="group overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-border/50 bg-card"
                   onClick={() => navigate(`/blog/${post.slug}`)}
                 >
                   {/* Cover Image */}
-                  <div className={`relative overflow-hidden ${index === 0 ? "h-64 lg:h-80" : "h-48"}`}>
+                  <div className="relative overflow-hidden h-48">
                     {post.cover_image_url ? (
                       <img
                         src={post.cover_image_url}
@@ -134,7 +132,7 @@ export default function Blog() {
                   </div>
 
                   {/* Content */}
-                  <CardContent className="p-6">
+                  <CardContent className="p-6 bg-card">
                     {/* Meta */}
                     <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
                       <div className="flex items-center gap-1.5">
@@ -148,9 +146,7 @@ export default function Blog() {
                     </div>
 
                     {/* Title */}
-                    <h2 className={`font-bold text-foreground mb-2 group-hover:text-primary transition-colors ${
-                      index === 0 ? "text-xl lg:text-2xl" : "text-lg"
-                    }`}>
+                    <h2 className="font-bold text-card-foreground mb-2 group-hover:text-primary transition-colors text-lg">
                       {post.title}
                     </h2>
 
