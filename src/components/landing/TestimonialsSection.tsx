@@ -75,7 +75,7 @@ export function TestimonialsSection() {
     }
 
     if (isAdjacent) {
-      const translateX = position < 0 ? "-60%" : "60%";
+      const translateX = position < 0 ? "-110%" : "110%";
       return {
         opacity: 0.6,
         transform: `scale(0.85) translateX(${translateX})`,
@@ -85,7 +85,7 @@ export function TestimonialsSection() {
     }
 
     // Far cards
-    const translateX = position < 0 ? "-120%" : "120%";
+    const translateX = position < 0 ? "-200%" : "200%";
     return {
       opacity: 0.3,
       transform: `scale(0.7) translateX(${translateX})`,
