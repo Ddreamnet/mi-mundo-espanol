@@ -39,13 +39,17 @@ export function SSSEditor() {
         .eq("page_key", "sss")
         .maybeSingle();
       if (error) throw error;
-      return data;
+      return data ?? null;
     },
   });
 
   useEffect(() => {
     if (pageContent?.content) {
-      setFormData({ ...defaultSSS, ...(pageContent.content as unknown as SSSContent) });
+      const savedContent = pageContent.content as unknown as SSSContent;
+      setFormData({ ...defaultSSS, ...savedContent });
+    } else {
+      // Load defaults if no saved content
+      setFormData(defaultSSS);
     }
   }, [pageContent]);
 

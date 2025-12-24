@@ -41,13 +41,17 @@ export function GizlilikPolitikasiEditor() {
         .eq("page_key", "gizlilik-politikasi")
         .maybeSingle();
       if (error) throw error;
-      return data;
+      return data ?? null;
     },
   });
 
   useEffect(() => {
     if (pageContent?.content) {
-      setFormData({ ...defaultPrivacy, ...(pageContent.content as unknown as PrivacyContent) });
+      const savedContent = pageContent.content as unknown as PrivacyContent;
+      setFormData({ ...defaultPrivacy, ...savedContent });
+    } else {
+      // Load defaults if no saved content
+      setFormData(defaultPrivacy);
     }
   }, [pageContent]);
 

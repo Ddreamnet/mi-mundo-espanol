@@ -64,7 +64,8 @@ export default function GizlilikPolitikasi() {
         .eq("page_key", "gizlilik-politikasi")
         .maybeSingle();
       if (error) throw error;
-      return data?.content as unknown as PrivacyContent | null;
+      if (!data || !data.content) return null;
+      return data.content as unknown as PrivacyContent;
     },
     staleTime: 1000 * 60 * 5,
   });

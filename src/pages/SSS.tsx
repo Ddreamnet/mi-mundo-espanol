@@ -62,7 +62,8 @@ export default function SSS() {
         .eq("page_key", "sss")
         .maybeSingle();
       if (error) throw error;
-      return data?.content as unknown as SSSContent | null;
+      if (!data || !data.content) return null;
+      return data.content as unknown as SSSContent;
     },
     staleTime: 1000 * 60 * 5,
   });
