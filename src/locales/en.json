@@ -429,8 +429,23 @@
     },
     "weeklySchedule": {
       "title": "Weekly Schedule",
-      "noLessons": "No lessons this week.",
-      "exportImage": "Save as Image"
+      "noLessons": "No scheduled lessons yet",
+      "exportImage": "Save as Image",
+      "downloadPng": "Download PNG",
+      "hour": "Hour",
+      "trialLesson": "Trial Lesson",
+      "markComplete": "Mark as Complete",
+      "markIncomplete": "Mark as Incomplete",
+      "completeConfirmTitle": "Mark Trial Lesson",
+      "completeConfirmDesc": "Are you sure you want to mark this trial lesson as completed?",
+      "incompleteConfirmTitle": "Undo Completion",
+      "incompleteConfirmDesc": "Are you sure you want to undo the completion of this trial lesson?",
+      "trialMarked": "Trial lesson marked as completed",
+      "trialUnmarked": "Trial lesson marked as incomplete",
+      "operationFailed": "Operation failed",
+      "scheduleLoadError": "Failed to load schedule",
+      "pngDownloaded": "Schedule downloaded as PNG",
+      "pngError": "Failed to create PNG"
     },
     "createStudent": {
       "title": "Create Student Account",
