@@ -17,7 +17,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Clock, CheckCircle2, Calendar, Plus, Minus, RotateCcw, Receipt } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { tr } from "date-fns/locale";
+import { tr, enUS, es } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface AdminBalanceManagerProps {
   teacherId: string;
@@ -41,12 +43,22 @@ interface PaymentHistory {
 }
 
 export function AdminBalanceManager({ teacherId }: AdminBalanceManagerProps) {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const [balance, setBalance] = useState<BalanceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [minutesToAdd, setMinutesToAdd] = useState("");
   const [minutesToSubtract, setMinutesToSubtract] = useState("");
   const [showResetDialog, setShowResetDialog] = useState(false);
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([]);
+
+  const getDateLocale = () => {
+    switch (language) {
+      case 'en': return enUS;
+      case 'es': return es;
+      default: return tr;
+    }
+  };
 
   useEffect(() => {
     fetchBalance();
@@ -77,7 +89,7 @@ export function AdminBalanceManager({ teacherId }: AdminBalanceManagerProps) {
       }
     } catch (error) {
       console.error("Error fetching balance:", error);
-      toast.error("Bakiye bilgisi yüklenirken hata oluştu");
+      toast.error(t("dialogs.balance.balanceLoadError"));
     } finally {
       setLoading(false);
     }
@@ -102,7 +114,7 @@ export function AdminBalanceManager({ teacherId }: AdminBalanceManagerProps) {
   const handleAddMinutes = async () => {
     const minutes = parseInt(minutesToAdd);
     if (isNaN(minutes) || minutes <= 0) {
-      toast.error("Geçerli bir dakika değeri girin");
+      toast.error(t("dialogs.balance.invalidMinutes"));
       return;
     }
 
@@ -135,24 +147,24 @@ export function AdminBalanceManager({ teacherId }: AdminBalanceManagerProps) {
         if (error) throw error;
       }
 
-      toast.success(`${minutes} dakika eklendi`);
+      toast.success(t("dialogs.balance.minutesAdded", { minutes }));
       setMinutesToAdd("");
       fetchBalance();
     } catch (error) {
       console.error("Error adding minutes:", error);
-      toast.error("Dakika eklenirken hata oluştu");
+      toast.error(t("dialogs.balance.addMinutesError"));
     }
   };
 
   const handleSubtractMinutes = async () => {
     const minutes = parseInt(minutesToSubtract);
     if (isNaN(minutes) || minutes <= 0) {
-      toast.error("Geçerli bir dakika değeri girin");
+      toast.error(t("dialogs.balance.invalidMinutes"));
       return;
     }
 
     if (!balance || balance.total_minutes < minutes) {
-      toast.error("Bakiyede yeterli dakika yok");
+      toast.error(t("dialogs.balance.insufficientBalance"));
       return;
     }
 
@@ -166,12 +178,12 @@ export function AdminBalanceManager({ teacherId }: AdminBalanceManagerProps) {
 
       if (error) throw error;
 
-      toast.success(`${minutes} dakika çıkarıldı`);
+      toast.success(t("dialogs.balance.minutesSubtracted", { minutes }));
       setMinutesToSubtract("");
       fetchBalance();
     } catch (error) {
       console.error("Error subtracting minutes:", error);
-      toast.error("Dakika çıkarılırken hata oluştu");
+      toast.error(t("dialogs.balance.subtractMinutesError"));
     }
   };
 
@@ -222,13 +234,13 @@ export function AdminBalanceManager({ teacherId }: AdminBalanceManagerProps) {
         if (error) throw error;
       }
 
-      toast.success("Bakiye sıfırlandı ve ödeme kaydedildi");
+      toast.success(t("dialogs.balance.balanceReset"));
       setShowResetDialog(false);
       fetchBalance();
       fetchPaymentHistory();
     } catch (error) {
       console.error("Error resetting balance:", error);
-      toast.error("Bakiye sıfırlanırken hata oluştu");
+      toast.error(t("dialogs.balance.resetError"));
     }
   };
 
@@ -241,16 +253,16 @@ export function AdminBalanceManager({ teacherId }: AdminBalanceManagerProps) {
 
       if (error) throw error;
 
-      toast.success("Ödeme kaydı silindi");
+      toast.success(t("dialogs.balance.paymentDeleted"));
       fetchPaymentHistory();
     } catch (error) {
       console.error("Error deleting payment:", error);
-      toast.error("Ödeme kaydı silinirken hata oluştu");
+      toast.error(t("dialogs.balance.paymentDeleteError"));
     }
   };
 
   const formatMinutes = (minutes: number) => {
-    return `${minutes} dakika`;
+    return `${minutes} ${t("common.minutes")}`;
   };
 
   if (loading) {
@@ -270,7 +282,7 @@ export function AdminBalanceManager({ teacherId }: AdminBalanceManagerProps) {
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Clock className="h-5 w-5 text-primary" />
-                <p className="text-sm font-medium text-muted-foreground">Toplam Bakiye</p>
+                <p className="text-sm font-medium text-muted-foreground">{t("dialogs.balance.totalBalance")}</p>
               </div>
               <p className="text-3xl font-bold text-primary">{formatMinutes(balance?.total_minutes || 0)}</p>
             </div>
@@ -282,9 +294,9 @@ export function AdminBalanceManager({ teacherId }: AdminBalanceManagerProps) {
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <CheckCircle2 className="h-5 w-5 text-primary" />
-                <p className="text-sm font-medium text-muted-foreground">Normal Dersler</p>
+                <p className="text-sm font-medium text-muted-foreground">{t("dialogs.balance.regularLessons")}</p>
               </div>
-              <p className="text-3xl font-bold">{balance?.completed_regular_lessons || 0} ders ({formatMinutes(balance?.regular_lessons_minutes || 0)})</p>
+              <p className="text-3xl font-bold">{balance?.completed_regular_lessons || 0} {t("dialogs.balance.lesson")} ({formatMinutes(balance?.regular_lessons_minutes || 0)})</p>
             </div>
           </CardContent>
         </Card>
@@ -294,9 +306,9 @@ export function AdminBalanceManager({ teacherId }: AdminBalanceManagerProps) {
             <div className="text-center">
               <div className="flex items-center justify-center gap-2 mb-2">
                 <Calendar className="h-5 w-5 text-accent" />
-                <p className="text-sm font-medium text-muted-foreground">Deneme Dersleri</p>
+                <p className="text-sm font-medium text-muted-foreground">{t("dialogs.balance.trialLessons")}</p>
               </div>
-              <p className="text-3xl font-bold">{balance?.completed_trial_lessons || 0} ders ({formatMinutes(balance?.trial_lessons_minutes || 0)})</p>
+              <p className="text-3xl font-bold">{balance?.completed_trial_lessons || 0} {t("dialogs.balance.lesson")} ({formatMinutes(balance?.trial_lessons_minutes || 0)})</p>
             </div>
           </CardContent>
         </Card>
@@ -305,44 +317,44 @@ export function AdminBalanceManager({ teacherId }: AdminBalanceManagerProps) {
       {/* Balance Actions */}
       <Card>
         <CardHeader>
-          <CardTitle>Bakiye Yönetimi</CardTitle>
-          <CardDescription>Öğretmen bakiyesine dakika ekleyin veya çıkarın</CardDescription>
+          <CardTitle>{t("dialogs.balance.balanceManagement")}</CardTitle>
+          <CardDescription>{t("dialogs.balance.balanceManagementDesc")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Add Minutes */}
           <div className="space-y-2">
-            <Label htmlFor="add-minutes">Dakika Ekle</Label>
+            <Label htmlFor="add-minutes">{t("dialogs.balance.addMinutes")}</Label>
             <div className="flex gap-2">
               <Input
                 id="add-minutes"
                 type="number"
-                placeholder="Eklenecek dakika"
+                placeholder={t("dialogs.balance.addMinutesPlaceholder")}
                 value={minutesToAdd}
                 onChange={(e) => setMinutesToAdd(e.target.value)}
                 min="1"
               />
               <Button onClick={handleAddMinutes} className="whitespace-nowrap">
                 <Plus className="h-4 w-4 mr-2" />
-                Ekle
+                {t("dialogs.balance.add")}
               </Button>
             </div>
           </div>
 
           {/* Subtract Minutes */}
           <div className="space-y-2">
-            <Label htmlFor="subtract-minutes">Dakika Çıkar</Label>
+            <Label htmlFor="subtract-minutes">{t("dialogs.balance.subtractMinutes")}</Label>
             <div className="flex gap-2">
               <Input
                 id="subtract-minutes"
                 type="number"
-                placeholder="Çıkarılacak dakika"
+                placeholder={t("dialogs.balance.subtractMinutesPlaceholder")}
                 value={minutesToSubtract}
                 onChange={(e) => setMinutesToSubtract(e.target.value)}
                 min="1"
               />
               <Button onClick={handleSubtractMinutes} variant="secondary" className="whitespace-nowrap">
                 <Minus className="h-4 w-4 mr-2" />
-                Çıkar
+                {t("dialogs.balance.subtract")}
               </Button>
             </div>
           </div>
@@ -351,10 +363,10 @@ export function AdminBalanceManager({ teacherId }: AdminBalanceManagerProps) {
           <div className="pt-4 border-t">
             <Button onClick={() => setShowResetDialog(true)} variant="destructive" className="w-full">
               <RotateCcw className="h-4 w-4 mr-2" />
-              Bakiyeyi Sıfırla
+              {t("dialogs.balance.resetBalance")}
             </Button>
             <p className="text-xs text-muted-foreground text-center mt-2">
-              Öğretmen ödeme yaptıktan sonra bakiyeyi sıfırlayın
+              {t("dialogs.balance.resetBalanceNote")}
             </p>
           </div>
         </CardContent>
@@ -365,13 +377,13 @@ export function AdminBalanceManager({ teacherId }: AdminBalanceManagerProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Receipt className="h-5 w-5" />
-            Ödeme Geçmişi
+            {t("dialogs.balance.paymentHistory")}
           </CardTitle>
-          <CardDescription>Geçmiş ödeme kayıtları</CardDescription>
+          <CardDescription>{t("dialogs.balance.pastPayments")}</CardDescription>
         </CardHeader>
         <CardContent>
           {paymentHistory.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-8">Henüz ödeme kaydı yok</p>
+            <p className="text-sm text-muted-foreground text-center py-8">{t("dialogs.balance.noPayments")}</p>
           ) : (
             <div className="space-y-3">
               {paymentHistory.map((payment) => (
@@ -386,21 +398,21 @@ export function AdminBalanceManager({ teacherId }: AdminBalanceManagerProps) {
                         <div className="flex gap-4 text-sm text-muted-foreground">
                           <span className="flex items-center gap-1">
                             <CheckCircle2 className="h-3 w-3 text-primary" />
-                            {payment.completed_regular_lessons} ders
+                            {payment.completed_regular_lessons} {t("dialogs.balance.lesson")}
                           </span>
                           <span className="flex items-center gap-1">
                             <Calendar className="h-3 w-3 text-accent" />
-                            {payment.completed_trial_lessons} ders
+                            {payment.completed_trial_lessons} {t("dialogs.balance.lesson")}
                           </span>
                         </div>
                       </div>
                       <div className="flex flex-col items-end gap-2">
                         <div className="text-right">
                           <p className="text-sm font-medium">
-                            {format(new Date(payment.payment_date), "dd MMMM yyyy", { locale: tr })}
+                            {format(new Date(payment.payment_date), "dd MMMM yyyy", { locale: getDateLocale() })}
                           </p>
                           <p className="text-xs text-muted-foreground">
-                            {format(new Date(payment.payment_date), "HH:mm", { locale: tr })}
+                            {format(new Date(payment.payment_date), "HH:mm", { locale: getDateLocale() })}
                           </p>
                         </div>
                         <Button
@@ -409,7 +421,7 @@ export function AdminBalanceManager({ teacherId }: AdminBalanceManagerProps) {
                           onClick={() => handleDeletePayment(payment.id)}
                           className="text-destructive hover:text-destructive h-8"
                         >
-                          Sil
+                          {t("dialogs.balance.delete")}
                         </Button>
                       </div>
                     </div>
@@ -425,16 +437,15 @@ export function AdminBalanceManager({ teacherId }: AdminBalanceManagerProps) {
       <AlertDialog open={showResetDialog} onOpenChange={setShowResetDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Bakiyeyi Sıfırla</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.balance.resetConfirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Bu işlem öğretmenin tüm bakiyesini (toplam dakika, normal ders sayısı, deneme dersi sayısı) sıfırlayacak
-              ve mevcut bakiye ödeme geçmişine kaydedilecek. Devam etmek istediğinize emin misiniz?
+              {t("dialogs.balance.resetConfirmDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleResetBalance} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Sıfırla ve Kaydet
+              {t("common.resetAndSave")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
