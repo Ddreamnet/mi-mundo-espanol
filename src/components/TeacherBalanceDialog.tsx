@@ -5,7 +5,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { Clock, CheckCircle2, Calendar, Receipt } from "lucide-react";
 import { toast } from "sonner";
 import { format } from "date-fns";
-import { tr } from "date-fns/locale";
+import { tr, enUS, es } from "date-fns/locale";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface TeacherBalanceDialogProps {
   open: boolean;
@@ -31,9 +33,19 @@ interface PaymentHistory {
 }
 
 export function TeacherBalanceDialog({ open, onOpenChange, teacherId }: TeacherBalanceDialogProps) {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const [balance, setBalance] = useState<BalanceData | null>(null);
   const [loading, setLoading] = useState(true);
   const [paymentHistory, setPaymentHistory] = useState<PaymentHistory[]>([]);
+
+  const getDateLocale = () => {
+    switch (language) {
+      case 'en': return enUS;
+      case 'es': return es;
+      default: return tr;
+    }
+  };
 
   useEffect(() => {
     if (open) {
@@ -66,7 +78,7 @@ export function TeacherBalanceDialog({ open, onOpenChange, teacherId }: TeacherB
       }
     } catch (error) {
       console.error("Error fetching balance:", error);
-      toast.error("Bakiye bilgisi yüklenirken hata oluştu");
+      toast.error(t("dialogs.balance.balanceLoadError"));
     } finally {
       setLoading(false);
     }
@@ -89,7 +101,7 @@ export function TeacherBalanceDialog({ open, onOpenChange, teacherId }: TeacherB
   };
 
   const formatMinutes = (minutes: number) => {
-    return `${minutes} dakika`;
+    return `${minutes} ${t("common.minutes")}`;
   };
 
   return (
@@ -98,7 +110,7 @@ export function TeacherBalanceDialog({ open, onOpenChange, teacherId }: TeacherB
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Clock className="h-5 w-5" />
-            Bakiye Durumu
+            {t("dialogs.balance.title")}
           </DialogTitle>
         </DialogHeader>
 
@@ -110,7 +122,7 @@ export function TeacherBalanceDialog({ open, onOpenChange, teacherId }: TeacherB
           <div className="space-y-4">
             <div className="bg-secondary/30 rounded-lg p-6 border border-border">
               <div className="text-center">
-                <p className="text-sm text-muted-foreground mb-2">Toplam İşlenen Süre</p>
+                <p className="text-sm text-muted-foreground mb-2">{t("dialogs.balance.totalProcessedTime")}</p>
                 <p className="text-3xl font-bold text-primary">
                   {formatMinutes(balance?.total_minutes || 0)}
                 </p>
@@ -121,26 +133,26 @@ export function TeacherBalanceDialog({ open, onOpenChange, teacherId }: TeacherB
               <div className="bg-secondary/20 border rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <CheckCircle2 className="h-4 w-4" />
-                  <p className="text-xs opacity-70">Normal Dersler</p>
+                  <p className="text-xs opacity-70">{t("dialogs.balance.regularLessons")}</p>
                 </div>
                 <p className="text-2xl font-semibold">
-                  {balance?.completed_regular_lessons || 0} ders ({formatMinutes(balance?.regular_lessons_minutes || 0)})
+                  {balance?.completed_regular_lessons || 0} {t("dialogs.balance.lesson")} ({formatMinutes(balance?.regular_lessons_minutes || 0)})
                 </p>
               </div>
 
               <div className="bg-secondary/20 border rounded-lg p-4">
                 <div className="flex items-center gap-2 mb-2">
                   <Calendar className="h-4 w-4" />
-                  <p className="text-xs opacity-70">Deneme Dersleri</p>
+                  <p className="text-xs opacity-70">{t("dialogs.balance.trialLessons")}</p>
                 </div>
                 <p className="text-2xl font-semibold">
-                  {balance?.completed_trial_lessons || 0} ders ({formatMinutes(balance?.trial_lessons_minutes || 0)})
+                  {balance?.completed_trial_lessons || 0} {t("dialogs.balance.lesson")} ({formatMinutes(balance?.trial_lessons_minutes || 0)})
                 </p>
               </div>
             </div>
 
             <div className="text-xs text-muted-foreground text-center pt-2 border-t">
-              Her işlenen ders, ders süresine göre bakiyenize otomatik eklenir
+              {t("dialogs.balance.autoAddNote")}
             </div>
 
             {/* Payment History */}
@@ -148,7 +160,7 @@ export function TeacherBalanceDialog({ open, onOpenChange, teacherId }: TeacherB
               <div className="space-y-3 pt-4 border-t">
                 <div className="flex items-center gap-2">
                   <Receipt className="h-4 w-4" />
-                  <h3 className="font-semibold text-sm">Ödeme Geçmişi</h3>
+                  <h3 className="font-semibold text-sm">{t("dialogs.balance.paymentHistory")}</h3>
                 </div>
                 <div className="space-y-2 max-h-64 overflow-y-auto">
                   {paymentHistory.map((payment) => (
@@ -163,17 +175,17 @@ export function TeacherBalanceDialog({ open, onOpenChange, teacherId }: TeacherB
                             <div className="flex gap-3 text-xs opacity-70">
                               <span className="flex items-center gap-1">
                                 <CheckCircle2 className="h-3 w-3" />
-                                {payment.completed_regular_lessons} ders
+                                {payment.completed_regular_lessons} {t("dialogs.balance.lesson")}
                               </span>
                               <span className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
-                                {payment.completed_trial_lessons} ders
+                                {payment.completed_trial_lessons} {t("dialogs.balance.lesson")}
                               </span>
                             </div>
                           </div>
                           <div className="text-right">
                             <p className="text-xs font-medium">
-                              {format(new Date(payment.payment_date), "dd MMM yyyy", { locale: tr })}
+                              {format(new Date(payment.payment_date), "dd MMM yyyy", { locale: getDateLocale() })}
                             </p>
                           </div>
                         </div>

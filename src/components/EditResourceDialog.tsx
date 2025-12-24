@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { useTranslation } from "react-i18next";
 
 interface EditResourceDialogProps {
   open: boolean;
@@ -26,6 +27,7 @@ interface EditResourceDialogProps {
 }
 
 export function EditResourceDialog({ open, onOpenChange, onEditResource, resource }: EditResourceDialogProps) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [resourceType, setResourceType] = useState("link");
@@ -58,60 +60,60 @@ export function EditResourceDialog({ open, onOpenChange, onEditResource, resourc
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Kaynağı Düzenle</DialogTitle>
+          <DialogTitle>{t("dialogs.editResource.title")}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <Label htmlFor="title">Başlık</Label>
+            <Label htmlFor="title">{t("dialogs.editResource.titleLabel")}</Label>
             <Input
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="Kaynak başlığı"
+              placeholder={t("dialogs.editResource.titlePlaceholder")}
               required
             />
           </div>
           <div>
-            <Label htmlFor="description">Açıklama</Label>
+            <Label htmlFor="description">{t("dialogs.editResource.descriptionLabel")}</Label>
             <Textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Kaynak açıklaması (opsiyonel)"
+              placeholder={t("dialogs.editResource.descriptionPlaceholder")}
               rows={2}
             />
           </div>
           <div>
-            <Label htmlFor="resourceType">Kaynak Türü</Label>
+            <Label htmlFor="resourceType">{t("dialogs.editResource.typeLabel")}</Label>
             <Select value={resourceType} onValueChange={setResourceType}>
               <SelectTrigger>
-                <SelectValue placeholder="Kaynak türünü seçin" />
+                <SelectValue placeholder={t("dialogs.editResource.typePlaceholder")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="video">Video</SelectItem>
-                <SelectItem value="pdf">PDF</SelectItem>
-                <SelectItem value="document">Doküman</SelectItem>
-                <SelectItem value="link">Link</SelectItem>
+                <SelectItem value="video">{t("dialogs.editResource.types.video")}</SelectItem>
+                <SelectItem value="pdf">{t("dialogs.editResource.types.pdf")}</SelectItem>
+                <SelectItem value="document">{t("dialogs.editResource.types.document")}</SelectItem>
+                <SelectItem value="link">{t("dialogs.editResource.types.link")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div>
-            <Label htmlFor="resourceUrl">Kaynak URL</Label>
+            <Label htmlFor="resourceUrl">{t("dialogs.editResource.urlLabel")}</Label>
             <Input
               id="resourceUrl"
               type="url"
               value={resourceUrl}
               onChange={(e) => setResourceUrl(e.target.value)}
-              placeholder="https://..."
+              placeholder={t("dialogs.editResource.urlPlaceholder")}
               required
             />
           </div>
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              İptal
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={loading}>
-              {loading ? "Kaydediliyor..." : "Kaydet"}
+              {loading ? t("common.saving") : t("common.save")}
             </Button>
           </DialogFooter>
         </form>

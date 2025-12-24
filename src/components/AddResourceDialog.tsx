@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2, Upload, X } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface AddResourceDialogProps {
   open: boolean;
@@ -18,15 +19,6 @@ interface AddResourceDialogProps {
   topicTitle?: string;
 }
 
-const resourceTypes = [
-  { value: "pdf", label: "PDF Dökümanı" },
-  { value: "video", label: "Video" },
-  { value: "image", label: "Resim" },
-  { value: "link", label: "Web Bağlantısı" },
-  { value: "document", label: "Döküman" },
-  { value: "other", label: "Diğer" },
-];
-
 export function AddResourceDialog({
   open,
   onOpenChange,
@@ -35,6 +27,7 @@ export function AddResourceDialog({
   onAddResource,
   topicTitle,
 }: AddResourceDialogProps) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [resourceType, setResourceType] = useState("");
@@ -43,6 +36,15 @@ export function AddResourceDialog({
   const [isDragOver, setIsDragOver] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+
+  const resourceTypes = [
+    { value: "pdf", label: t("dialogs.addResource.types.pdf") },
+    { value: "video", label: t("dialogs.addResource.types.video") },
+    { value: "image", label: t("dialogs.addResource.types.image") },
+    { value: "link", label: t("dialogs.addResource.types.link") },
+    { value: "document", label: t("dialogs.addResource.types.document") },
+    { value: "other", label: t("dialogs.addResource.types.other") },
+  ];
 
   const handleDrop = useCallback(
     (e: React.DragEvent) => {
@@ -125,8 +127,8 @@ export function AddResourceDialog({
     // Check if URL is required for web links
     if (resourceType === "link" && !webUrl.trim() && !selectedFile) {
       toast({
-        title: "Hata",
-        description: "Lütfen web bağlantısı için bir URL sağlayın",
+        title: t("common.error"),
+        description: t("dialogs.addResource.urlRequired"),
         variant: "destructive",
       });
       return;
@@ -177,8 +179,8 @@ export function AddResourceDialog({
         if (error) throw error;
 
         toast({
-          title: "Başarılı",
-          description: "Kaynak başarıyla yüklendi",
+          title: t("common.success"),
+          description: t("dialogs.addResource.successMessage"),
         });
 
         onResourceAdded?.();
@@ -192,7 +194,7 @@ export function AddResourceDialog({
       onOpenChange(false);
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -201,24 +203,28 @@ export function AddResourceDialog({
     }
   };
 
+  const getDialogDescription = () => {
+    let desc = topicTitle
+      ? t("dialogs.addResource.topicDescription", { topic: topicTitle })
+      : t("dialogs.addResource.topicDescriptionDefault");
+    return desc + " " + t("dialogs.addResource.topicDescriptionDetails");
+  };
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Öğrenme Kaynağı Ekle</DialogTitle>
+          <DialogTitle>{t("dialogs.addResource.title")}</DialogTitle>
           <DialogDescription>
-            {topicTitle
-              ? `"${topicTitle}" konusuna yeni bir öğrenme kaynağı ekleyin.`
-              : "Bu konuya yeni bir öğrenme kaynağı ekleyin."}{" "}
-            Bu bir PDF, video, bağlantı veya diğer herhangi bir materyal olabilir.
+            {getDialogDescription()}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 w-full max-w-full overflow-hidden">
           <div className="space-y-2">
-            <Label htmlFor="resource-title">Kaynak Başlığı</Label>
+            <Label htmlFor="resource-title">{t("dialogs.addResource.titleLabel")}</Label>
             <Input
               id="resource-title"
-              placeholder="örn., Sebzeler Kelime Listesi"
+              placeholder={t("dialogs.addResource.titlePlaceholder")}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
@@ -226,10 +232,10 @@ export function AddResourceDialog({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="resource-type">Kaynak Türü</Label>
+            <Label htmlFor="resource-type">{t("dialogs.addResource.typeLabel")}</Label>
             <Select value={resourceType} onValueChange={setResourceType} required>
               <SelectTrigger>
-                <SelectValue placeholder="Kaynak türünü seçin" />
+                <SelectValue placeholder={t("dialogs.addResource.typePlaceholder")} />
               </SelectTrigger>
               <SelectContent>
                 {resourceTypes.map((type) => (
@@ -243,11 +249,11 @@ export function AddResourceDialog({
 
           {resourceType === "link" && (
             <div className="space-y-2">
-              <Label htmlFor="web-url">Web Bağlantısı URL</Label>
+              <Label htmlFor="web-url">{t("dialogs.addResource.urlLabel")}</Label>
               <Input
                 id="web-url"
                 type="url"
-                placeholder="https://example.com"
+                placeholder={t("dialogs.addResource.urlPlaceholder")}
                 value={webUrl}
                 onChange={(e) => setWebUrl(e.target.value)}
                 required={resourceType === "link" && !selectedFile}
@@ -257,7 +263,7 @@ export function AddResourceDialog({
 
           {resourceType !== "link" && (
             <div className="space-y-2">
-              <Label>Dosya Yükle</Label>
+              <Label>{t("dialogs.addResource.fileUpload")}</Label>
               <div
                 className={`border-2 border-dashed rounded-lg p-6 text-center transition-colors w-full max-w-full box-border ${
                   isDragOver ? "border-primary bg-primary/5" : "border-muted-foreground/25"
@@ -281,7 +287,7 @@ export function AddResourceDialog({
                     <Upload className="mx-auto h-12 w-12 opacity-50 mb-4" />
                     <div className="space-y-2">
                       <p className="text-sm opacity-70">
-                        Dosyanızı buraya sürükleyip bırakın veya göz atmak için tıklayın
+                        {t("dialogs.addResource.dragDrop")}
                       </p>
                       <input
                         type="file"
@@ -295,7 +301,7 @@ export function AddResourceDialog({
                         variant="outline"
                         onClick={() => document.getElementById("file-upload")?.click()}
                       >
-                        Dosya Seç
+                        {t("dialogs.addResource.selectFileBtn")}
                       </Button>
                     </div>
                   </>
@@ -305,10 +311,10 @@ export function AddResourceDialog({
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="resource-description">Açıklama (Opsiyonel)</Label>
+            <Label htmlFor="resource-description">{t("dialogs.addResource.descriptionLabel")}</Label>
             <Textarea
               id="resource-description"
-              placeholder="Bu kaynağın kısa açıklaması..."
+              placeholder={t("dialogs.addResource.descriptionPlaceholder")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
@@ -317,7 +323,7 @@ export function AddResourceDialog({
 
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-              İptal
+              {t("common.cancel")}
             </Button>
             <Button
               type="submit"
@@ -329,7 +335,7 @@ export function AddResourceDialog({
               }
             >
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              {resourceType === "link" && !selectedFile ? "Bağlantı Ekle" : "Kaynak Yükle"}
+              {resourceType === "link" && !selectedFile ? t("dialogs.addResource.addLink") : t("dialogs.addResource.uploadResource")}
             </Button>
           </div>
         </form>

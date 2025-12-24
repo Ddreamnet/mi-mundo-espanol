@@ -23,6 +23,7 @@ import {
   BookOpen,
 } from "lucide-react";
 import { LessonTracker } from "./LessonTracker";
+import { useTranslation } from "react-i18next";
 
 // ============================================================================
 // TİPLER
@@ -69,6 +70,7 @@ interface StudentTopicsContentProps {
 // ============================================================================
 
 export function StudentTopicsContent({ student, teacherId }: StudentTopicsContentProps) {
+  const { t } = useTranslation();
   const [topics, setTopics] = useState<Topic[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set());
@@ -173,8 +175,8 @@ export function StudentTopicsContent({ student, teacherId }: StudentTopicsConten
       setTopics([...processedStudentTopics, ...processedGlobalTopics]);
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: "Konular getirilemedi",
+        title: t("common.error"),
+        description: t("messages.topicsLoadError"),
         variant: "destructive",
       });
     } finally {
@@ -217,15 +219,16 @@ export function StudentTopicsContent({ student, teacherId }: StudentTopicsConten
 
       if (error) throw error;
 
+      const status = !isCompleted ? t("studentTopics.completed") : t("studentTopics.notCompleted");
       toast({
-        title: "Başarılı",
-        description: `Kaynak ${!isCompleted ? "tamamlandı" : "tamamlanmadı olarak işaretlendi"}`,
+        title: t("common.success"),
+        description: t("studentTopics.resourceMarked", { status }),
       });
 
       fetchTopics();
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -264,15 +267,16 @@ export function StudentTopicsContent({ student, teacherId }: StudentTopicsConten
         if (error) throw error;
       }
 
+      const status = !isCompleted ? t("studentTopics.completed") : t("studentTopics.notCompleted");
       toast({
-        title: "Başarılı",
-        description: `Konu ${!isCompleted ? "tamamlandı" : "tamamlanmadı olarak işaretlendi"}`,
+        title: t("common.success"),
+        description: t("studentTopics.topicMarked", { status }),
       });
 
       fetchTopics();
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -355,8 +359,8 @@ export function StudentTopicsContent({ student, teacherId }: StudentTopicsConten
                 </CollapsibleTrigger>
 
                 <div className="flex items-center gap-2">
-                  {topic.is_completed && <Badge variant="secondary">Tamamlandı</Badge>}
-                  <Badge variant="outline">{topic.resources.length} kaynak</Badge>
+                  {topic.is_completed && <Badge variant="secondary">{t("studentTopics.completed")}</Badge>}
+                  <Badge variant="outline">{topic.resources.length} {t("common.resource")}</Badge>
                 </div>
               </div>
             </div>
@@ -364,12 +368,12 @@ export function StudentTopicsContent({ student, teacherId }: StudentTopicsConten
             <CollapsibleContent className="mt-4">
               <div className="pl-8 space-y-3">
                 <div className="flex justify-between items-center">
-                  <h5 className="font-medium text-sm">Kaynaklar</h5>
+                  <h5 className="font-medium text-sm">{t("common.resources")}</h5>
                 </div>
 
                 {visibleResources.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    {topic.resources.length === 0 ? "Henüz kaynak yok." : "Görünür kaynak yok."}
+                    {topic.resources.length === 0 ? t("studentTopics.noResources") : t("studentTopics.noVisibleResources")}
                   </p>
                 ) : (
                   <div className="space-y-2">
@@ -416,10 +420,10 @@ export function StudentTopicsContent({ student, teacherId }: StudentTopicsConten
             <div>
               <CardTitle className="flex items-center gap-2">
                 <BookOpen className="h-5 w-5" />
-                {student.profiles.full_name} için konular
+                {t("studentTopics.topicsFor", { name: student.profiles.full_name })}
               </CardTitle>
               <CardDescription>
-                {topics.filter((t) => t.is_completed).length} / {topics.length} konu tamamlandı
+                {topics.filter((t) => t.is_completed).length} / {topics.length} {t("studentTopics.topicsCompleted")}
               </CardDescription>
             </div>
 
@@ -436,7 +440,7 @@ export function StudentTopicsContent({ student, teacherId }: StudentTopicsConten
         <CardContent className="space-y-4">
           {topics.length === 0 ? (
             <div className="text-center py-8">
-              <p className="opacity-70">Henüz konu yok.</p>
+              <p className="opacity-70">{t("studentTopics.noTopics")}</p>
             </div>
           ) : (
             topics.map((topic) => <TopicCard key={topic.id} topic={topic} />)
