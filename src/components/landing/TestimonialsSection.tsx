@@ -1,0 +1,237 @@
+import { useState, useCallback } from "react";
+import { ChevronLeft, ChevronRight, User } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+interface Testimonial {
+  id: string;
+  quote: string;
+}
+
+// Dummy testimonials - ileride admin panelinden gelecek
+const testimonials: Testimonial[] = [
+  {
+    id: "1",
+    quote: "Mi Mundo Español ile İspanyolca öğrenmek hayatımın en iyi kararlarından biri oldu. Öğretmenim sayesinde kısa sürede konuşma becerim inanılmaz gelişti.",
+  },
+  {
+    id: "2",
+    quote: "DELE sınavına hazırlanırken aldığım destek paha biçilemezdi. Birebir ders formatı sayesinde eksiklerimi hızlıca kapattım.",
+  },
+  {
+    id: "3",
+    quote: "Online ders imkanı benim için büyük kolaylık sağladı. Esnek saatler ve kaliteli eğitim bir arada.",
+  },
+  {
+    id: "4",
+    quote: "Sıfırdan başladım ve şimdi İspanya'da rahatça iletişim kurabiliyorum. Teşekkürler Mi Mundo Español!",
+  },
+  {
+    id: "5",
+    quote: "Anadili İspanyolca olan bir eğitmenden ders almak gerçekten fark yaratıyor. Aksanımı ve telaffuzumu çok geliştirdim.",
+  },
+];
+
+export function TestimonialsSection() {
+  const [activeIndex, setActiveIndex] = useState(0);
+
+  const handlePrev = useCallback(() => {
+    setActiveIndex((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1));
+  }, []);
+
+  const handleNext = useCallback(() => {
+    setActiveIndex((prev) => (prev === testimonials.length - 1 ? 0 : prev + 1));
+  }, []);
+
+  const getCardStyle = (index: number) => {
+    const diff = index - activeIndex;
+    const normalizedDiff = ((diff + testimonials.length) % testimonials.length);
+    
+    // Determine position: -2, -1, 0, 1, 2
+    let position = normalizedDiff;
+    if (normalizedDiff > 2) {
+      position = normalizedDiff - testimonials.length;
+    }
+
+    const isCenter = position === 0;
+    const isAdjacent = Math.abs(position) === 1;
+    const isVisible = Math.abs(position) <= 2;
+
+    if (!isVisible) {
+      return {
+        opacity: 0,
+        transform: "scale(0.6) translateX(0)",
+        zIndex: 0,
+        pointerEvents: "none" as const,
+      };
+    }
+
+    if (isCenter) {
+      return {
+        opacity: 1,
+        transform: "scale(1) translateX(0)",
+        zIndex: 30,
+        pointerEvents: "auto" as const,
+      };
+    }
+
+    if (isAdjacent) {
+      const translateX = position < 0 ? "-60%" : "60%";
+      return {
+        opacity: 0.6,
+        transform: `scale(0.85) translateX(${translateX})`,
+        zIndex: 20,
+        pointerEvents: "auto" as const,
+      };
+    }
+
+    // Far cards
+    const translateX = position < 0 ? "-120%" : "120%";
+    return {
+      opacity: 0.3,
+      transform: `scale(0.7) translateX(${translateX})`,
+      zIndex: 10,
+      pointerEvents: "none" as const,
+    };
+  };
+
+  return (
+    <section className="py-16 lg:py-24 overflow-hidden">
+      <div className="container mx-auto px-4 lg:px-8">
+        <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground text-center mb-16">
+          Öğrencilerimiz Ne Diyor?
+        </h2>
+
+        {/* Desktop Carousel */}
+        <div className="hidden md:block relative">
+          <div className="flex items-center justify-center">
+            {/* Left Arrow */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handlePrev}
+              className="absolute left-4 lg:left-12 z-40 h-12 w-12 rounded-full bg-card shadow-lg hover:bg-accent transition-all duration-300"
+              aria-label="Önceki referans"
+            >
+              <ChevronLeft className="h-6 w-6" />
+            </Button>
+
+            {/* Cards Container */}
+            <div className="relative h-[320px] w-full max-w-4xl flex items-center justify-center">
+              {testimonials.map((testimonial, index) => {
+                const style = getCardStyle(index);
+                return (
+                  <div
+                    key={testimonial.id}
+                    className="absolute w-80 transition-all duration-500 ease-out"
+                    style={{
+                      opacity: style.opacity,
+                      transform: style.transform,
+                      zIndex: style.zIndex,
+                      pointerEvents: style.pointerEvents,
+                    }}
+                  >
+                    <TestimonialCard quote={testimonial.quote} />
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Right Arrow */}
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleNext}
+              className="absolute right-4 lg:right-12 z-40 h-12 w-12 rounded-full bg-card shadow-lg hover:bg-accent transition-all duration-300"
+              aria-label="Sonraki referans"
+            >
+              <ChevronRight className="h-6 w-6" />
+            </Button>
+          </div>
+
+          {/* Dots Indicator */}
+          <div className="flex justify-center gap-2 mt-8">
+            {testimonials.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setActiveIndex(index)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  index === activeIndex
+                    ? "w-8 bg-primary"
+                    : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                }`}
+                aria-label={`Referans ${index + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Mobile Carousel - Single Card Focus */}
+        <div className="md:hidden relative">
+          <div className="flex items-center justify-center gap-4">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handlePrev}
+              className="shrink-0 h-10 w-10 rounded-full bg-card shadow-lg hover:bg-accent"
+              aria-label="Önceki referans"
+            >
+              <ChevronLeft className="h-5 w-5" />
+            </Button>
+
+            <div className="w-full max-w-[280px]">
+              <TestimonialCard quote={testimonials[activeIndex].quote} />
+            </div>
+
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={handleNext}
+              className="shrink-0 h-10 w-10 rounded-full bg-card shadow-lg hover:bg-accent"
+              aria-label="Sonraki referans"
+            >
+              <ChevronRight className="h-5 w-5" />
+            </Button>
+          </div>
+
+          {/* Mobile Dots */}
+          <div className="flex justify-center gap-2 mt-6">
+            {testimonials.map((_, index) => (
+              <button
+                key={index}
+                onClick={() => setActiveIndex(index)}
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  index === activeIndex
+                    ? "w-6 bg-primary"
+                    : "w-2 bg-muted-foreground/30"
+                }`}
+                aria-label={`Referans ${index + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function TestimonialCard({ quote }: { quote: string }) {
+  return (
+    <div className="relative pt-10">
+      {/* Avatar Circle - Half outside, half inside */}
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
+        <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary/70 flex items-center justify-center shadow-xl ring-4 ring-background">
+          <User className="h-10 w-10 text-primary-foreground" />
+        </div>
+      </div>
+
+      {/* Card */}
+      <div className="bg-card rounded-2xl shadow-xl pt-14 pb-8 px-6 border border-border/50">
+        <blockquote className="text-card-foreground/80 text-center leading-relaxed">
+          <span className="text-primary text-2xl font-serif">"</span>
+          {quote}
+          <span className="text-primary text-2xl font-serif">"</span>
+        </blockquote>
+      </div>
+    </div>
+  );
+}
