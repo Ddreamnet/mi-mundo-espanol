@@ -79,15 +79,8 @@ export default function Lessons() {
         <div className="container mx-auto px-4 lg:px-8">
           {/* Page Title */}
           <div className="text-center mb-12 lg:mb-16">
-            <h1 className="text-3xl md:text-4xl lg:text-5xl font-montserrat font-bold text-foreground mb-4">
-              {content.pageTitle.includes(" ") ? (
-                <>
-                  {content.pageTitle.split(" ").slice(0, -1).join(" ")}{" "}
-                  <span className="text-primary">{content.pageTitle.split(" ").pop()}</span>
-                </>
-              ) : (
-                content.pageTitle
-              )}
+            <h1 className="text-3xl md:text-4xl lg:text-5xl font-montserrat font-bold text-[hsl(42_42%_94%)] mb-4">
+              {content.pageTitle}
             </h1>
             <p className="text-lg text-foreground/80 max-w-2xl mx-auto">
               {content.pageSubtitle}
