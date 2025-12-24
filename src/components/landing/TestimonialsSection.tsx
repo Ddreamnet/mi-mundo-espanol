@@ -11,11 +11,13 @@ interface Testimonial {
 const testimonials: Testimonial[] = [
   {
     id: "1",
-    quote: "Mi Mundo Español ile İspanyolca öğrenmek hayatımın en iyi kararlarından biri oldu. Öğretmenim sayesinde kısa sürede konuşma becerim inanılmaz gelişti.",
+    quote:
+      "Mi Mundo Español ile İspanyolca öğrenmek hayatımın en iyi kararlarından biri oldu. Öğretmenim sayesinde kısa sürede konuşma becerim inanılmaz gelişti.",
   },
   {
     id: "2",
-    quote: "DELE sınavına hazırlanırken aldığım destek paha biçilemezdi. Birebir ders formatı sayesinde eksiklerimi hızlıca kapattım.",
+    quote:
+      "DELE sınavına hazırlanırken aldığım destek paha biçilemezdi. Birebir ders formatı sayesinde eksiklerimi hızlıca kapattım.",
   },
   {
     id: "3",
@@ -27,7 +29,8 @@ const testimonials: Testimonial[] = [
   },
   {
     id: "5",
-    quote: "Anadili İspanyolca olan bir eğitmenden ders almak gerçekten fark yaratıyor. Aksanımı ve telaffuzumu çok geliştirdim.",
+    quote:
+      "Anadili İspanyolca olan bir eğitmenden ders almak gerçekten fark yaratıyor. Aksanımı ve telaffuzumu çok geliştirdim.",
   },
 ];
 
@@ -92,8 +95,8 @@ export function TestimonialsSection() {
 
   const getCardStyle = (index: number) => {
     const diff = index - activeIndex;
-    const normalizedDiff = ((diff + testimonials.length) % testimonials.length);
-    
+    const normalizedDiff = (diff + testimonials.length) % testimonials.length;
+
     // Determine position: -2, -1, 0, 1, 2
     let position = normalizedDiff;
     if (normalizedDiff > 2) {
@@ -123,7 +126,7 @@ export function TestimonialsSection() {
     }
 
     if (isAdjacent) {
-      const translateX = position < 0 ? "-110%" : "110%";
+      const translateX = position < 0 ? "-95%" : "95%";
       return {
         opacity: 0.6,
         transform: `scale(0.85) translateX(${translateX})`,
@@ -133,7 +136,7 @@ export function TestimonialsSection() {
     }
 
     // Far cards
-    const translateX = position < 0 ? "-200%" : "200%";
+    const translateX = position < 0 ? "-175%" : "175%";
     return {
       opacity: 0.3,
       transform: `scale(0.7) translateX(${translateX})`,
@@ -164,12 +167,14 @@ export function TestimonialsSection() {
             </Button>
 
             {/* Cards Container */}
-            <div 
+            <div
               className="relative h-[320px] w-full max-w-4xl flex items-center justify-center cursor-grab active:cursor-grabbing select-none"
               onMouseDown={handleMouseDown}
               onMouseMove={handleMouseMove}
               onMouseUp={handleMouseUp}
-              onMouseLeave={() => { dragStart.current = null; }}
+              onMouseLeave={() => {
+                dragStart.current = null;
+              }}
               onTouchStart={handleTouchStart}
               onTouchMove={handleTouchMove}
               onTouchEnd={handleTouchEnd}
@@ -212,9 +217,7 @@ export function TestimonialsSection() {
                 key={index}
                 onClick={() => setActiveIndex(index)}
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  index === activeIndex
-                    ? "w-8 bg-primary"
-                    : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
+                  index === activeIndex ? "w-8 bg-primary" : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
                 }`}
                 aria-label={`Referans ${index + 1}`}
               />
@@ -257,9 +260,7 @@ export function TestimonialsSection() {
                 key={index}
                 onClick={() => setActiveIndex(index)}
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  index === activeIndex
-                    ? "w-6 bg-primary"
-                    : "w-2 bg-muted-foreground/30"
+                  index === activeIndex ? "w-6 bg-primary" : "w-2 bg-muted-foreground/30"
                 }`}
                 aria-label={`Referans ${index + 1}`}
               />
