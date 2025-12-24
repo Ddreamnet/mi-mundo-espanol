@@ -333,47 +333,185 @@
   /* ==========================================================================
      DASHBOARD SCOPE TOKENS
      These override global tokens ONLY within dashboard context.
-     Add data-area="dashboard" to the dashboard container to activate.
+     Activated by data-area="dashboard" on the dashboard container.
      ========================================================================== */
   [data-area="dashboard"] {
+    /* ========================================================================
+       DASHBOARD COLOR SYSTEM
+       Based on: Background 1 85% 24% (burgundy) + Foreground 42 42% 94% (cream)
+       ======================================================================== */
+
     /* ------------------------------------------------------------------------
-       DASHBOARD BASE PALETTE
-       Override these to change the dashboard theme without affecting landing
+       DASHBOARD BACKGROUND HIERARCHY
+       From deepest (main bg) to surfaces (cards, dialogs)
        ------------------------------------------------------------------------ */
     
-    /* Dashboard uses the same tokens as global for now.
-       To customize dashboard separately, override values here:
-       
-       --background: <your-dashboard-bg>;
-       --foreground: <your-dashboard-fg>;
-       --card: <your-dashboard-card>;
-       --card-foreground: <your-dashboard-card-fg>;
-       etc.
-    */
+    /* Main dashboard background - deep burgundy */
+    --dash-bg: 1 85% 24%;
+    
+    /* Primary surface (cards) - warm cream */
+    --dash-surface: 42 42% 94%;
+    
+    /* Secondary surface (nested cards, hover states) - slightly darker cream */
+    --dash-surface-2: 40 35% 88%;
+    
+    /* Borders - visible on both dark and light surfaces */
+    --dash-border: 1 25% 75%;
+    --dash-border-on-dark: 1 40% 35%;
+
+    /* ------------------------------------------------------------------------
+       DASHBOARD TEXT
+       ------------------------------------------------------------------------ */
+    
+    /* Text on dark background (main bg) */
+    --dash-text: 42 42% 94%;
+    --dash-text-muted: 42 25% 70%;
+    
+    /* Text on light surfaces (cards, dialogs) */
+    --dash-text-on-surface: 1 85% 15%;
+    --dash-text-muted-on-surface: 1 30% 40%;
+
+    /* ------------------------------------------------------------------------
+       DASHBOARD INPUTS
+       Clear visibility with proper contrast
+       ------------------------------------------------------------------------ */
+    
+    /* Input on light surface (cards) */
+    --dash-input-bg: 0 0% 100%;
+    --dash-input-border: 1 20% 70%;
+    --dash-input-border-focus: 1 50% 45%;
+    --dash-placeholder: 1 15% 55%;
+    --dash-input-text: 1 85% 15%;
+
+    /* ------------------------------------------------------------------------
+       DASHBOARD DIALOGS & POPOVERS
+       Light background for maximum readability
+       ------------------------------------------------------------------------ */
+    
+    --dash-dialog-bg: 45 50% 97%;
+    --dash-dialog-text: 1 85% 15%;
+    --dash-dialog-border: 1 20% 80%;
+
+    /* ------------------------------------------------------------------------
+       DASHBOARD BUTTONS
+       High contrast - never blend into backgrounds
+       ------------------------------------------------------------------------ */
+    
+    /* Primary button - dark burgundy, stands out on cream surfaces */
+    --dash-primary: 354 50% 22%;
+    --dash-primary-foreground: 42 42% 96%;
+    --dash-primary-hover: 354 55% 18%;
+    
+    /* Secondary button - muted burgundy for secondary actions */
+    --dash-secondary: 1 25% 50%;
+    --dash-secondary-foreground: 42 42% 96%;
+    --dash-secondary-hover: 1 25% 42%;
+    
+    /* Ghost button hover - subtle highlight */
+    --dash-ghost-hover: 1 20% 88%;
+    --dash-ghost-hover-on-dark: 1 40% 30%;
+    
+    /* Outline button - visible border */
+    --dash-outline-border: 1 30% 55%;
+    --dash-outline-hover: 1 20% 92%;
+
+    /* ------------------------------------------------------------------------
+       DASHBOARD DESTRUCTIVE
+       ------------------------------------------------------------------------ */
+    
+    --dash-destructive: 0 70% 45%;
+    --dash-destructive-foreground: 0 0% 100%;
+    --dash-destructive-hover: 0 70% 38%;
+
+    /* ------------------------------------------------------------------------
+       MAP TO STANDARD TOKENS
+       This makes existing components automatically use dashboard theme
+       ------------------------------------------------------------------------ */
+    
+    /* Backgrounds */
+    --background: var(--dash-bg);
+    --foreground: var(--dash-text);
+    
+    /* Cards/Surfaces */
+    --card: var(--dash-surface);
+    --card-foreground: var(--dash-text-on-surface);
+    
+    /* Dialogs/Popovers */
+    --popover: var(--dash-dialog-bg);
+    --popover-foreground: var(--dash-dialog-text);
+    
+    /* Borders & Inputs */
+    --border: var(--dash-border-on-dark);
+    --input: var(--dash-input-border);
+    
+    /* Muted */
+    --muted: var(--dash-surface-2);
+    --muted-foreground: var(--dash-text-muted-on-surface);
+    
+    /* Primary */
+    --primary: var(--dash-primary);
+    --primary-foreground: var(--dash-primary-foreground);
+    
+    /* Secondary */
+    --secondary: var(--dash-secondary);
+    --secondary-foreground: var(--dash-secondary-foreground);
+    
+    /* Accent - warm terracotta for highlights */
+    --accent: 15 55% 50%;
+    --accent-foreground: 42 42% 96%;
+    
+    /* Destructive */
+    --destructive: var(--dash-destructive);
+    --destructive-foreground: var(--dash-destructive-foreground);
+    
+    /* Ring */
+    --ring: 1 50% 45%;
+
+    /* Button overrides */
+    --btn-primary: var(--dash-primary);
+    --btn-primary-foreground: var(--dash-primary-foreground);
+    --btn-primary-hover: var(--dash-primary-hover);
+    
+    --btn-secondary: var(--dash-secondary);
+    --btn-secondary-foreground: var(--dash-secondary-foreground);
+    --btn-secondary-hover: var(--dash-secondary-hover);
+    
+    --btn-ghost-foreground: var(--dash-text-on-surface);
+    --btn-ghost-hover: var(--dash-ghost-hover);
+    
+    --btn-outline: transparent;
+    --btn-outline-foreground: var(--dash-text-on-surface);
+    --btn-outline-border: var(--dash-outline-border);
+    --btn-outline-hover: var(--dash-outline-hover);
   }
 
   /* ==========================================================================
      ROLE-SPECIFIC ACCENT OVERRIDES
-     Apply via data-dashboard attribute on dashboard container.
-     These work within the [data-area="dashboard"] scope.
+     These are used for badges, highlights, active states - NOT full backgrounds
      ========================================================================== */
   
   [data-area="dashboard"][data-dashboard="admin"] {
-    --role-accent: 42 70% 55%;
-    --role-accent-hover: 42 70% 50%;
-    --role-accent-foreground: 1 85% 15%;
+    /* Gold accent for admin - warm, authoritative */
+    --role-accent: 42 70% 50%;
+    --role-accent-hover: 42 70% 45%;
+    --role-accent-foreground: 1 85% 12%;
+    --role-accent-muted: 42 50% 85%;
   }
 
   [data-area="dashboard"][data-dashboard="teacher"] {
-    --role-accent: 15 60% 45%;
-    --role-accent-hover: 15 60% 40%;
-    --role-accent-foreground: 42 42% 94%;
+    /* Terracotta accent for teacher - warm, approachable */
+    --role-accent: 15 60% 48%;
+    --role-accent-hover: 15 60% 42%;
+    --role-accent-foreground: 42 42% 96%;
+    --role-accent-muted: 15 40% 88%;
   }
 
   [data-area="dashboard"][data-dashboard="student"] {
-    --role-accent: 142 70% 40%;
-    --role-accent-hover: 142 70% 35%;
-    --role-accent-foreground: 42 42% 94%;
+    /* Emerald accent for student - fresh, growth */
+    --role-accent: 152 60% 38%;
+    --role-accent-hover: 152 60% 32%;
+    --role-accent-foreground: 42 42% 96%;
+    --role-accent-muted: 152 45% 88%;
   }
 }
 
@@ -388,6 +526,45 @@
 
   body {
     @apply bg-background text-foreground antialiased;
+  }
+}
+
+/* ============================================================================
+   DASHBOARD-SPECIFIC COMPONENT STYLES
+   ============================================================================ */
+
+@layer components {
+  /* Input placeholder styling for dashboard */
+  [data-area="dashboard"] input::placeholder,
+  [data-area="dashboard"] textarea::placeholder {
+    color: hsl(var(--dash-placeholder));
+    opacity: 1;
+  }
+
+  /* Card text on dashboard surfaces */
+  [data-area="dashboard"] .card-content-text {
+    color: hsl(var(--dash-text-on-surface));
+  }
+
+  /* Role accent badge styling */
+  [data-area="dashboard"] .role-accent-badge {
+    background-color: hsl(var(--role-accent));
+    color: hsl(var(--role-accent-foreground));
+  }
+
+  [data-area="dashboard"] .role-accent-badge:hover {
+    background-color: hsl(var(--role-accent-hover));
+  }
+
+  /* Role accent muted (for subtle highlights) */
+  [data-area="dashboard"] .role-accent-muted {
+    background-color: hsl(var(--role-accent-muted));
+  }
+
+  /* Active nav item styling using role accent */
+  [data-area="dashboard"] .nav-active {
+    background-color: hsl(var(--role-accent-muted));
+    border-left: 3px solid hsl(var(--role-accent));
   }
 }
 
