@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 
 // WhatsApp icon component
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -63,6 +63,13 @@ export function LandingFooter() {
 
   const footer = content ? { ...defaultFooter, ...content } : defaultFooter;
 
+  const normalizeHref = (href: string) => {
+    // Backward compatibility for older DB content
+    if (href === "/contact") return "/iletisim";
+    if (href === "/lessons") return "/dersler";
+    return href;
+  };
+
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
     if (location.pathname === "/") {
@@ -72,8 +79,10 @@ export function LandingFooter() {
     }
   };
 
-  const handleLinkClick = (e: React.MouseEvent, href: string) => {
+  const handleLinkClick = (e: React.MouseEvent, rawHref: string) => {
     e.preventDefault();
+    const href = normalizeHref(rawHref);
+
     if (href.startsWith("#")) {
       if (location.pathname !== "/") {
         navigate("/" + href);
@@ -81,9 +90,10 @@ export function LandingFooter() {
         const element = document.querySelector(href);
         element?.scrollIntoView({ behavior: "smooth" });
       }
-    } else {
-      navigate(href);
+      return;
     }
+
+    navigate(href);
   };
 
   return (
@@ -99,7 +109,7 @@ export function LandingFooter() {
           <div className="flex items-center gap-6">
             {footer.links.map((link) => (
               <button
-                key={link.href}
+                key={`${link.label}-${link.href}`}
                 onClick={(e) => handleLinkClick(e, link.href)}
                 className="text-sm text-[hsl(var(--landing-footer-foreground)/0.8)] hover:text-[hsl(var(--primary))] transition-colors bg-transparent border-none cursor-pointer"
               >
