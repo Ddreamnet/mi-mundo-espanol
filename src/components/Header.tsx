@@ -1,4 +1,5 @@
 import { ReactNode, useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Logo } from "./Logo";
 import { Globe, Menu, X, ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -9,34 +10,19 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface HeaderProps {
   children?: ReactNode;
   rightActions?: ReactNode;
 }
 
-const languages = [
-  { code: "tr", label: "Türkçe", flag: "🇹🇷" },
-  { code: "en", label: "English", flag: "🇬🇧" },
-  { code: "es", label: "Español", flag: "🇪🇸" },
-];
-
 export function Header({ children, rightActions }: HeaderProps) {
-  const [currentLang, setCurrentLang] = useState(() => {
-    if (typeof window !== "undefined") {
-      return localStorage.getItem("language") || "tr";
-    }
-    return "tr";
-  });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { t } = useTranslation();
+  const { language, setLanguage, languages } = useLanguage();
 
-  const handleLanguageChange = (langCode: string) => {
-    setCurrentLang(langCode);
-    localStorage.setItem("language", langCode);
-    // Future: trigger i18n language change
-  };
-
-  const currentLanguage = languages.find((l) => l.code === currentLang) || languages[0];
+  const currentLanguage = languages.find((l) => l.code === language) || languages[0];
 
   const LanguageSelector = () => (
     <DropdownMenu>
@@ -51,8 +37,8 @@ export function Header({ children, rightActions }: HeaderProps) {
         {languages.map((lang) => (
           <DropdownMenuItem
             key={lang.code}
-            onClick={() => handleLanguageChange(lang.code)}
-            className={currentLang === lang.code ? "bg-accent" : ""}
+            onClick={() => setLanguage(lang.code)}
+            className={language === lang.code ? "bg-accent" : ""}
           >
             <span className="mr-2">{lang.flag}</span>
             {lang.label}

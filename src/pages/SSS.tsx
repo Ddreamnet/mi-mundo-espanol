@@ -1,5 +1,6 @@
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { LandingFooter } from "@/components/landing/LandingFooter";
+import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import {
@@ -21,38 +22,40 @@ interface SSSContent {
   items: FAQItem[];
 }
 
-const defaultSSS: SSSContent = {
-  pageTitle: "Sıkça Sorulan Sorular",
-  pageSubtitle: "En çok merak edilen sorular ve cevapları",
-  items: [
-    {
-      question: "Deneme dersi nasıl işliyor?",
-      answer: "Deneme dersimiz 40 dakika sürmektedir. Bu derste seviyenizi belirliyor ve ders içeriklerini tanıtıyoruz. Deneme dersi tamamen ücretsizdir.",
-    },
-    {
-      question: "Dersler ne kadar sürüyor?",
-      answer: "Her ders 40 dakika sürmektedir. Bireysel ve grup dersleri için aynı süre geçerlidir.",
-    },
-    {
-      question: "Grup dersleri kaç kişilik?",
-      answer: "Grup derslerimiz maksimum 5 kişi ile sınırlıdır. Bu sayede her öğrenciye yeterli ilgi gösterebiliyoruz.",
-    },
-    {
-      question: "Hangi materyaller kullanılıyor?",
-      answer: "Derslerimizde Aula Internacional ders kitabı ve ihtiyaca göre ek materyaller kullanılmaktadır. Tüm materyaller tarafımızca sağlanmaktadır.",
-    },
-    {
-      question: "Ders saatleri esnek mi?",
-      answer: "Evet, bireysel derslerde esnek ders saatleri sunuyoruz. Programınıza uygun saatleri birlikte belirleyebiliriz.",
-    },
-    {
-      question: "Ödev veriliyor mu?",
-      answer: "Evet, derslerin pekişmesi için düzenli ödevler verilmektedir. Ödevlerinizi platform üzerinden takip edebilir ve geri bildirim alabilirsiniz.",
-    },
-  ],
-};
-
 export default function SSS() {
+  const { t } = useTranslation();
+
+  const defaultSSS: SSSContent = {
+    pageTitle: t("sss.pageTitle"),
+    pageSubtitle: t("sss.pageSubtitle"),
+    items: [
+      {
+        question: "Deneme dersi nasıl işliyor?",
+        answer: "Deneme dersimiz 40 dakika sürmektedir. Bu derste seviyenizi belirliyor ve ders içeriklerini tanıtıyoruz. Deneme dersi tamamen ücretsizdir.",
+      },
+      {
+        question: "Dersler ne kadar sürüyor?",
+        answer: "Her ders 40 dakika sürmektedir. Bireysel ve grup dersleri için aynı süre geçerlidir.",
+      },
+      {
+        question: "Grup dersleri kaç kişilik?",
+        answer: "Grup derslerimiz maksimum 5 kişi ile sınırlıdır. Bu sayede her öğrenciye yeterli ilgi gösterebiliyoruz.",
+      },
+      {
+        question: "Hangi materyaller kullanılıyor?",
+        answer: "Derslerimizde Aula Internacional ders kitabı ve ihtiyaca göre ek materyaller kullanılmaktadır. Tüm materyaller tarafımızca sağlanmaktadır.",
+      },
+      {
+        question: "Ders saatleri esnek mi?",
+        answer: "Evet, bireysel derslerde esnek ders saatleri sunuyoruz. Programınıza uygun saatleri birlikte belirleyebiliriz.",
+      },
+      {
+        question: "Ödev veriliyor mu?",
+        answer: "Evet, derslerin pekişmesi için düzenli ödevler verilmektedir. Ödevlerinizi platform üzerinden takip edebilir ve geri bildirim alabilirsiniz.",
+      },
+    ],
+  };
+
   const { data: pageContent } = useQuery({
     queryKey: ["page-content", "sss"],
     queryFn: async () => {

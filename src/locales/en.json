@@ -1,0 +1,92 @@
+{
+  "nav": {
+    "home": "Home",
+    "lessons": "Lessons",
+    "blog": "Blog",
+    "contact": "Contact",
+    "login": "Login",
+    "logout": "Logout",
+    "language": "Language"
+  },
+  "hero": {
+    "mainTitle": "Mi Mundo Español",
+    "subtitle": "Your Spanish World",
+    "primaryButton": "Get Started",
+    "secondaryButton": "About Lessons"
+  },
+  "cta": {
+    "title": "Ready? Get in Touch Now!",
+    "description": "Start your Spanish learning journey today. Reach your goals with personalized lesson plans and one-on-one instruction.",
+    "button": "Contact"
+  },
+  "footer": {
+    "contact": "Contact",
+    "faq": "FAQ",
+    "blog": "Blog",
+    "privacy": "Privacy Policy",
+    "copyright": "Mi Mundo Español. All rights reserved."
+  },
+  "contact": {
+    "pageTitle": "Contact",
+    "supportText": "24/7 Support",
+    "phone": "Phone",
+    "mail": "Mail",
+    "whatsapp": "Whatsapp",
+    "instagram": "Instagram",
+    "facebook": "Facebook",
+    "whatsappContact": "Contact via WhatsApp",
+    "imageAlt": "Contact Illustration"
+  },
+  "sss": {
+    "pageTitle": "Frequently Asked Questions",
+    "pageSubtitle": "The most frequently asked questions and answers"
+  },
+  "lessons": {
+    "pageTitle": "Lessons",
+    "pageSubtitle": "Lesson programs we have prepared for your Spanish learning journey",
+    "learnMore": "Learn More",
+    "imageAlt": "Lesson image"
+  },
+  "blog": {
+    "pageTitle": "Blog",
+    "pageSubtitle": "Content to help you on your Spanish learning journey",
+    "readMore": "Read More",
+    "noPosts": "No blog posts yet.",
+    "backToBlog": "Back to Blog",
+    "notFound": "Blog post not found"
+  },
+  "privacy": {
+    "pageTitle": "Privacy Policy",
+    "pageSubtitle": "Protecting your personal data is important to us"
+  },
+  "login": {
+    "title": "Login",
+    "description": "Sign in to your Mi Mundo Español account",
+    "email": "Email",
+    "emailPlaceholder": "example@email.com",
+    "password": "Password",
+    "passwordPlaceholder": "••••••••",
+    "submit": "Login",
+    "loading": "Logging in...",
+    "error": "Error",
+    "emailPasswordRequired": "Email and password are required.",
+    "success": "Success",
+    "successMessage": "Logged in. Redirecting...",
+    "loginFailed": "Login Failed",
+    "genericError": "An error occurred while logging in.",
+    "invalidCredentials": "Invalid email or password.",
+    "emailNotConfirmed": "Your email address has not been verified yet."
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "An error occurred",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "close": "Close",
+    "confirm": "Confirm",
+    "back": "Back"
+  }
+}
