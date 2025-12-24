@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Save, Home, Megaphone } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ImageUpload } from "./ImageUpload";
 
 interface HeroContent {
   mainTitle: string;
@@ -144,19 +145,12 @@ export function HeroCTAEditor() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label>Görsel URL</Label>
-            <div className="flex gap-2">
-              <Input
-                value={hero.imageUrl}
-                onChange={(e) => setHero({ ...hero, imageUrl: e.target.value })}
-                placeholder="/lovable-uploads/..."
-              />
-              {hero.imageUrl && (
-                <img src={hero.imageUrl} alt="Preview" className="w-16 h-12 object-contain rounded" />
-              )}
-            </div>
-          </div>
+          <ImageUpload
+            label="Hero Görseli"
+            value={hero.imageUrl}
+            onChange={(url) => setHero({ ...hero, imageUrl: url })}
+            folder="hero"
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">

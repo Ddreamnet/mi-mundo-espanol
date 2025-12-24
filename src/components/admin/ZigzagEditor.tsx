@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Plus, Trash2, GripVertical, Save, LayoutTemplate, X } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { ImageUpload } from "./ImageUpload";
 import {
   DndContext,
   closestCenter,
@@ -131,19 +132,12 @@ function SortableZigzag({
               </div>
             </div>
 
-            <div className="space-y-2">
-              <Label className="text-xs text-muted-foreground">Görsel URL</Label>
-              <div className="flex gap-2">
-                <Input
-                  value={localImageUrl}
-                  onChange={(e) => setLocalImageUrl(e.target.value)}
-                  placeholder="/assets/..."
-                />
-                {localImageUrl && (
-                  <img src={localImageUrl} alt="Preview" className="w-16 h-12 object-contain rounded" />
-                )}
-              </div>
-            </div>
+            <ImageUpload
+              label="Bölüm Görseli"
+              value={localImageUrl}
+              onChange={setLocalImageUrl}
+              folder="zigzag"
+            />
 
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">Maddeler</Label>
