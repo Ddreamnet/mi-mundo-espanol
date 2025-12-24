@@ -332,10 +332,23 @@
   }
 
   /* ==========================================================================
-     DASHBOARD SCOPE TOKENS
+     ██████   █████  ███████ ██   ██ ██████   ██████   █████  ██████  ██████  
+     ██   ██ ██   ██ ██      ██   ██ ██   ██ ██    ██ ██   ██ ██   ██ ██   ██ 
+     ██   ██ ███████ ███████ ███████ ██████  ██    ██ ███████ ██████  ██   ██ 
+     ██   ██ ██   ██      ██ ██   ██ ██   ██ ██    ██ ██   ██ ██   ██ ██   ██ 
+     ██████  ██   ██ ███████ ██   ██ ██████   ██████  ██   ██ ██   ██ ██████  
+     
+     DASHBOARD DESIGN TOKENS
+     ========================================================================== 
      These override global tokens ONLY within dashboard context.
      Activated by data-area="dashboard" on the dashboard container.
+     
+     USAGE:
+     - Use --dash-* tokens for dashboard-specific values
+     - Standard tokens (--background, --card, etc.) are remapped automatically
+     - Role accents use --role-accent-* for badges, highlights, active states
      ========================================================================== */
+  
   [data-area="dashboard"] {
     /* ========================================================================
        DASHBOARD COLOR SYSTEM
@@ -343,7 +356,7 @@
        ======================================================================== */
 
     /* ------------------------------------------------------------------------
-       DASHBOARD BACKGROUND HIERARCHY
+       BACKGROUND HIERARCHY
        From deepest (main bg) to surfaces (cards, dialogs)
        ------------------------------------------------------------------------ */
     
@@ -361,7 +374,7 @@
     --dash-border-on-dark: 1 35% 38%;
 
     /* ------------------------------------------------------------------------
-       DASHBOARD TEXT
+       TEXT TOKENS
        High contrast for readability
        ------------------------------------------------------------------------ */
     
@@ -374,11 +387,10 @@
     --dash-text-muted-on-surface: 1 25% 45%;
 
     /* ------------------------------------------------------------------------
-       DASHBOARD INPUTS
+       INPUT TOKENS
        White background with clear borders for maximum clarity
        ------------------------------------------------------------------------ */
     
-    /* Input on light surface (cards) */
     --dash-input-bg: 0 0% 100%;
     --dash-input-border: 1 15% 72%;
     --dash-input-border-focus: 1 55% 42%;
@@ -386,7 +398,7 @@
     --dash-input-text: 1 70% 15%;
 
     /* ------------------------------------------------------------------------
-       DASHBOARD DIALOGS & POPOVERS
+       DIALOG & POPOVER TOKENS
        Light background for maximum readability
        ------------------------------------------------------------------------ */
     
@@ -396,7 +408,7 @@
     --dash-dialog-muted: 1 20% 50%;
 
     /* ------------------------------------------------------------------------
-       DASHBOARD BUTTONS
+       BUTTON TOKENS
        High contrast - clearly distinguishable from backgrounds
        ------------------------------------------------------------------------ */
     
@@ -410,7 +422,7 @@
     --dash-secondary-foreground: 0 0% 100%;
     --dash-secondary-hover: 1 22% 48%;
     
-    /* Ghost button hover - subtle highlight on light surfaces */
+    /* Ghost button hover - subtle highlight on surfaces */
     --dash-ghost-hover: 1 18% 92%;
     --dash-ghost-hover-on-dark: 1 40% 32%;
     
@@ -420,7 +432,7 @@
     --dash-outline-text: 1 50% 30%;
 
     /* ------------------------------------------------------------------------
-       DASHBOARD DESTRUCTIVE
+       DESTRUCTIVE TOKENS
        ------------------------------------------------------------------------ */
     
     --dash-destructive: 0 72% 48%;
@@ -428,7 +440,7 @@
     --dash-destructive-hover: 0 72% 40%;
 
     /* ------------------------------------------------------------------------
-       MAP TO STANDARD TOKENS
+       STANDARD TOKEN REMAPPING
        This makes existing components automatically use dashboard theme
        ------------------------------------------------------------------------ */
     
@@ -541,43 +553,282 @@
 }
 
 /* ============================================================================
-   DASHBOARD-SPECIFIC COMPONENT STYLES
+   ██████   █████  ███████ ██   ██ ██████   ██████   █████  ██████  ██████  
+   ██   ██ ██   ██ ██      ██   ██ ██   ██ ██    ██ ██   ██ ██   ██ ██   ██ 
+   ██   ██ ███████ ███████ ███████ ██████  ██    ██ ███████ ██████  ██   ██ 
+   ██   ██ ██   ██      ██ ██   ██ ██   ██ ██    ██ ██   ██ ██   ██ ██   ██ 
+   ██████  ██   ██ ███████ ██   ██ ██████   ██████  ██   ██ ██   ██ ██████  
+   
+   DASHBOARD COMPONENT UTILITIES
+   ============================================================================
+   Scoped utility classes for dashboard components.
+   These classes only work within [data-area="dashboard"] context.
+   
+   USAGE:
+   - .dash-card, .dash-card-header, .dash-card-content for card layouts
+   - .dash-btn-* for button variants
+   - .dash-input, .dash-label for form elements
+   - .dash-dialog-* for dialog layouts
    ============================================================================ */
 
 @layer components {
-  /* Input placeholder styling for dashboard - distinct from input text */
+  /* --------------------------------------------------------------------------
+     DASHBOARD CARD UTILITIES
+     -------------------------------------------------------------------------- */
+  
+  [data-area="dashboard"] .dash-card {
+    background-color: hsl(var(--dash-surface));
+    color: hsl(var(--dash-text-on-surface));
+    border: 1px solid hsl(var(--dash-border));
+    border-radius: var(--radius);
+    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+  }
+
+  [data-area="dashboard"] .dash-card-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid hsl(var(--dash-border));
+  }
+
+  [data-area="dashboard"] .dash-card-content {
+    padding: 1.5rem;
+  }
+
+  [data-area="dashboard"] .dash-card-footer {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid hsl(var(--dash-border));
+    background-color: hsl(var(--dash-surface-2));
+  }
+
+  /* --------------------------------------------------------------------------
+     DASHBOARD BUTTON UTILITIES
+     -------------------------------------------------------------------------- */
+  
+  /* Primary Button */
+  [data-area="dashboard"] .dash-btn-primary {
+    background-color: hsl(var(--dash-primary));
+    color: hsl(var(--dash-primary-foreground));
+    border-radius: var(--radius);
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+  }
+
+  [data-area="dashboard"] .dash-btn-primary:hover {
+    background-color: hsl(var(--dash-primary-hover));
+  }
+
+  [data-area="dashboard"] .dash-btn-primary:focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  /* Secondary Button */
+  [data-area="dashboard"] .dash-btn-secondary {
+    background-color: hsl(var(--dash-secondary));
+    color: hsl(var(--dash-secondary-foreground));
+    border-radius: var(--radius);
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+  }
+
+  [data-area="dashboard"] .dash-btn-secondary:hover {
+    background-color: hsl(var(--dash-secondary-hover));
+  }
+
+  /* Outline Button */
+  [data-area="dashboard"] .dash-btn-outline {
+    background-color: transparent;
+    color: hsl(var(--dash-outline-text));
+    border: 1px solid hsl(var(--dash-outline-border));
+    border-radius: var(--radius);
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+  }
+
+  [data-area="dashboard"] .dash-btn-outline:hover {
+    background-color: hsl(var(--dash-outline-hover));
+  }
+
+  /* Ghost Button */
+  [data-area="dashboard"] .dash-btn-ghost {
+    background-color: transparent;
+    color: hsl(var(--dash-text-on-surface));
+    border-radius: var(--radius);
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+  }
+
+  [data-area="dashboard"] .dash-btn-ghost:hover {
+    background-color: hsl(var(--dash-ghost-hover));
+  }
+
+  /* Ghost Button on dark background */
+  [data-area="dashboard"] .dash-btn-ghost-dark {
+    background-color: transparent;
+    color: hsl(var(--dash-text));
+    border-radius: var(--radius);
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+  }
+
+  [data-area="dashboard"] .dash-btn-ghost-dark:hover {
+    background-color: hsl(var(--dash-ghost-hover-on-dark));
+  }
+
+  /* Destructive Button */
+  [data-area="dashboard"] .dash-btn-destructive {
+    background-color: hsl(var(--dash-destructive));
+    color: hsl(var(--dash-destructive-foreground));
+    border-radius: var(--radius);
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease;
+  }
+
+  [data-area="dashboard"] .dash-btn-destructive:hover {
+    background-color: hsl(var(--dash-destructive-hover));
+  }
+
+  /* --------------------------------------------------------------------------
+     DASHBOARD FORM UTILITIES
+     -------------------------------------------------------------------------- */
+  
+  [data-area="dashboard"] .dash-input {
+    background-color: hsl(var(--dash-input-bg));
+    color: hsl(var(--dash-input-text));
+    border: 1px solid hsl(var(--dash-input-border));
+    border-radius: var(--radius);
+    padding: 0.5rem 0.75rem;
+    width: 100%;
+    transition: border-color 0.2s ease;
+  }
+
+  [data-area="dashboard"] .dash-input:focus {
+    outline: none;
+    border-color: hsl(var(--dash-input-border-focus));
+    box-shadow: 0 0 0 2px hsl(var(--ring) / 0.2);
+  }
+
+  [data-area="dashboard"] .dash-input::placeholder {
+    color: hsl(var(--dash-placeholder));
+  }
+
+  [data-area="dashboard"] .dash-label {
+    color: hsl(var(--dash-text-on-surface));
+    font-weight: 500;
+    font-size: 0.875rem;
+    display: block;
+    margin-bottom: 0.375rem;
+  }
+
+  [data-area="dashboard"] .dash-placeholder {
+    color: hsl(var(--dash-placeholder));
+  }
+
+  [data-area="dashboard"] .dash-helper-text {
+    color: hsl(var(--dash-text-muted-on-surface));
+    font-size: 0.75rem;
+    margin-top: 0.25rem;
+  }
+
+  /* --------------------------------------------------------------------------
+     DASHBOARD DIALOG UTILITIES
+     -------------------------------------------------------------------------- */
+  
+  [data-area="dashboard"] .dash-dialog {
+    background-color: hsl(var(--dash-dialog-bg));
+    color: hsl(var(--dash-dialog-text));
+    border: 1px solid hsl(var(--dash-dialog-border));
+    border-radius: var(--radius);
+    box-shadow: 0 25px 50px -12px rgb(0 0 0 / 0.25);
+  }
+
+  [data-area="dashboard"] .dash-dialog-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid hsl(var(--dash-dialog-border));
+  }
+
+  [data-area="dashboard"] .dash-dialog-header h2,
+  [data-area="dashboard"] .dash-dialog-header h3 {
+    color: hsl(var(--dash-dialog-text));
+    font-weight: 600;
+  }
+
+  [data-area="dashboard"] .dash-dialog-content {
+    padding: 1.5rem;
+  }
+
+  [data-area="dashboard"] .dash-dialog-actions {
+    padding: 1rem 1.5rem;
+    border-top: 1px solid hsl(var(--dash-dialog-border));
+    background-color: hsl(var(--dash-surface-2));
+    display: flex;
+    justify-content: flex-end;
+    gap: 0.5rem;
+  }
+
+  [data-area="dashboard"] .dash-dialog-muted {
+    color: hsl(var(--dash-dialog-muted));
+  }
+
+  /* --------------------------------------------------------------------------
+     DASHBOARD NATIVE INPUT/TEXTAREA STYLING
+     Ensures all native form elements match dashboard theme
+     -------------------------------------------------------------------------- */
+  
   [data-area="dashboard"] input::placeholder,
   [data-area="dashboard"] textarea::placeholder {
     color: hsl(var(--dash-placeholder));
     opacity: 1;
   }
 
-  /* Input focus states */
   [data-area="dashboard"] input:focus,
   [data-area="dashboard"] textarea:focus,
   [data-area="dashboard"] select:focus {
     border-color: hsl(var(--dash-input-border-focus));
   }
 
-  /* Card improvements for dashboard */
+  /* --------------------------------------------------------------------------
+     DASHBOARD CARD BORDER OVERRIDE
+     -------------------------------------------------------------------------- */
+  
   [data-area="dashboard"] .card,
   [data-area="dashboard"] [class*="Card"] {
     border-color: hsl(var(--dash-border));
   }
 
-  /* Role accent badge styling */
+  /* --------------------------------------------------------------------------
+     ROLE ACCENT UTILITIES
+     For badges, highlights, active nav items
+     -------------------------------------------------------------------------- */
+  
   [data-area="dashboard"] .role-accent-badge {
     background-color: hsl(var(--role-accent));
     color: hsl(var(--role-accent-foreground));
+    border-radius: var(--radius);
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    font-weight: 500;
   }
 
   [data-area="dashboard"] .role-accent-badge:hover {
     background-color: hsl(var(--role-accent-hover));
   }
 
-  /* Role accent muted (for subtle highlights) */
   [data-area="dashboard"] .role-accent-muted {
     background-color: hsl(var(--role-accent-muted));
+  }
+
+  [data-area="dashboard"] .role-accent-text {
+    color: hsl(var(--role-accent));
+  }
+
+  [data-area="dashboard"] .role-accent-border {
+    border-color: hsl(var(--role-accent));
   }
 
   /* Active nav item styling using role accent */
@@ -585,10 +836,30 @@
     background-color: hsl(var(--role-accent-muted));
     border-left: 3px solid hsl(var(--role-accent));
   }
+
+  /* --------------------------------------------------------------------------
+     DASHBOARD TEXT UTILITIES
+     -------------------------------------------------------------------------- */
+  
+  [data-area="dashboard"] .dash-text {
+    color: hsl(var(--dash-text));
+  }
+
+  [data-area="dashboard"] .dash-text-muted {
+    color: hsl(var(--dash-text-muted));
+  }
+
+  [data-area="dashboard"] .dash-text-on-surface {
+    color: hsl(var(--dash-text-on-surface));
+  }
+
+  [data-area="dashboard"] .dash-text-muted-on-surface {
+    color: hsl(var(--dash-text-muted-on-surface));
+  }
 }
 
 /* ============================================================================
-   SEMANTIC UTILITY CLASSES
+   SEMANTIC UTILITY CLASSES (Global - for schedules)
    Use these instead of hardcoded Tailwind colors
    ============================================================================ */
 
