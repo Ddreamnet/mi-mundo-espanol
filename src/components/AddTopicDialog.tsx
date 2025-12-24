@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 interface AddTopicDialogProps {
   open: boolean;
@@ -27,6 +28,7 @@ export function AddTopicDialog({
   onTopicAdded,
   onAddTopic,
 }: AddTopicDialogProps) {
+  const { t } = useTranslation();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [addToEnd, setAddToEnd] = useState(false);
@@ -68,8 +70,8 @@ export function AddTopicDialog({
         if (error) throw error;
 
         toast({
-          title: "Başarılı",
-          description: "Konu başarıyla oluşturuldu",
+          title: t("common.success"),
+          description: t("dialogs.addTopic.successMessage"),
         });
 
         onTopicAdded?.();
@@ -81,7 +83,7 @@ export function AddTopicDialog({
       onOpenChange(false);
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -94,27 +96,27 @@ export function AddTopicDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Yeni Konu Ekle</DialogTitle>
+          <DialogTitle>{t("dialogs.addTopic.title")}</DialogTitle>
           <DialogDescription>
-            Öğrenci için yeni bir öğrenme konusu oluşturun. Daha sonra kaynak ekleyebilirsiniz.
+            {t("dialogs.addTopic.description")}
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="topic-title">Konu Başlığı</Label>
+            <Label htmlFor="topic-title">{t("dialogs.addTopic.titleLabel")}</Label>
             <Input
               id="topic-title"
-              placeholder="örn., Sebzeler, Meslekler, Günlük Rutinler"
+              placeholder={t("dialogs.addTopic.titlePlaceholder")}
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="topic-description">Açıklama (Opsiyonel)</Label>
+            <Label htmlFor="topic-description">{t("dialogs.addTopic.descriptionLabel")}</Label>
             <Textarea
               id="topic-description"
-              placeholder="Bu konunun ne içerdiğinin kısa açıklaması..."
+              placeholder={t("dialogs.addTopic.descriptionPlaceholder")}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               rows={3}
@@ -131,17 +133,17 @@ export function AddTopicDialog({
                 htmlFor="add-to-end"
                 className="text-sm font-normal cursor-pointer"
               >
-                Sona ekle
+                {t("dialogs.addTopic.addToEnd")}
               </Label>
             </div>
           )}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-              İptal
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={isLoading || !title.trim()}>
               {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Konu Oluştur
+              {t("dialogs.addTopic.submit")}
             </Button>
           </div>
         </form>

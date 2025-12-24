@@ -9,8 +9,10 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { FileText, Calendar, Download, FileImage, File, Edit2, Trash2 } from "lucide-react";
 import { format } from "date-fns";
-import { tr } from "date-fns/locale";
+import { tr, enUS, es } from "date-fns/locale";
 import { EditHomeworkDialog } from "./EditHomeworkDialog";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface HomeworkListDialogProps {
   open: boolean;
@@ -58,12 +60,22 @@ export function HomeworkListDialog({
   currentUserId,
   isTeacher = false 
 }: HomeworkListDialogProps) {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const [homeworks, setHomeworks] = useState<Homework[]>([]);
   const [groupedHomeworks, setGroupedHomeworks] = useState<GroupedHomework[]>([]);
   const [loading, setLoading] = useState(true);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [editHomework, setEditHomework] = useState<Homework | null>(null);
   const { toast } = useToast();
+
+  const getDateLocale = () => {
+    switch (language) {
+      case 'en': return enUS;
+      case 'es': return es;
+      default: return tr;
+    }
+  };
 
   useEffect(() => {
     if (open) {
@@ -116,8 +128,8 @@ export function HomeworkListDialog({
       setGroupedHomeworks(sortedGroups);
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: "Ödevler yüklenemedi",
+        title: t("common.error"),
+        description: t("dialogs.homeworkList.loadError"),
         variant: "destructive",
       });
     } finally {
@@ -161,8 +173,8 @@ export function HomeworkListDialog({
       URL.revokeObjectURL(url);
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: "Dosya indirilemedi",
+        title: t("common.error"),
+        description: t("dialogs.homeworkList.downloadError"),
         variant: "destructive",
       });
     }
@@ -191,16 +203,16 @@ export function HomeworkListDialog({
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Ödev silindi",
+        title: t("common.success"),
+        description: t("dialogs.homeworkList.deleteSuccess"),
       });
 
       fetchHomeworks();
       setDeleteId(null);
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: "Ödev silinemedi",
+        title: t("common.error"),
+        description: t("dialogs.homeworkList.deleteError"),
         variant: "destructive",
       });
     }
@@ -221,9 +233,9 @@ export function HomeworkListDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Ödevler</DialogTitle>
+            <DialogTitle>{t("dialogs.homeworkList.title")}</DialogTitle>
             <DialogDescription>
-              Tüm ödevleri görüntüleyin
+              {t("dialogs.homeworkList.description")}
             </DialogDescription>
           </DialogHeader>
 
@@ -235,7 +247,7 @@ export function HomeworkListDialog({
             ) : groupedHomeworks.length === 0 ? (
               <div className="text-center py-8">
                 <FileText className="h-12 w-12 mx-auto opacity-50 mb-2" />
-                <p className="opacity-70">Henüz ödev yok</p>
+                <p className="opacity-70">{t("dialogs.homeworkList.noHomework")}</p>
               </div>
             ) : (
               <div className="flex flex-col gap-3">
@@ -259,7 +271,7 @@ export function HomeworkListDialog({
                             <div className="flex items-center gap-2 text-xs text-muted-foreground">
                               <span className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
-                                {format(new Date(group.created_at), "dd MMM yyyy HH:mm", { locale: tr })}
+                                {format(new Date(group.created_at), "dd MMM yyyy HH:mm", { locale: getDateLocale() })}
                               </span>
                             </div>
                           </div>
@@ -273,7 +285,7 @@ export function HomeworkListDialog({
                                     const firstFile = homeworks.find(h => h.batch_id === group.batch_id);
                                     if (firstFile) setEditHomework(firstFile);
                                   }}
-                                  title="Düzenle"
+                                  title={t("common.edit")}
                                 >
                                   <Edit2 className="h-4 w-4" />
                                 </Button>
@@ -282,7 +294,7 @@ export function HomeworkListDialog({
                                     <Button
                                       size="icon"
                                       variant="ghost"
-                                      title="Sil"
+                                      title={t("common.delete")}
                                       className="text-destructive hover:text-destructive"
                                     >
                                       <Trash2 className="h-4 w-4" />
@@ -290,18 +302,18 @@ export function HomeworkListDialog({
                                   </AlertDialogTrigger>
                                   <AlertDialogContent>
                                     <AlertDialogHeader>
-                                      <AlertDialogTitle>Ödevi Sil</AlertDialogTitle>
+                                      <AlertDialogTitle>{t("dialogs.homeworkList.deleteTitle")}</AlertDialogTitle>
                                       <AlertDialogDescription>
-                                        Bu ödevi ve tüm dosyalarını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+                                        {t("dialogs.homeworkList.deleteConfirmation")}
                                       </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
-                                      <AlertDialogCancel>İptal</AlertDialogCancel>
+                                      <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                                       <AlertDialogAction
                                         onClick={() => handleDelete(group.batch_id)}
                                         className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                       >
-                                        Sil
+                                        {t("common.delete")}
                                       </AlertDialogAction>
                                     </AlertDialogFooter>
                                   </AlertDialogContent>
@@ -330,7 +342,7 @@ export function HomeworkListDialog({
                                   variant="ghost"
                                   size="sm"
                                   onClick={() => handleDownload(file.file_url, file.file_name)}
-                                  title="İndir"
+                                  title={t("common.download")}
                                   className="shrink-0"
                                 >
                                   <Download className="h-4 w-4" />
@@ -344,7 +356,7 @@ export function HomeworkListDialog({
                           variant="outline" 
                           className={`absolute bottom-2 right-2 text-xs ${uploadedByStudent ? "opacity-100 font-semibold" : "opacity-70"}`}
                         >
-                          {uploadedByStudent ? "Öğrenci" : "Öğretmen"}
+                          {uploadedByStudent ? t("dialogs.homeworkList.student") : t("dialogs.homeworkList.teacher")}
                         </Badge>
                       </CardContent>
                     </Card>

@@ -20,6 +20,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Loader2, Trash2, Archive } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, addDays, parse } from "date-fns";
+import { useTranslation } from "react-i18next";
 
 interface StudentLesson {
   id?: string;
@@ -49,16 +50,6 @@ interface EditStudentDialogProps {
   currentLessons: StudentLesson[];
 }
 
-const daysOfWeek = [
-  { value: 1, label: "Pazartesi" },
-  { value: 2, label: "Salı" },
-  { value: 3, label: "Çarşamba" },
-  { value: 4, label: "Perşembe" },
-  { value: 5, label: "Cuma" },
-  { value: 6, label: "Cumartesi" },
-  { value: 0, label: "Pazar" },
-];
-
 export function EditStudentDialog({
   open,
   onOpenChange,
@@ -67,6 +58,7 @@ export function EditStudentDialog({
   currentName,
   currentLessons,
 }: EditStudentDialogProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [lessonsPerWeek, setLessonsPerWeek] = useState(1);
   const [lessons, setLessons] = useState<StudentLesson[]>([{ dayOfWeek: 1, startTime: "", endTime: "", note: "" }]);
@@ -80,6 +72,16 @@ export function EditStudentDialog({
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [updateRemainingDays, setUpdateRemainingDays] = useState(false);
   const { toast } = useToast();
+
+  const daysOfWeek = [
+    { value: 1, label: t("days.monday") },
+    { value: 2, label: t("days.tuesday") },
+    { value: 3, label: t("days.wednesday") },
+    { value: 4, label: t("days.thursday") },
+    { value: 5, label: t("days.friday") },
+    { value: 6, label: t("days.saturday") },
+    { value: 0, label: t("days.sunday") },
+  ];
 
   useEffect(() => {
     if (open) {
@@ -106,7 +108,6 @@ export function EditStudentDialog({
       if (studentError) throw studentError;
 
       // CRITICAL: Get the MOST RECENT tracking record by ordering by updated_at DESC
-      // This ensures consistent results when multiple records exist
       const { data: records, error } = await supabase
         .from("student_lesson_tracking")
         .select("*")
@@ -193,7 +194,6 @@ export function EditStudentDialog({
     currentDate.setHours(0, 0, 0, 0);
     
     for (let i = fromLessonNumber - 1; i >= 1; i--) {
-      // Find the previous lesson day (going backwards)
       let daysToSubtract = 1;
       let prevDate = addDays(currentDate, -daysToSubtract);
       
@@ -211,7 +211,6 @@ export function EditStudentDialog({
     currentDate.setHours(0, 0, 0, 0);
     
     for (let i = fromLessonNumber + 1; i <= totalLessons; i++) {
-      // Find the next lesson day
       let daysToAdd = 1;
       let nextDate = addDays(currentDate, daysToAdd);
       
@@ -228,7 +227,6 @@ export function EditStudentDialog({
   };
 
   const handleDateSubmit = () => {
-    // Check if dates have changed
     const hasChanges = Object.keys(lessonDates).some(
       (key) => lessonDates[key] !== originalLessonDates[key]
     );
@@ -237,8 +235,8 @@ export function EditStudentDialog({
       setShowConfirm(true);
     } else {
       toast({
-        title: "Bilgi",
-        description: "Hiçbir değişiklik yapılmadı",
+        title: t("common.info"),
+        description: t("dialogs.editStudent.noChanges"),
       });
     }
   };
@@ -256,11 +254,9 @@ export function EditStudentDialog({
 
       if (studentError) throw studentError;
 
-      // Get the next lesson to mark (last completed + 1, or 1 if none completed)
       const nextLesson = completedLessons.length === 0 ? 1 : Math.max(...completedLessons) + 1;
       const newCompletedLessons = [...completedLessons, nextLesson].sort((a, b) => a - b);
 
-      // CRITICAL: Get the most recent tracking record ID and update by ID
       const { data: existingRecords } = await supabase
         .from("student_lesson_tracking")
         .select("id")
@@ -270,7 +266,7 @@ export function EditStudentDialog({
         .limit(1);
 
       if (!existingRecords || existingRecords.length === 0) {
-        throw new Error("Ders takip kaydı bulunamadı");
+        throw new Error(t("dialogs.editStudent.trackingNotFound"));
       }
 
       const { error } = await supabase
@@ -280,18 +276,17 @@ export function EditStudentDialog({
 
       if (error) throw error;
 
-      // Update teacher balance
       await updateTeacherBalance(studentData.teacher_id, studentData.student_id);
 
       setCompletedLessons(newCompletedLessons);
       toast({
-        title: "Başarılı",
-        description: `${nextLesson}. ders işaretlendi`,
+        title: t("common.success"),
+        description: t("dialogs.editStudent.lessonMarked", { lesson: nextLesson }),
       });
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: error.message || "Ders işaretlenemedi",
+        title: t("common.error"),
+        description: error.message || t("dialogs.editStudent.markError"),
         variant: "destructive",
       });
     }
@@ -309,11 +304,9 @@ export function EditStudentDialog({
 
       if (studentError) throw studentError;
 
-      // Get the last completed lesson
       const lastLesson = Math.max(...completedLessons);
       const newCompletedLessons = completedLessons.filter(l => l !== lastLesson);
 
-      // CRITICAL: Get the most recent tracking record ID and update by ID
       const { data: existingRecords } = await supabase
         .from("student_lesson_tracking")
         .select("id")
@@ -323,7 +316,7 @@ export function EditStudentDialog({
         .limit(1);
 
       if (!existingRecords || existingRecords.length === 0) {
-        throw new Error("Ders takip kaydı bulunamadı");
+        throw new Error(t("dialogs.editStudent.trackingNotFound"));
       }
 
       const { error } = await supabase
@@ -333,18 +326,17 @@ export function EditStudentDialog({
 
       if (error) throw error;
 
-      // Subtract from teacher balance
       await subtractFromTeacherBalance(studentData.teacher_id, studentData.student_id);
 
       setCompletedLessons(newCompletedLessons);
       toast({
-        title: "Başarılı",
-        description: `${lastLesson}. ders geri alındı`,
+        title: t("common.success"),
+        description: t("dialogs.editStudent.lessonUndone", { lesson: lastLesson }),
       });
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: error.message || "Ders geri alınamadı",
+        title: t("common.error"),
+        description: error.message || t("dialogs.editStudent.undoError"),
         variant: "destructive",
       });
     }
@@ -352,7 +344,6 @@ export function EditStudentDialog({
 
   const updateTeacherBalance = async (teacherId: string, studentId: string) => {
     try {
-      // Get lesson duration
       const { data: lessonData } = await supabase
         .from("student_lessons")
         .select("start_time, end_time")
@@ -367,7 +358,6 @@ export function EditStudentDialog({
       const endTime = new Date(`2000-01-01T${lessonData.end_time}`);
       const durationMinutes = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
 
-      // Check if teacher balance exists
       const { data: existingBalance } = await supabase
         .from("teacher_balance")
         .select("*")
@@ -375,7 +365,6 @@ export function EditStudentDialog({
         .maybeSingle();
 
       if (existingBalance) {
-        // Update existing balance
         await supabase
           .from("teacher_balance")
           .update({
@@ -385,7 +374,6 @@ export function EditStudentDialog({
           })
           .eq("teacher_id", teacherId);
       } else {
-        // Create new balance
         await supabase.from("teacher_balance").insert({
           teacher_id: teacherId,
           total_minutes: durationMinutes,
@@ -402,7 +390,6 @@ export function EditStudentDialog({
 
   const subtractFromTeacherBalance = async (teacherId: string, studentId: string) => {
     try {
-      // Get lesson duration
       const { data: lessonData } = await supabase
         .from("student_lessons")
         .select("start_time, end_time")
@@ -417,7 +404,6 @@ export function EditStudentDialog({
       const endTime = new Date(`2000-01-01T${lessonData.end_time}`);
       const durationMinutes = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
 
-      // Get current balance
       const { data: existingBalance } = await supabase
         .from("teacher_balance")
         .select("*")
@@ -425,7 +411,6 @@ export function EditStudentDialog({
         .maybeSingle();
 
       if (existingBalance) {
-        // Subtract from existing balance
         await supabase
           .from("teacher_balance")
           .update({
@@ -450,7 +435,6 @@ export function EditStudentDialog({
 
       if (studentError) throw studentError;
 
-      // CRITICAL: Get the most recent tracking record ID and update by ID
       const { data: existingRecords } = await supabase
         .from("student_lesson_tracking")
         .select("id")
@@ -460,11 +444,9 @@ export function EditStudentDialog({
         .limit(1);
 
       if (!existingRecords || existingRecords.length === 0) {
-        throw new Error("Ders takip kaydı bulunamadı");
+        throw new Error(t("dialogs.editStudent.trackingNotFound"));
       }
 
-      // IMPORTANT: Bu fonksiyon sadece öğrencinin ders takibini sıfırlar (yeni ay için).
-      // Öğretmen bu dersleri zaten işlemiş olduğundan, öğretmen bakiyesinden eksilme YAPILMAMALIDIR.
       const { error } = await supabase
         .from("student_lesson_tracking")
         .update({ 
@@ -481,13 +463,13 @@ export function EditStudentDialog({
       setShowResetConfirm(false);
       
       toast({
-        title: "Başarılı",
-        description: "Tüm dersler sıfırlandı (Öğretmen bakiyesi korundu)",
+        title: t("common.success"),
+        description: t("dialogs.editStudent.resetSuccess"),
       });
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: error.message || "Dersler sıfırlanamadı",
+        title: t("common.error"),
+        description: error.message || t("dialogs.editStudent.resetError"),
         variant: "destructive",
       });
     }
@@ -506,7 +488,6 @@ export function EditStudentDialog({
       let finalDates = lessonDates;
 
       if (updateRemainingDays) {
-        // Find the first changed date
         const changedKeys = Object.keys(lessonDates).filter(
           (key) => lessonDates[key] !== originalLessonDates[key]
         );
@@ -517,7 +498,6 @@ export function EditStudentDialog({
         }
       }
 
-      // CRITICAL: Get the most recent tracking record ID and update by ID
       const { data: existingRecords } = await supabase
         .from("student_lesson_tracking")
         .select("id")
@@ -527,7 +507,7 @@ export function EditStudentDialog({
         .limit(1);
 
       if (!existingRecords || existingRecords.length === 0) {
-        throw new Error("Ders takip kaydı bulunamadı");
+        throw new Error(t("dialogs.editStudent.trackingNotFound"));
       }
 
       const { error } = await supabase
@@ -538,8 +518,8 @@ export function EditStudentDialog({
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Ders tarihleri güncellendi",
+        title: t("common.success"),
+        description: t("dialogs.editStudent.datesUpdated"),
       });
 
       setOriginalLessonDates(finalDates);
@@ -548,8 +528,8 @@ export function EditStudentDialog({
       setUpdateRemainingDays(false);
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: error.message || "Tarihler güncellenemedi",
+        title: t("common.error"),
+        description: error.message || t("dialogs.editStudent.datesUpdateError"),
         variant: "destructive",
       });
     }
@@ -560,8 +540,8 @@ export function EditStudentDialog({
 
     if (!name.trim()) {
       toast({
-        title: "Hata",
-        description: "Öğrenci adı gereklidir",
+        title: t("common.error"),
+        description: t("dialogs.editStudent.nameRequired"),
         variant: "destructive",
       });
       return;
@@ -569,8 +549,8 @@ export function EditStudentDialog({
 
     if (!lessons.every((lesson) => lesson.dayOfWeek !== undefined && lesson.startTime && lesson.endTime)) {
       toast({
-        title: "Hata",
-        description: "Tüm ders programı alanlarını doldurun",
+        title: t("common.error"),
+        description: t("dialogs.editStudent.scheduleRequired"),
         variant: "destructive",
       });
       return;
@@ -579,7 +559,6 @@ export function EditStudentDialog({
     setLoading(true);
 
     try {
-      // Get student's user_id and teacher_id from the students table
       const { data: studentData, error: studentError } = await supabase
         .from("students")
         .select("student_id, teacher_id")
@@ -588,7 +567,6 @@ export function EditStudentDialog({
 
       if (studentError) throw studentError;
 
-      // Update student name in profiles
       const { error: profileError } = await supabase
         .from("profiles")
         .update({ full_name: name.trim() })
@@ -596,7 +574,6 @@ export function EditStudentDialog({
 
       if (profileError) throw profileError;
 
-      // Delete existing lessons
       const { error: deleteError } = await supabase
         .from("student_lessons")
         .delete()
@@ -605,7 +582,6 @@ export function EditStudentDialog({
 
       if (deleteError) throw deleteError;
 
-      // Insert new lessons
       const lessonsToInsert = lessons.map((lesson) => ({
         student_id: studentData.student_id,
         teacher_id: studentData.teacher_id,
@@ -620,16 +596,16 @@ export function EditStudentDialog({
       if (insertError) throw insertError;
 
       toast({
-        title: "Başarılı",
-        description: "Öğrenci ayarları güncellendi",
+        title: t("common.success"),
+        description: t("dialogs.editStudent.updateSuccess"),
       });
 
       onStudentUpdated();
       onOpenChange(false);
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: error.message || "Öğrenci ayarları güncellenemedi",
+        title: t("common.error"),
+        description: error.message || t("dialogs.editStudent.updateError"),
         variant: "destructive",
       });
     } finally {
@@ -649,7 +625,6 @@ export function EditStudentDialog({
       if (studentError) throw studentError;
 
       // Delete all related data
-      // 1. Delete student topics and resources
       const { data: topics } = await supabase
         .from("topics")
         .select("id")
@@ -662,50 +637,44 @@ export function EditStudentDialog({
         await supabase.from("topics").delete().in("id", topicIds);
       }
 
-      // 2. Delete student resource completion
       await supabase
         .from("student_resource_completion")
         .delete()
         .eq("student_id", studentData.student_id);
 
-      // 3. Delete student lesson tracking
       await supabase
         .from("student_lesson_tracking")
         .delete()
         .eq("student_id", studentData.student_id)
         .eq("teacher_id", studentData.teacher_id);
 
-      // 4. Delete student lessons
       await supabase
         .from("student_lessons")
         .delete()
         .eq("student_id", studentData.student_id)
         .eq("teacher_id", studentData.teacher_id);
 
-      // 5. Delete homework submissions (both from and to student)
       await supabase
         .from("homework_submissions")
         .delete()
         .eq("student_id", studentData.student_id)
         .eq("teacher_id", studentData.teacher_id);
 
-      // 6. Delete student-teacher relationship
       await supabase.from("students").delete().eq("id", studentId);
 
-      // 7. Delete profile (user account)
       await supabase.from("profiles").delete().eq("user_id", studentData.student_id);
 
       toast({
-        title: "Başarılı",
-        description: "Öğrenci ve tüm verileri silindi",
+        title: t("common.success"),
+        description: t("dialogs.editStudent.deleteSuccess"),
       });
 
       onStudentUpdated();
       onOpenChange(false);
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: error.message || "Öğrenci silinemedi",
+        title: t("common.error"),
+        description: error.message || t("dialogs.editStudent.deleteError"),
         variant: "destructive",
       });
     } finally {
@@ -717,24 +686,24 @@ export function EditStudentDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle>Öğrenci Ayarları</DialogTitle>
+          <DialogTitle>{t("dialogs.editStudent.title")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">Öğrenci Adı</Label>
+            <Label htmlFor="name">{t("dialogs.editStudent.nameLabel")}</Label>
             <Input
               id="name"
               type="text"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Ad Soyad"
+              placeholder={t("dialogs.editStudent.namePlaceholder")}
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="lessonsPerWeek">Haftalık Ders Sayısı</Label>
+            <Label htmlFor="lessonsPerWeek">{t("dialogs.editStudent.lessonsPerWeekLabel")}</Label>
             <Select
               value={lessonsPerWeek.toString()}
               onValueChange={(value) => setLessonsPerWeek(Number(value))}
@@ -745,7 +714,7 @@ export function EditStudentDialog({
               <SelectContent>
                 {[1, 2, 3, 4, 5, 6, 7].map((num) => (
                   <SelectItem key={num} value={num.toString()}>
-                    {num} ders
+                    {num} {t("dialogs.editStudent.lessonsUnit")}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -753,11 +722,11 @@ export function EditStudentDialog({
           </div>
 
           <div className="space-y-3">
-            <Label className="text-base font-medium">Ders Programı</Label>
+            <Label className="text-base font-medium">{t("dialogs.editStudent.scheduleLabel")}</Label>
             {lessons.map((lesson, index) => (
               <div key={index} className="grid grid-cols-4 gap-3 p-3 border rounded-lg">
                 <div className="space-y-2">
-                  <Label>Gün</Label>
+                  <Label>{t("dialogs.editStudent.dayLabel")}</Label>
                   <Select
                     value={lesson.dayOfWeek.toString()}
                     onValueChange={(value) => updateLesson(index, "dayOfWeek", Number(value))}
@@ -776,7 +745,7 @@ export function EditStudentDialog({
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Başlangıç</Label>
+                  <Label>{t("dialogs.editStudent.startTimeLabel")}</Label>
                   <Input
                     type="time"
                     value={lesson.startTime}
@@ -786,7 +755,7 @@ export function EditStudentDialog({
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Bitiş</Label>
+                  <Label>{t("dialogs.editStudent.endTimeLabel")}</Label>
                   <Input
                     type="time"
                     value={lesson.endTime}
@@ -796,12 +765,12 @@ export function EditStudentDialog({
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Not</Label>
+                  <Label>{t("dialogs.editStudent.noteLabel")}</Label>
                   <Input
                     type="text"
                     value={lesson.note || ""}
                     onChange={(e) => updateLesson(index, "note", e.target.value)}
-                    placeholder="Opsiyonel"
+                    placeholder={t("dialogs.editStudent.notePlaceholder")}
                   />
                 </div>
               </div>
@@ -814,9 +783,9 @@ export function EditStudentDialog({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-base font-medium">İşlenen Dersler</Label>
+                <Label className="text-base font-medium">{t("dialogs.editStudent.completedLessonsTitle")}</Label>
                 <p className="text-sm text-muted-foreground">
-                  Ders tarihlerini düzenleyebilir ve güncelleyebilirsiniz.
+                  {t("dialogs.editStudent.completedLessonsDescription")}
                 </p>
               </div>
               <div className="flex gap-2">
@@ -828,7 +797,7 @@ export function EditStudentDialog({
                     onClick={handleMarkLastLesson}
                     disabled={loading}
                   >
-                    Son Dersi İşaretle
+                    {t("dialogs.editStudent.markLastLesson")}
                   </Button>
                 )}
                 {completedLessons.length > 0 && (
@@ -840,7 +809,7 @@ export function EditStudentDialog({
                       onClick={handleUndoLastLesson}
                       disabled={loading}
                     >
-                      Son Dersi Geri Al
+                      {t("dialogs.editStudent.undoLastLesson")}
                     </Button>
                     <Button
                       type="button"
@@ -849,7 +818,7 @@ export function EditStudentDialog({
                       onClick={() => setShowResetConfirm(true)}
                       disabled={loading}
                     >
-                      Sıfırla
+                      {t("dialogs.editStudent.reset")}
                     </Button>
                   </>
                 )}
@@ -859,7 +828,6 @@ export function EditStudentDialog({
               {(() => {
                 const totalLessons = lessonsPerWeek * 4;
                 
-                // Build sorted lesson data with overrides applied
                 const lessonsWithDates: { lessonNumber: number; originalDate: string; effectiveDate: string; isCancelled: boolean; isOverridden: boolean }[] = [];
                 
                 for (let i = 1; i <= totalLessons; i++) {
@@ -890,7 +858,6 @@ export function EditStudentDialog({
                   });
                 }
                 
-                // Sort by effective date (chronological order)
                 const sortedLessons = [...lessonsWithDates].filter(l => l.originalDate).sort((a, b) => {
                   if (a.isCancelled && b.isCancelled) return a.originalDate.localeCompare(b.originalDate);
                   if (a.isCancelled) return a.originalDate.localeCompare(b.effectiveDate);
@@ -898,7 +865,6 @@ export function EditStudentDialog({
                   return a.effectiveDate.localeCompare(b.effectiveDate);
                 });
                 
-                // Add lessons without dates at the end
                 const lessonsWithoutDates = lessonsWithDates.filter(l => !l.originalDate);
                 const allLessons = [...sortedLessons, ...lessonsWithoutDates];
                 
@@ -923,13 +889,13 @@ export function EditStudentDialog({
                             ? "text-foreground" 
                             : "text-muted-foreground"
                       }`}>
-                        Ders {displayIndex + 1}
-                        {lesson.isCancelled && " (İptal)"}
+                        {t("dialogs.editStudent.lesson")} {displayIndex + 1}
+                        {lesson.isCancelled && ` (${t("dialogs.editStudent.cancelled")})`}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Label className={`text-sm ${lesson.isOverridden ? "text-warning font-medium" : "text-muted-foreground"}`}>
-                        {lesson.isOverridden ? "Yeni Tarih:" : "Tarih:"}
+                        {lesson.isOverridden ? t("dialogs.editStudent.newDate") : t("dialogs.editStudent.dateLabel")}
                       </Label>
                       <Input
                         type="date"
@@ -951,7 +917,7 @@ export function EditStudentDialog({
                 )}
                 className="w-full"
               >
-                Tarihleri Onayla
+                {t("dialogs.editStudent.confirmDates")}
               </Button>
             </div>
           </div>
@@ -962,9 +928,9 @@ export function EditStudentDialog({
           <div className="space-y-3 pt-2">
             <div className="flex items-center justify-between">
               <div>
-                <Label className="text-base font-medium text-destructive">Tehlikeli Alan</Label>
+                <Label className="text-base font-medium text-destructive">{t("dialogs.editStudent.dangerZone")}</Label>
                 <p className="text-sm text-muted-foreground">
-                  Öğrenciyi arşivleyin veya kalıcı olarak silin.
+                  {t("dialogs.editStudent.dangerZoneDescription")}
                 </p>
               </div>
             </div>
@@ -974,7 +940,7 @@ export function EditStudentDialog({
                 variant="outline"
                 onClick={async () => {
                   const confirmed = window.confirm(
-                    `${currentName} adlı öğrenciyi arşivlemek istediğinize emin misiniz? Öğrenci ders programından ve listeden kaldırılacak, ancak tüm verileri korunacaktır. İstediğiniz zaman geri alabilirsiniz.`
+                    t("dialogs.editStudent.archiveConfirmation", { name: currentName })
                   );
                   if (confirmed) {
                     setLoading(true);
@@ -987,16 +953,16 @@ export function EditStudentDialog({
                       if (error) throw error;
 
                       toast({
-                        title: "Başarılı",
-                        description: "Öğrenci arşivlendi",
+                        title: t("common.success"),
+                        description: t("dialogs.editStudent.archiveSuccess"),
                       });
 
                       onStudentUpdated();
                       onOpenChange(false);
                     } catch (error: any) {
                       toast({
-                        title: "Hata",
-                        description: error.message || "Öğrenci arşivlenemedi",
+                        title: t("common.error"),
+                        description: error.message || t("dialogs.editStudent.archiveError"),
                         variant: "destructive",
                       });
                     } finally {
@@ -1008,14 +974,14 @@ export function EditStudentDialog({
                 className="w-full"
               >
                 <Archive className="h-4 w-4 mr-2" />
-                Arşivle
+                {t("dialogs.editStudent.archive")}
               </Button>
               <Button
                 type="button"
                 variant="destructive"
                 onClick={() => {
                   const confirmed = window.confirm(
-                    `${currentName} adlı öğrenciyi silmek istediğinize emin misiniz? Bu işlem geri alınamaz ve öğrencinin tüm verileri (dersler, ödevler, konular, kaynaklar) silinecektir.`
+                    t("dialogs.editStudent.deleteConfirmation", { name: currentName })
                   );
                   if (confirmed) {
                     handleDeleteStudent();
@@ -1025,18 +991,18 @@ export function EditStudentDialog({
                 className="w-full"
               >
                 <Trash2 className="h-4 w-4 mr-2" />
-                Sil
+                {t("common.delete")}
               </Button>
             </div>
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={loading}>
-              İptal
+              {t("common.cancel")}
             </Button>
             <Button type="submit" disabled={loading}>
               {loading && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Kaydet
+              {t("common.save")}
             </Button>
           </div>
         </form>
@@ -1046,9 +1012,9 @@ export function EditStudentDialog({
       <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Ders Tarihlerini Güncelle</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.editStudent.updateDatesTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Ders tarihlerini güncellemek istediğinize emin misiniz?
+              {t("dialogs.editStudent.updateDatesDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
 
@@ -1059,13 +1025,13 @@ export function EditStudentDialog({
               onCheckedChange={(checked) => setUpdateRemainingDays(checked as boolean)}
             />
             <Label htmlFor="update-remaining" className="cursor-pointer font-normal">
-              Kalan günleri de güncelle
+              {t("dialogs.editStudent.updateRemainingDays")}
             </Label>
           </div>
 
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setUpdateRemainingDays(false)}>İptal</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmDateUpdate}>Onayla</AlertDialogAction>
+            <AlertDialogCancel onClick={() => setUpdateRemainingDays(false)}>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDateUpdate}>{t("common.confirm")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -1074,17 +1040,15 @@ export function EditStudentDialog({
       <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Tüm Dersleri Sıfırla</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.editStudent.resetAllTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Öğrencinin bu aydaki tüm ders kayıtları sıfırlanacaktır (yeni ay için). 
-              Öğretmen bu dersleri işlediği için öğretmen bakiyesi KORUNACAKTIR ve etkilenmeyecektir.
-              Bu işlem geri alınamaz. Devam etmek istiyor musunuz?
+              {t("dialogs.editStudent.resetAllDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleResetAllLessons} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Sıfırla
+              {t("dialogs.editStudent.reset")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

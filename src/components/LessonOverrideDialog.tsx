@@ -14,7 +14,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon, ArrowRight, CalendarClock, RotateCcw, Save } from "lucide-react";
 import { format, addDays } from "date-fns";
-import { tr } from "date-fns/locale";
+import { tr, enUS, es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -28,6 +28,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface LessonOverrideDialogProps {
   open: boolean;
@@ -63,6 +65,9 @@ export function LessonOverrideDialog({
   hasExistingOverride = false,
   onSuccess,
 }: LessonOverrideDialogProps) {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
+  
   // Use current values if provided, otherwise fall back to original
   const displayDate = currentDate || originalDate;
   const displayStartTime = currentStartTime || originalStartTime;
@@ -76,6 +81,14 @@ export function LessonOverrideDialog({
   const [showRevertConfirm, setShowRevertConfirm] = useState(false);
   const [nextLessonDate, setNextLessonDate] = useState<Date | null>(null);
   const { toast } = useToast();
+
+  const getDateLocale = () => {
+    switch (language) {
+      case 'en': return enUS;
+      case 'es': return es;
+      default: return tr;
+    }
+  };
 
   // Reset state when dialog opens with new lesson data
   useEffect(() => {
@@ -94,7 +107,7 @@ export function LessonOverrideDialog({
 
   const formatTime = (time: string) => {
     try {
-      return new Date(`2000-01-01T${time}`).toLocaleTimeString("tr-TR", {
+      return new Date(`2000-01-01T${time}`).toLocaleTimeString(language === 'tr' ? 'tr-TR' : language === 'es' ? 'es-ES' : 'en-US', {
         hour: "2-digit",
         minute: "2-digit",
       });
@@ -175,8 +188,8 @@ export function LessonOverrideDialog({
 
       if (!trackingData || !trackingData.lesson_dates) {
         toast({
-          title: "Hata",
-          description: "Ders takip verisi bulunamadı",
+          title: t("common.error"),
+          description: t("dialogs.lessonOverride.noTrackingData"),
           variant: "destructive",
         });
         setSaving(false);
@@ -198,8 +211,8 @@ export function LessonOverrideDialog({
 
       if (targetLessonNumber === null) {
         toast({
-          title: "Hata",
-          description: "Bu tarih için ders kaydı bulunamadı",
+          title: t("common.error"),
+          description: t("dialogs.lessonOverride.lessonNotFound"),
           variant: "destructive",
         });
         setSaving(false);
@@ -216,8 +229,8 @@ export function LessonOverrideDialog({
 
       if (lessonDaysError || !lessonDays || lessonDays.length === 0) {
         toast({
-          title: "Hata",
-          description: "Öğrenci ders günleri bulunamadı",
+          title: t("common.error"),
+          description: t("dialogs.lessonOverride.lessonDaysNotFound"),
           variant: "destructive",
         });
         setSaving(false);
@@ -264,16 +277,16 @@ export function LessonOverrideDialog({
         .eq("original_date", originalDateStr);
 
       toast({
-        title: "Başarılı",
-        description: `${targetLessonNumber}. ders ve sonraki tüm dersler kaydırıldı`,
+        title: t("common.success"),
+        description: t("dialogs.lessonOverride.postponeSuccess", { lesson: targetLessonNumber }),
       });
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
       console.error("Error postponing lesson:", error);
       toast({
-        title: "Hata",
-        description: error.message || "Ders ertelenemedi",
+        title: t("common.error"),
+        description: error.message || t("dialogs.lessonOverride.postponeError"),
         variant: "destructive",
       });
     } finally {
@@ -286,8 +299,8 @@ export function LessonOverrideDialog({
   const handleOneTimeChange = async () => {
     if (!newDate) {
       toast({
-        title: "Hata",
-        description: "Lütfen yeni tarih seçin",
+        title: t("common.error"),
+        description: t("dialogs.lessonOverride.selectDate"),
         variant: "destructive",
       });
       return;
@@ -295,8 +308,8 @@ export function LessonOverrideDialog({
 
     if (!hasDateTimeChanges()) {
       toast({
-        title: "Bilgi",
-        description: "Tarih veya saat değişikliği yapılmadı",
+        title: t("common.info"),
+        description: t("dialogs.lessonOverride.noChanges"),
       });
       return;
     }
@@ -344,16 +357,16 @@ export function LessonOverrideDialog({
       }
 
       toast({
-        title: "Başarılı",
-        description: `Ders ${format(newDate, "d MMMM", { locale: tr })} tarihine taşındı`,
+        title: t("common.success"),
+        description: t("dialogs.lessonOverride.moveSuccess", { date: format(newDate, "d MMMM", { locale: getDateLocale() }) }),
       });
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
       console.error("Error saving lesson override:", error);
       toast({
-        title: "Hata",
-        description: error.message || "Ders tarihi değiştirilemedi",
+        title: t("common.error"),
+        description: error.message || t("dialogs.lessonOverride.changeError"),
         variant: "destructive",
       });
     } finally {
@@ -376,16 +389,16 @@ export function LessonOverrideDialog({
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Ders orijinal tarih ve saatine döndürüldü",
+        title: t("common.success"),
+        description: t("dialogs.lessonOverride.revertSuccess"),
       });
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
       console.error("Error reverting lesson override:", error);
       toast({
-        title: "Hata",
-        description: error.message || "Değişiklik geri alınamadı",
+        title: t("common.error"),
+        description: error.message || t("dialogs.lessonOverride.revertError"),
         variant: "destructive",
       });
     } finally {
@@ -408,15 +421,15 @@ export function LessonOverrideDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-[95vw] sm:max-w-md">
           <DialogHeader>
-            <DialogTitle className="text-base">Ders Düzenle</DialogTitle>
+            <DialogTitle className="text-base">{t("dialogs.lessonOverride.title")}</DialogTitle>
             <DialogDescription className="text-sm">
-              {studentName} - {format(originalDate, "d MMM yyyy", { locale: tr })} {formatTime(originalStartTime)}
+              {studentName} - {format(originalDate, "d MMM yyyy", { locale: getDateLocale() })} {formatTime(originalStartTime)}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-3 py-2">
             <div className="space-y-1.5">
-              <Label className="text-sm">Tarih</Label>
+              <Label className="text-sm">{t("dialogs.lessonOverride.dateLabel")}</Label>
               <Popover>
                 <PopoverTrigger asChild>
                   <Button
@@ -428,7 +441,7 @@ export function LessonOverrideDialog({
                     )}
                   >
                     <CalendarIcon className="mr-2 h-4 w-4 shrink-0" />
-                    {newDate ? format(newDate, "d MMM yyyy", { locale: tr }) : "Tarih seçin"}
+                    {newDate ? format(newDate, "d MMM yyyy", { locale: getDateLocale() }) : t("dialogs.lessonOverride.selectDatePlaceholder")}
                   </Button>
                 </PopoverTrigger>
                 <PopoverContent className="w-auto p-0 z-50" align="start">
@@ -436,7 +449,7 @@ export function LessonOverrideDialog({
                     mode="single"
                     selected={newDate}
                     onSelect={setNewDate}
-                    locale={tr}
+                    locale={getDateLocale()}
                     initialFocus
                   />
                 </PopoverContent>
@@ -445,7 +458,7 @@ export function LessonOverrideDialog({
 
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1.5">
-                <Label htmlFor="startTime" className="text-sm">Başlangıç</Label>
+                <Label htmlFor="startTime" className="text-sm">{t("dialogs.lessonOverride.startTimeLabel")}</Label>
                 <Input
                   id="startTime"
                   type="time"
@@ -455,7 +468,7 @@ export function LessonOverrideDialog({
                 />
               </div>
               <div className="space-y-1.5">
-                <Label htmlFor="endTime" className="text-sm">Bitiş</Label>
+                <Label htmlFor="endTime" className="text-sm">{t("dialogs.lessonOverride.endTimeLabel")}</Label>
                 <Input
                   id="endTime"
                   type="time"
@@ -476,7 +489,7 @@ export function LessonOverrideDialog({
               className="text-xs px-2"
             >
               <ArrowRight className="h-3.5 w-3.5 mr-1 shrink-0" />
-              <span className="truncate">Sonraki Derse Aktar</span>
+              <span className="truncate">{t("dialogs.lessonOverride.postponeButton")}</span>
             </Button>
             <Button
               variant="outline"
@@ -489,7 +502,7 @@ export function LessonOverrideDialog({
               )}
             >
               <CalendarClock className="h-3.5 w-3.5 mr-1 shrink-0" />
-              <span className="truncate">1 Seferlik Değiştir</span>
+              <span className="truncate">{t("dialogs.lessonOverride.oneTimeButton")}</span>
             </Button>
             <Button
               variant="outline"
@@ -502,7 +515,7 @@ export function LessonOverrideDialog({
               )}
             >
               <RotateCcw className="h-3.5 w-3.5 mr-1 shrink-0" />
-              <span className="truncate">Geri Al</span>
+              <span className="truncate">{t("dialogs.lessonOverride.revertButton")}</span>
             </Button>
             <Button 
               size="sm"
@@ -511,7 +524,7 @@ export function LessonOverrideDialog({
               className="text-xs px-2"
             >
               <Save className="h-3.5 w-3.5 mr-1 shrink-0" />
-              <span className="truncate">{saving ? "Kaydediliyor..." : "Kaydet"}</span>
+              <span className="truncate">{saving ? t("common.saving") : t("common.save")}</span>
             </Button>
           </div>
         </DialogContent>
@@ -521,22 +534,25 @@ export function LessonOverrideDialog({
       <AlertDialog open={showPostponeConfirm} onOpenChange={setShowPostponeConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Sonraki Derse Aktar</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.lessonOverride.postponeTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {studentName} öğrencisinin {format(originalDate, "d MMMM yyyy", { locale: tr })} tarihli dersini sonraki derse aktarmak istediğinize emin misiniz?
+              {t("dialogs.lessonOverride.postponeDescription", { 
+                name: studentName, 
+                date: format(originalDate, "d MMMM yyyy", { locale: getDateLocale() }) 
+              })}
               <br /><br />
-              <strong>Bu işlem ile:</strong>
+              <strong>{t("dialogs.lessonOverride.postponeEffects")}</strong>
               <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>Bu ders {nextLessonDate ? format(nextLessonDate, "d MMMM", { locale: tr }) : "sonraki ders gününe"} tarihine kaydırılacak</li>
-                <li>Sonraki tüm dersler de birer ders ileri kaydırılacak</li>
-                <li>Öğrencinin ders hakkı korunacak</li>
+                <li>{t("dialogs.lessonOverride.postponeEffect1", { date: nextLessonDate ? format(nextLessonDate, "d MMMM", { locale: getDateLocale() }) : t("dialogs.lessonOverride.nextLessonDay") })}</li>
+                <li>{t("dialogs.lessonOverride.postponeEffect2")}</li>
+                <li>{t("dialogs.lessonOverride.postponeEffect3")}</li>
               </ul>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={handlePostponeToNextLesson}>
-              Aktar
+              {t("dialogs.lessonOverride.transfer")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -546,15 +562,19 @@ export function LessonOverrideDialog({
       <AlertDialog open={showRevertConfirm} onOpenChange={setShowRevertConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Değişiklikleri Geri Al</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.lessonOverride.revertTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {studentName} öğrencisinin dersini orijinal tarih ve saatine ({format(originalDate, "d MMMM yyyy", { locale: tr })} {formatTime(originalStartTime)}) döndürmek istediğinize emin misiniz?
+              {t("dialogs.lessonOverride.revertDescription", { 
+                name: studentName, 
+                date: format(originalDate, "d MMMM yyyy", { locale: getDateLocale() }),
+                time: formatTime(originalStartTime)
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Vazgeç</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleRevert}>
-              Geri Al
+              {t("dialogs.lessonOverride.revert")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

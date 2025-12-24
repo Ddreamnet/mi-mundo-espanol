@@ -98,6 +98,10 @@
     "updating": "Güncelleniyor...",
     "success": "Başarılı",
     "saveAll": "Tümünü Kaydet",
+    "info": "Bilgi",
+    "warning": "Uyarı",
+    "click": "Tıklayın",
+    "download": "İndir"
     "saveChanges": "Değişiklikleri Kaydet",
     "reset": "Sıfırla",
     "resetAndSave": "Sıfırla ve Kaydet",
