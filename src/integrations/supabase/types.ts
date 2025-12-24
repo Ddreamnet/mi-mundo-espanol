@@ -297,6 +297,33 @@ export type Database = {
           },
         ]
       }
+      page_contents: {
+        Row: {
+          content: Json
+          created_at: string
+          id: string
+          page_key: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          content?: Json
+          created_at?: string
+          id?: string
+          page_key: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          content?: Json
+          created_at?: string
+          id?: string
+          page_key?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       payment_history: {
         Row: {
           amount_minutes: number
@@ -605,6 +632,36 @@ export type Database = {
         }
         Relationships: []
       }
+      testimonials: {
+        Row: {
+          author_name: string | null
+          created_at: string
+          id: string
+          is_active: boolean | null
+          order_index: number
+          quote: string
+          updated_at: string
+        }
+        Insert: {
+          author_name?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          order_index?: number
+          quote: string
+          updated_at?: string
+        }
+        Update: {
+          author_name?: string | null
+          created_at?: string
+          id?: string
+          is_active?: boolean | null
+          order_index?: number
+          quote?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       topics: {
         Row: {
           completed_at: string | null
@@ -713,6 +770,42 @@ export type Database = {
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
           user_id?: string
+        }
+        Relationships: []
+      }
+      zigzag_sections: {
+        Row: {
+          created_at: string
+          id: string
+          image_on_left: boolean | null
+          image_url: string | null
+          is_active: boolean | null
+          items: Json
+          order_index: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_on_left?: boolean | null
+          image_url?: string | null
+          is_active?: boolean | null
+          items?: Json
+          order_index?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_on_left?: boolean | null
+          image_url?: string | null
+          is_active?: boolean | null
+          items?: Json
+          order_index?: number
+          title?: string
+          updated_at?: string
         }
         Relationships: []
       }
