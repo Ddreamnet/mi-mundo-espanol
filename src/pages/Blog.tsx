@@ -12,19 +12,49 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage, Language } from "@/contexts/LanguageContext";
 
 interface BlogPost {
   id: string;
   title: string;
   slug: string;
   excerpt: string | null;
+  content: string;
   cover_image_url: string | null;
   published_at: string | null;
   created_at: string;
 }
 
+interface MultiLangBlogContent {
+  title: string;
+  excerpt: string;
+  content: string;
+}
+
+type MultiLangContent = {
+  tr: MultiLangBlogContent;
+  en: MultiLangBlogContent;
+  es: MultiLangBlogContent;
+};
+
 const localeMap = { tr, en: enUS, es };
+
+// Parse content to get language-specific data
+const getLocalizedContent = (post: BlogPost, language: Language) => {
+  try {
+    const parsed = JSON.parse(post.content) as MultiLangContent;
+    if (parsed.tr && parsed.en && parsed.es) {
+      const langContent = parsed[language] || parsed.tr;
+      return {
+        title: langContent.title || post.title,
+        excerpt: langContent.excerpt || post.excerpt,
+      };
+    }
+  } catch {
+    // Not JSON, legacy format
+  }
+  return { title: post.title, excerpt: post.excerpt };
+};
 
 export default function Blog() {
   const navigate = useNavigate();
@@ -37,7 +67,7 @@ export default function Blog() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("blog_posts")
-        .select("id, title, slug, excerpt, cover_image_url, published_at, created_at")
+        .select("id, title, slug, excerpt, content, cover_image_url, published_at, created_at")
         .eq("is_published", true)
         .order("published_at", { ascending: false });
 
@@ -46,20 +76,23 @@ export default function Blog() {
     },
   });
 
-  const filteredPosts = posts?.filter((post) =>
-    post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    post.excerpt?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredPosts = posts?.filter((post) => {
+    const localized = getLocalizedContent(post, language);
+    return (
+      localized.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      localized.excerpt?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+  });
 
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), "d MMMM yyyy", { locale: localeMap[language] || tr });
   };
 
   const estimateReadTime = (excerpt: string | null) => {
-    if (!excerpt) return "2 dk";
+    if (!excerpt) return language === "en" ? "2 min" : language === "es" ? "2 min" : "2 dk";
     const words = excerpt.split(" ").length;
     const minutes = Math.max(2, Math.ceil(words / 200));
-    return `${minutes} dk`;
+    return language === "en" ? `${minutes} min` : language === "es" ? `${minutes} min` : `${minutes} dk`;
   };
 
   return (
@@ -106,41 +139,44 @@ export default function Blog() {
             </div>
           ) : filteredPosts && filteredPosts.length > 0 ? (
             <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-              {filteredPosts.map((post) => (
-                <Card
-                  key={post.id}
-                  className="group overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-border/50 bg-card"
-                  onClick={() => navigate(`/blog/${post.slug}`)}
-                >
-                  <div className="relative overflow-hidden h-48">
-                    {post.cover_image_url ? (
-                      <img src={post.cover_image_url} alt={post.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
-                    ) : (
-                      <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
-                        <span className="text-4xl">📚</span>
-                      </div>
-                    )}
-                  </div>
-                  <CardContent className="p-6 bg-card">
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
-                      <div className="flex items-center gap-1.5">
-                        <Calendar className="w-4 h-4" />
-                        <span>{formatDate(post.published_at || post.created_at)}</span>
-                      </div>
-                      <div className="flex items-center gap-1.5">
-                        <Clock className="w-4 h-4" />
-                        <span>{estimateReadTime(post.excerpt)}</span>
-                      </div>
+              {filteredPosts.map((post) => {
+                const localized = getLocalizedContent(post, language);
+                return (
+                  <Card
+                    key={post.id}
+                    className="group overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-border/50 bg-card"
+                    onClick={() => navigate(`/blog/${post.slug}`)}
+                  >
+                    <div className="relative overflow-hidden h-48">
+                      {post.cover_image_url ? (
+                        <img src={post.cover_image_url} alt={localized.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                          <span className="text-4xl">📚</span>
+                        </div>
+                      )}
                     </div>
-                    <h2 className="font-bold text-card-foreground mb-2 group-hover:text-primary transition-colors text-lg">{post.title}</h2>
-                    {post.excerpt && <p className="text-muted-foreground text-sm line-clamp-2 mb-4">{post.excerpt}</p>}
-                    <div className="flex items-center gap-2 text-primary font-medium text-sm group-hover:gap-3 transition-all">
-                      <span>{t("blog.readMore")}</span>
-                      <ArrowRight className="w-4 h-4" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                    <CardContent className="p-6 bg-card">
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar className="w-4 h-4" />
+                          <span>{formatDate(post.published_at || post.created_at)}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <Clock className="w-4 h-4" />
+                          <span>{estimateReadTime(localized.excerpt)}</span>
+                        </div>
+                      </div>
+                      <h2 className="font-bold text-card-foreground mb-2 group-hover:text-primary transition-colors text-lg">{localized.title}</h2>
+                      {localized.excerpt && <p className="text-muted-foreground text-sm line-clamp-2 mb-4">{localized.excerpt}</p>}
+                      <div className="flex items-center gap-2 text-primary font-medium text-sm group-hover:gap-3 transition-all">
+                        <span>{t("blog.readMore")}</span>
+                        <ArrowRight className="w-4 h-4" />
+                      </div>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           ) : (
             <div className="text-center py-16">

@@ -12,7 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
-import { useLanguage } from "@/contexts/LanguageContext";
+import { useLanguage, Language } from "@/contexts/LanguageContext";
 
 interface BlogPostData {
   id: string;
@@ -25,7 +25,37 @@ interface BlogPostData {
   created_at: string;
 }
 
+interface MultiLangBlogContent {
+  title: string;
+  excerpt: string;
+  content: string;
+}
+
+type MultiLangContent = {
+  tr: MultiLangBlogContent;
+  en: MultiLangBlogContent;
+  es: MultiLangBlogContent;
+};
+
 const localeMap = { tr, en: enUS, es };
+
+// Parse content to get language-specific data
+const getLocalizedContent = (post: BlogPostData, language: Language) => {
+  try {
+    const parsed = JSON.parse(post.content) as MultiLangContent;
+    if (parsed.tr && parsed.en && parsed.es) {
+      const langContent = parsed[language] || parsed.tr;
+      return {
+        title: langContent.title || post.title,
+        excerpt: langContent.excerpt || post.excerpt,
+        content: langContent.content || post.content,
+      };
+    }
+  } catch {
+    // Not JSON, legacy format
+  }
+  return { title: post.title, excerpt: post.excerpt, content: post.content };
+};
 
 export default function BlogPost() {
   const { slug } = useParams<{ slug: string }>();
@@ -50,6 +80,8 @@ export default function BlogPost() {
     enabled: !!slug,
   });
 
+  const localized = post ? getLocalizedContent(post, language) : null;
+
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), "d MMMM yyyy", { locale: localeMap[language] || tr });
   };
@@ -71,7 +103,7 @@ export default function BlogPost() {
     
     if (navigator.share) {
       try {
-        await navigator.share({ title: post?.title, url });
+        await navigator.share({ title: localized?.title, url });
       } catch {
         // User cancelled
       }
@@ -146,7 +178,7 @@ export default function BlogPost() {
             <Skeleton className="h-80 w-full mb-8 rounded-xl" />
           </div>
         </article>
-      ) : post ? (
+      ) : post && localized ? (
         <article className="pt-24 lg:pt-32 pb-16">
           <div className="container mx-auto px-4 lg:px-8 max-w-4xl mb-8">
             <Button
@@ -162,7 +194,7 @@ export default function BlogPost() {
           <header className="container mx-auto px-4 lg:px-8 max-w-4xl mb-8">
             <Badge variant="secondary" className="mb-4">{t("blog.pageTitle")}</Badge>
             <h1 className="text-3xl lg:text-4xl xl:text-5xl font-bold text-foreground mb-6 leading-tight">
-              {post.title}
+              {localized.title}
             </h1>
 
             <div className="flex flex-wrap items-center gap-4 text-muted-foreground mb-6">
@@ -172,7 +204,7 @@ export default function BlogPost() {
               </div>
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4" />
-                <span>{estimateReadTime(post.content)}</span>
+                <span>{estimateReadTime(localized.content)}</span>
               </div>
               <Button variant="ghost" size="sm" onClick={handleShare} className="ml-auto">
                 {copied ? <Check className="w-4 h-4 mr-2 text-green-500" /> : <Share2 className="w-4 h-4 mr-2" />}
@@ -180,9 +212,9 @@ export default function BlogPost() {
               </Button>
             </div>
 
-            {post.excerpt && (
+            {localized.excerpt && (
               <p className="text-lg text-muted-foreground leading-relaxed border-l-4 border-primary pl-4">
-                {post.excerpt}
+                {localized.excerpt}
               </p>
             )}
           </header>
@@ -190,7 +222,7 @@ export default function BlogPost() {
           {post.cover_image_url && (
             <div className="container mx-auto px-4 lg:px-8 max-w-5xl mb-12">
               <div className="relative rounded-2xl overflow-hidden shadow-xl">
-                <img src={post.cover_image_url} alt={post.title} className="w-full h-64 lg:h-96 object-cover" />
+                <img src={post.cover_image_url} alt={localized.title} className="w-full h-64 lg:h-96 object-cover" />
               </div>
             </div>
           )}
@@ -198,7 +230,7 @@ export default function BlogPost() {
           <div className="container mx-auto px-4 lg:px-8 max-w-4xl">
             <div 
               className="prose prose-lg max-w-none prose-headings:text-foreground prose-headings:font-bold prose-p:text-foreground/90 prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:text-foreground prose-ul:text-foreground/90 prose-ol:text-foreground/90 prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground prose-img:rounded-xl prose-img:shadow-lg dark:prose-invert"
-              dangerouslySetInnerHTML={{ __html: post.content }}
+              dangerouslySetInnerHTML={{ __html: localized.content }}
             />
           </div>
 
