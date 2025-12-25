@@ -245,7 +245,7 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
                           isCancelled
                             ? "bg-muted border-border opacity-50"
                             : isCompleted
-                              ? "bg-primary text-primary-foreground border-primary scale-95 shadow-md"
+                              ? "bg-secondary text-secondary-foreground border-secondary scale-95 shadow-md"
                               : "bg-muted/50 border-border/50"
                         }
                       `}
