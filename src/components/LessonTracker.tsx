@@ -451,7 +451,7 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
                             isCancelled
                               ? "bg-muted opacity-50 border-border cursor-not-allowed"
                               : isCompleted
-                                ? "bg-primary text-primary-foreground border-primary scale-95 shadow-md"
+                                ? "bg-secondary text-secondary-foreground border-secondary scale-95 shadow-md"
                                 : "bg-background border-primary/30 hover:bg-primary/10 hover:scale-105 hover:shadow-md cursor-pointer hover:border-primary"
                           }
                         `}

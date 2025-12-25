@@ -287,7 +287,7 @@ export function StudentDashboard() {
 
       <div className="container mx-auto p-4">
         {/* İlerleme Özeti - 2x2 Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
           {/* İşlenen Konular */}
           <Card>
             <CardContent className="p-4">

@@ -170,7 +170,7 @@ export function BlogManager() {
 
                     <div className="flex items-center gap-1">
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="icon"
                         onClick={() =>
                           togglePublishMutation.mutate({
@@ -179,6 +179,7 @@ export function BlogManager() {
                           })
                         }
                         title={post.is_published ? "Yayından kaldır" : "Yayınla"}
+                        className="border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
                       >
                         {post.is_published ? (
                           <EyeOff className="h-4 w-4" />
@@ -187,18 +188,19 @@ export function BlogManager() {
                         )}
                       </Button>
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="icon"
                         onClick={() => handleEditPost(post)}
                         title="Düzenle"
+                        className="border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="icon"
                         onClick={() => setDeletingPostId(post.id)}
-                        className="text-destructive hover:text-destructive"
+                        className="border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
                         title="Sil"
                       >
                         <Trash2 className="h-4 w-4" />
