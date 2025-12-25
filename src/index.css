@@ -85,7 +85,7 @@
     /* ------------------------------------------------------------------------
        BASE PALETTE - Landing page theme (burgundy + cream)
        ------------------------------------------------------------------------ */
-    
+
     /* Main background - deep burgundy */
     --background: 1 85% 24%;
     --foreground: 42 42% 94%;
@@ -101,7 +101,7 @@
     /* ------------------------------------------------------------------------
        SEMANTIC TOKENS
        ------------------------------------------------------------------------ */
-    
+
     /* Primary - warm gold accent */
     --primary: 42 70% 55%;
     --primary-foreground: 1 85% 15%;
@@ -122,7 +122,7 @@
     /* ------------------------------------------------------------------------
        STATUS COLORS - Semantic feedback
        ------------------------------------------------------------------------ */
-    
+
     /* Destructive - coral red */
     --destructive: 0 65% 50%;
     --destructive-foreground: 42 42% 94%;
@@ -138,10 +138,10 @@
     /* ------------------------------------------------------------------------
        OVERLAY & FORM ELEMENTS
        ------------------------------------------------------------------------ */
-    
+
     /* Modal/Dialog overlay */
     --overlay: 0 0% 0% / 0.8;
-    
+
     --border: 1 40% 35%;
     --input: 1 40% 35%;
     --ring: 42 70% 55%;
@@ -150,7 +150,7 @@
     /* ------------------------------------------------------------------------
        BUTTON TOKENS - Centralized button theming
        ------------------------------------------------------------------------ */
-    
+
     /* Primary Button - dark burgundy on light backgrounds */
     --btn-primary: 354 47% 20%;
     --btn-primary-foreground: 42 42% 94%;
@@ -191,7 +191,7 @@
     /* ------------------------------------------------------------------------
        ICON TOKENS
        ------------------------------------------------------------------------ */
-    
+
     /* Icons on dark background */
     --icon-default: 42 42% 94%;
     --icon-muted: 42 30% 70%;
@@ -204,7 +204,7 @@
     /* ------------------------------------------------------------------------
        SIDEBAR TOKENS
        ------------------------------------------------------------------------ */
-    
+
     --sidebar-background: 1 85% 18%;
     --sidebar-foreground: 42 42% 94%;
     --sidebar-primary: 42 70% 55%;
@@ -217,7 +217,7 @@
     /* ------------------------------------------------------------------------
        CHART TOKENS
        ------------------------------------------------------------------------ */
-    
+
     --chart-1: 42 70% 55%;
     --chart-2: 15 60% 45%;
     --chart-3: 1 50% 40%;
@@ -227,7 +227,7 @@
     /* ------------------------------------------------------------------------
        LANDING PAGE TOKENS
        ------------------------------------------------------------------------ */
-    
+
     --landing-header: 49 100% 97%;
     --landing-header-foreground: 1 85% 15%;
     --landing-footer: 49 100% 97%;
@@ -235,16 +235,16 @@
 
     /* Page-specific backgrounds */
     --page-lessons: 228 43% 29%;
-    --page-contact: 214 26% 31%;
+    --page-contact: 133 23% 24%;
 
     /* ------------------------------------------------------------------------
        NOTIFICATION HEADER TOKENS
        ------------------------------------------------------------------------ */
-    
+
     /* Primary notification header gradient */
     --notification-header-from: var(--primary);
     --notification-header-to: var(--primary);
-    
+
     /* Admin notification header gradient */
     --notification-admin-header-from: var(--secondary);
     --notification-admin-header-to: var(--secondary);
@@ -252,7 +252,7 @@
     /* ------------------------------------------------------------------------
        ROLE ACCENT TOKENS - Default values (used outside dashboard)
        ------------------------------------------------------------------------ */
-    
+
     --role-accent: 42 70% 55%;
     --role-accent-hover: 42 70% 50%;
     --role-accent-foreground: 1 85% 15%;
@@ -263,61 +263,61 @@
        For student identification in schedule views
        Each set has: background, text, border, hover
        ------------------------------------------------------------------------ */
-    
+
     /* Schedule Color 1 - Rose */
     --schedule-1-bg: 350 100% 94%;
     --schedule-1-text: 336 84% 17%;
     --schedule-1-border: 350 96% 82%;
     --schedule-1-hover: 350 100% 90%;
-    
+
     /* Schedule Color 2 - Blue */
     --schedule-2-bg: 213 97% 87%;
     --schedule-2-text: 224 64% 33%;
     --schedule-2-border: 213 94% 75%;
     --schedule-2-hover: 213 97% 82%;
-    
+
     /* Schedule Color 3 - Amber */
     --schedule-3-bg: 48 96% 89%;
     --schedule-3-text: 28 73% 26%;
     --schedule-3-border: 43 96% 65%;
     --schedule-3-hover: 48 96% 84%;
-    
+
     /* Schedule Color 4 - Emerald */
     --schedule-4-bg: 152 76% 91%;
     --schedule-4-text: 164 86% 16%;
     --schedule-4-border: 156 72% 67%;
     --schedule-4-hover: 152 76% 86%;
-    
+
     /* Schedule Color 5 - Purple */
     --schedule-5-bg: 270 100% 97%;
     --schedule-5-text: 274 87% 21%;
     --schedule-5-border: 270 95% 75%;
     --schedule-5-hover: 270 100% 93%;
-    
+
     /* Schedule Color 6 - Pink */
     --schedule-6-bg: 327 73% 97%;
     --schedule-6-text: 336 74% 35%;
     --schedule-6-border: 327 73% 66%;
     --schedule-6-hover: 327 73% 93%;
-    
+
     /* Schedule Color 7 - Cyan */
     --schedule-7-bg: 183 100% 96%;
     --schedule-7-text: 192 91% 36%;
     --schedule-7-border: 183 93% 65%;
     --schedule-7-hover: 183 100% 91%;
-    
+
     /* Schedule Color 8 - Orange */
     --schedule-8-bg: 34 100% 92%;
     --schedule-8-text: 17 88% 40%;
     --schedule-8-border: 27 96% 61%;
     --schedule-8-hover: 34 100% 87%;
-    
+
     /* Schedule Color 9 - Lime */
     --schedule-9-bg: 79 89% 89%;
     --schedule-9-text: 85 78% 27%;
     --schedule-9-border: 82 85% 67%;
     --schedule-9-hover: 79 89% 84%;
-    
+
     /* Schedule Color 10 - Indigo */
     --schedule-10-bg: 226 100% 94%;
     --schedule-10-text: 238 66% 29%;
@@ -348,7 +348,7 @@
      - Standard tokens (--background, --card, etc.) are remapped automatically
      - Role accents use --role-accent-* for badges, highlights, active states
      ========================================================================== */
-  
+
   [data-area="dashboard"] {
     /* ========================================================================
        DASHBOARD COLOR SYSTEM
@@ -359,16 +359,16 @@
        BACKGROUND HIERARCHY
        From deepest (main bg) to surfaces (cards, dialogs)
        ------------------------------------------------------------------------ */
-    
+
     /* Main dashboard background - deep burgundy */
     --dash-bg: 1 85% 24%;
-    
+
     /* Primary surface (cards) - warm cream */
     --dash-surface: 42 42% 96%;
-    
+
     /* Secondary surface (nested cards, hover states) - slightly darker cream */
     --dash-surface-2: 40 30% 90%;
-    
+
     /* Borders - visible on both dark and light surfaces */
     --dash-border: 1 20% 78%;
     --dash-border-on-dark: 1 35% 38%;
@@ -377,11 +377,11 @@
        TEXT TOKENS
        High contrast for readability
        ------------------------------------------------------------------------ */
-    
+
     /* Text on dark background (main bg) */
     --dash-text: 42 42% 94%;
     --dash-text-muted: 42 20% 72%;
-    
+
     /* Text on light surfaces (cards, dialogs) - dark burgundy for max contrast */
     --dash-text-on-surface: 1 70% 18%;
     --dash-text-muted-on-surface: 1 25% 45%;
@@ -390,7 +390,7 @@
        INPUT TOKENS
        White background with clear borders for maximum clarity
        ------------------------------------------------------------------------ */
-    
+
     --dash-input-bg: 0 0% 100%;
     --dash-input-border: 1 15% 72%;
     --dash-input-border-focus: 1 55% 42%;
@@ -401,7 +401,7 @@
        DIALOG & POPOVER TOKENS
        Light background for maximum readability
        ------------------------------------------------------------------------ */
-    
+
     --dash-dialog-bg: 45 45% 98%;
     --dash-dialog-text: 1 70% 15%;
     --dash-dialog-border: 1 15% 82%;
@@ -411,21 +411,21 @@
        BUTTON TOKENS
        High contrast - clearly distinguishable from backgrounds
        ------------------------------------------------------------------------ */
-    
+
     /* Primary button - dark burgundy, stands out on cream surfaces */
     --dash-primary: 354 55% 25%;
     --dash-primary-foreground: 42 50% 97%;
     --dash-primary-hover: 354 60% 20%;
-    
+
     /* Secondary button - muted burgundy for secondary actions */
     --dash-secondary: 1 20% 55%;
     --dash-secondary-foreground: 0 0% 100%;
     --dash-secondary-hover: 1 22% 48%;
-    
+
     /* Ghost button hover - subtle highlight on surfaces */
     --dash-ghost-hover: 1 18% 92%;
     --dash-ghost-hover-on-dark: 1 40% 32%;
-    
+
     /* Outline button - visible border on light surfaces */
     --dash-outline-border: 1 30% 50%;
     --dash-outline-hover: 1 18% 94%;
@@ -434,7 +434,7 @@
     /* ------------------------------------------------------------------------
        DESTRUCTIVE TOKENS
        ------------------------------------------------------------------------ */
-    
+
     --dash-destructive: 0 72% 48%;
     --dash-destructive-foreground: 0 0% 100%;
     --dash-destructive-hover: 0 72% 40%;
@@ -443,46 +443,46 @@
        STANDARD TOKEN REMAPPING
        This makes existing components automatically use dashboard theme
        ------------------------------------------------------------------------ */
-    
+
     /* Backgrounds */
     --background: var(--dash-bg);
     --foreground: var(--dash-text);
-    
+
     /* Cards/Surfaces */
     --card: var(--dash-surface);
     --card-foreground: var(--dash-text-on-surface);
-    
+
     /* Dialogs/Popovers - use dialog tokens for proper contrast */
     --popover: var(--dash-dialog-bg);
     --popover-foreground: var(--dash-dialog-text);
-    
+
     /* Borders */
     --border: var(--dash-border-on-dark);
-    
+
     /* Input styling */
     --input: var(--dash-input-border);
-    
+
     /* Muted - for cards/surfaces */
     --muted: var(--dash-surface-2);
     --muted-foreground: var(--dash-text-muted-on-surface);
     --muted-foreground-on-card: var(--dash-text-muted-on-surface);
-    
+
     /* Primary - maps to dash primary */
     --primary: var(--dash-primary);
     --primary-foreground: var(--dash-primary-foreground);
-    
+
     /* Secondary */
     --secondary: var(--dash-secondary);
     --secondary-foreground: var(--dash-secondary-foreground);
-    
+
     /* Accent - warm terracotta for highlights */
     --accent: 15 50% 55%;
     --accent-foreground: 0 0% 100%;
-    
+
     /* Destructive */
     --destructive: var(--dash-destructive);
     --destructive-foreground: var(--dash-destructive-foreground);
-    
+
     /* Ring - visible focus ring */
     --ring: 1 50% 45%;
 
@@ -490,14 +490,14 @@
     --btn-primary: var(--dash-primary);
     --btn-primary-foreground: var(--dash-primary-foreground);
     --btn-primary-hover: var(--dash-primary-hover);
-    
+
     --btn-secondary: var(--dash-secondary);
     --btn-secondary-foreground: var(--dash-secondary-foreground);
     --btn-secondary-hover: var(--dash-secondary-hover);
-    
+
     --btn-ghost-foreground: var(--dash-text-on-surface);
     --btn-ghost-hover: var(--dash-ghost-hover);
-    
+
     --btn-outline: transparent;
     --btn-outline-foreground: var(--dash-outline-text);
     --btn-outline-border: var(--dash-outline-border);
@@ -512,7 +512,7 @@
      ROLE-SPECIFIC ACCENT OVERRIDES
      These are used for badges, highlights, active states - NOT full backgrounds
      ========================================================================== */
-  
+
   [data-area="dashboard"][data-dashboard="admin"] {
     /* Gold accent for admin - warm, authoritative */
     --role-accent: 42 75% 48%;
@@ -575,13 +575,15 @@
   /* --------------------------------------------------------------------------
      DASHBOARD CARD UTILITIES
      -------------------------------------------------------------------------- */
-  
+
   [data-area="dashboard"] .dash-card {
     background-color: hsl(var(--dash-surface));
     color: hsl(var(--dash-text-on-surface));
     border: 1px solid hsl(var(--dash-border));
     border-radius: var(--radius);
-    box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
+    box-shadow:
+      0 1px 3px 0 rgb(0 0 0 / 0.1),
+      0 1px 2px -1px rgb(0 0 0 / 0.1);
   }
 
   [data-area="dashboard"] .dash-card-header {
@@ -602,7 +604,7 @@
   /* --------------------------------------------------------------------------
      DASHBOARD BUTTON UTILITIES
      -------------------------------------------------------------------------- */
-  
+
   /* Primary Button */
   [data-area="dashboard"] .dash-btn-primary {
     background-color: hsl(var(--dash-primary));
@@ -696,7 +698,7 @@
   /* --------------------------------------------------------------------------
      DASHBOARD FORM UTILITIES
      -------------------------------------------------------------------------- */
-  
+
   [data-area="dashboard"] .dash-input {
     background-color: hsl(var(--dash-input-bg));
     color: hsl(var(--dash-input-text));
@@ -738,7 +740,7 @@
   /* --------------------------------------------------------------------------
      DASHBOARD DIALOG UTILITIES
      -------------------------------------------------------------------------- */
-  
+
   [data-area="dashboard"] .dash-dialog {
     background-color: hsl(var(--dash-dialog-bg));
     color: hsl(var(--dash-dialog-text));
@@ -779,7 +781,7 @@
      DASHBOARD NATIVE INPUT/TEXTAREA STYLING
      Ensures all native form elements match dashboard theme
      -------------------------------------------------------------------------- */
-  
+
   [data-area="dashboard"] input::placeholder,
   [data-area="dashboard"] textarea::placeholder {
     color: hsl(var(--dash-placeholder));
@@ -795,7 +797,7 @@
   /* --------------------------------------------------------------------------
      DASHBOARD CARD BORDER OVERRIDE
      -------------------------------------------------------------------------- */
-  
+
   [data-area="dashboard"] .card,
   [data-area="dashboard"] [class*="Card"] {
     border-color: hsl(var(--dash-border));
@@ -805,7 +807,7 @@
      ROLE ACCENT UTILITIES
      For badges, highlights, active nav items
      -------------------------------------------------------------------------- */
-  
+
   [data-area="dashboard"] .role-accent-badge {
     background-color: hsl(var(--role-accent));
     color: hsl(var(--role-accent-foreground));
@@ -840,7 +842,7 @@
   /* --------------------------------------------------------------------------
      DASHBOARD TEXT UTILITIES
      -------------------------------------------------------------------------- */
-  
+
   [data-area="dashboard"] .dash-text {
     color: hsl(var(--dash-text));
   }
