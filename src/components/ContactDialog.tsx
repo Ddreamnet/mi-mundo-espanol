@@ -23,8 +23,8 @@ export function ContactDialog() {
                 <Mail className="h-5 w-5 text-primary" />
                 <div>
                   <p className="font-medium">E-posta</p>
-                  <a href="mailto:dilarasirlan30@gmail.com" className="text-sm text-primary hover:underline">
-                    dilarasirlan30@gmail.com
+                  <a href="mailto:mertaydin245@hotmail.com" className="text-sm text-primary hover:underline">
+                    mertaydin245@hotmail.com
                   </a>
                 </div>
               </div>
@@ -38,7 +38,7 @@ export function ContactDialog() {
                 <div>
                   <p className="font-medium">Telefon</p>
                   <a href="tel:+905077962036" className="text-sm text-primary hover:underline">
-                    +90 (507) 796 20 36
+                    +90 530 472 1875
                   </a>
                 </div>
               </div>
