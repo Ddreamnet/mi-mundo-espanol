@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect, ReactNode, useMemo } from "react";
 import { useTranslation } from "react-i18next";
 
-type Language = "tr" | "en" | "es";
+export type Language = "tr" | "en" | "es";
 
 interface DayOfWeek {
   value: number;

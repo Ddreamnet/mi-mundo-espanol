@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Save, Plus, Trash2, GripVertical, HelpCircle } from "lucide-react";
+import { Save, Plus, Trash2, GripVertical, HelpCircle, Copy } from "lucide-react";
+import { LanguageTabs } from "./LanguageTabs";
+import { useMultiLangContent, MultiLangContent } from "@/hooks/useMultiLangContent";
 
 interface FAQItem {
   question: string;
@@ -30,7 +32,6 @@ const defaultSSS: SSSContent = {
 export function SSSEditor() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<SSSContent>(defaultSSS);
 
   const { data: pageContent, isLoading } = useQuery({
     queryKey: ["page-content", "sss"],
@@ -45,19 +46,22 @@ export function SSSEditor() {
     },
   });
 
-  useEffect(() => {
-    if (pageContent?.content) {
-      const savedContent = pageContent.content as unknown as SSSContent;
-      setFormData({ ...defaultSSS, ...savedContent });
-    } else {
-      // Load defaults if no saved content
-      setFormData(defaultSSS);
-    }
+  const savedContent = useMemo(() => {
+    return pageContent?.content as unknown as MultiLangContent<SSSContent> | SSSContent | null;
   }, [pageContent]);
 
+  const {
+    editingLang,
+    setEditingLang,
+    content,
+    currentContent: formData,
+    updateContent,
+    copyFromTurkish,
+  } = useMultiLangContent(defaultSSS, savedContent);
+
   const saveMutation = useMutation({
-    mutationFn: async (data: SSSContent) => {
-      const jsonContent = JSON.parse(JSON.stringify(data));
+    mutationFn: async () => {
+      const jsonContent = JSON.parse(JSON.stringify(content));
       if (pageContent?.id) {
         const { error } = await supabase
           .from("page_contents")
@@ -81,18 +85,18 @@ export function SSSEditor() {
   });
 
   const handleSave = () => {
-    saveMutation.mutate(formData);
+    saveMutation.mutate();
   };
 
   const addItem = () => {
-    setFormData({
+    updateContent({
       ...formData,
       items: [...formData.items, { question: "", answer: "" }],
     });
   };
 
   const removeItem = (index: number) => {
-    setFormData({
+    updateContent({
       ...formData,
       items: formData.items.filter((_, i) => i !== index),
     });
@@ -101,7 +105,12 @@ export function SSSEditor() {
   const updateItem = (index: number, field: keyof FAQItem, value: string) => {
     const newItems = [...formData.items];
     newItems[index] = { ...newItems[index], [field]: value };
-    setFormData({ ...formData, items: newItems });
+    updateContent({ ...formData, items: newItems });
+  };
+
+  const handleCopyFromTurkish = () => {
+    copyFromTurkish();
+    toast.success(t("common.copied"));
   };
 
   if (isLoading) {
@@ -110,6 +119,17 @@ export function SSSEditor() {
 
   return (
     <div className="space-y-6">
+      {/* Language Tabs */}
+      <div className="flex items-center justify-between">
+        <LanguageTabs selectedLang={editingLang} onLanguageChange={setEditingLang} />
+        {editingLang !== "tr" && (
+          <Button variant="outline" size="sm" onClick={handleCopyFromTurkish}>
+            <Copy className="h-4 w-4 mr-2" />
+            {t("common.copyFromTurkish")}
+          </Button>
+        )}
+      </div>
+
       {/* Page Settings */}
       <Card>
         <CardHeader className="pb-3">
@@ -124,7 +144,7 @@ export function SSSEditor() {
               <Label>{t("editors.sss.pageTitle")}</Label>
               <Input
                 value={formData.pageTitle}
-                onChange={(e) => setFormData({ ...formData, pageTitle: e.target.value })}
+                onChange={(e) => updateContent({ ...formData, pageTitle: e.target.value })}
                 placeholder={t("editors.sss.pageTitlePlaceholder")}
               />
             </div>
@@ -132,7 +152,7 @@ export function SSSEditor() {
               <Label>{t("editors.sss.subtitle")}</Label>
               <Input
                 value={formData.pageSubtitle}
-                onChange={(e) => setFormData({ ...formData, pageSubtitle: e.target.value })}
+                onChange={(e) => updateContent({ ...formData, pageSubtitle: e.target.value })}
                 placeholder={t("editors.sss.subtitlePlaceholder")}
               />
             </div>

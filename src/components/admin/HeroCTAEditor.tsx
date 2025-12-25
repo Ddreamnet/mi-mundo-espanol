@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -6,9 +6,12 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Save, Home, Megaphone } from "lucide-react";
+import { Save, Home, Megaphone, Copy } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ImageUpload } from "./ImageUpload";
+import { LanguageTabs } from "./LanguageTabs";
+import { useMultiLangContent, MultiLangContent } from "@/hooks/useMultiLangContent";
+import { useTranslation } from "react-i18next";
 
 interface HeroContent {
   mainTitle: string;
@@ -46,10 +49,8 @@ const defaultCTA: CTAContent = {
 
 export function HeroCTAEditor() {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
-
-  const [hero, setHero] = useState<HeroContent>(defaultHero);
-  const [cta, setCTA] = useState<CTAContent>(defaultCTA);
 
   const { data: pageContents, isLoading } = useQuery({
     queryKey: ["page-contents", "hero", "cta"],
@@ -63,19 +64,37 @@ export function HeroCTAEditor() {
     },
   });
 
-  useEffect(() => {
-    if (pageContents) {
-      const heroData = pageContents.find((p) => p.page_key === "hero");
-      const ctaData = pageContents.find((p) => p.page_key === "cta");
-      
-      if (heroData?.content) {
-        setHero({ ...defaultHero, ...(heroData.content as unknown as HeroContent) });
-      }
-      if (ctaData?.content) {
-        setCTA({ ...defaultCTA, ...(ctaData.content as unknown as CTAContent) });
-      }
-    }
+  const heroData = useMemo(() => {
+    const found = pageContents?.find((p) => p.page_key === "hero");
+    return found?.content as unknown as MultiLangContent<HeroContent> | HeroContent | null;
   }, [pageContents]);
+
+  const ctaData = useMemo(() => {
+    const found = pageContents?.find((p) => p.page_key === "cta");
+    return found?.content as unknown as MultiLangContent<CTAContent> | CTAContent | null;
+  }, [pageContents]);
+
+  const {
+    editingLang,
+    setEditingLang,
+    content: heroContent,
+    currentContent: hero,
+    updateField: updateHeroField,
+    copyFromTurkish: copyHeroFromTurkish,
+  } = useMultiLangContent(defaultHero, heroData);
+
+  const {
+    content: ctaContent,
+    currentContent: cta,
+    updateField: updateCTAField,
+    copyFromTurkish: copyCTAFromTurkish,
+  } = useMultiLangContent(defaultCTA, ctaData);
+
+  // Sync editing lang between hero and cta
+  const [syncedEditingLang, setSyncedEditingLang] = useState(editingLang);
+  useEffect(() => {
+    setEditingLang(syncedEditingLang);
+  }, [syncedEditingLang, setEditingLang]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -85,7 +104,7 @@ export function HeroCTAEditor() {
         .from("page_contents")
         .insert({
           page_key: "hero",
-          content: hero,
+          content: heroContent,
         } as any);
       if (heroError) throw heroError;
 
@@ -94,18 +113,24 @@ export function HeroCTAEditor() {
         .from("page_contents")
         .insert({
           page_key: "cta",
-          content: cta,
+          content: ctaContent,
         } as any);
       if (ctaError) throw ctaError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["page-contents"] });
-      toast({ title: "Başarılı", description: "Hero ve CTA güncellendi" });
+      toast({ title: t("common.success"), description: "Hero ve CTA güncellendi" });
     },
     onError: (error: any) => {
-      toast({ title: "Hata", description: error.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     },
   });
+
+  const handleCopyAll = () => {
+    copyHeroFromTurkish();
+    copyCTAFromTurkish();
+    toast({ title: t("common.copied"), description: "Türkçe içerik kopyalandı" });
+  };
 
   if (isLoading) {
     return (
@@ -117,6 +142,17 @@ export function HeroCTAEditor() {
 
   return (
     <div className="space-y-6">
+      {/* Language Tabs */}
+      <div className="flex items-center justify-between">
+        <LanguageTabs selectedLang={syncedEditingLang} onLanguageChange={setSyncedEditingLang} />
+        {syncedEditingLang !== "tr" && (
+          <Button variant="outline" size="sm" onClick={handleCopyAll}>
+            <Copy className="h-4 w-4 mr-2" />
+            {t("common.copyFromTurkish")}
+          </Button>
+        )}
+      </div>
+
       {/* Hero Section Editor */}
       <Card>
         <CardHeader>
@@ -131,7 +167,7 @@ export function HeroCTAEditor() {
               <Label>Ana Başlık</Label>
               <Input
                 value={hero.mainTitle}
-                onChange={(e) => setHero({ ...hero, mainTitle: e.target.value })}
+                onChange={(e) => updateHeroField("mainTitle", e.target.value)}
                 placeholder="Mi Mundo Español"
               />
             </div>
@@ -139,46 +175,48 @@ export function HeroCTAEditor() {
               <Label>Alt Başlık</Label>
               <Input
                 value={hero.subtitle}
-                onChange={(e) => setHero({ ...hero, subtitle: e.target.value })}
+                onChange={(e) => updateHeroField("subtitle", e.target.value)}
                 placeholder="Senin İspanyolca Dünyan"
               />
             </div>
           </div>
 
-          <ImageUpload
-            label="Hero Görseli"
-            value={hero.imageUrl}
-            onChange={(url) => setHero({ ...hero, imageUrl: url })}
-            folder="hero"
-          />
+          {syncedEditingLang === "tr" && (
+            <ImageUpload
+              label="Hero Görseli"
+              value={hero.imageUrl}
+              onChange={(url) => updateHeroField("imageUrl", url)}
+              folder="hero"
+            />
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Birincil Buton - Metin</Label>
               <Input
                 value={hero.primaryButtonText}
-                onChange={(e) => setHero({ ...hero, primaryButtonText: e.target.value })}
+                onChange={(e) => updateHeroField("primaryButtonText", e.target.value)}
               />
             </div>
             <div className="space-y-2">
               <Label>Birincil Buton - Link</Label>
               <Input
                 value={hero.primaryButtonLink}
-                onChange={(e) => setHero({ ...hero, primaryButtonLink: e.target.value })}
+                onChange={(e) => updateHeroField("primaryButtonLink", e.target.value)}
               />
             </div>
             <div className="space-y-2">
               <Label>İkincil Buton - Metin</Label>
               <Input
                 value={hero.secondaryButtonText}
-                onChange={(e) => setHero({ ...hero, secondaryButtonText: e.target.value })}
+                onChange={(e) => updateHeroField("secondaryButtonText", e.target.value)}
               />
             </div>
             <div className="space-y-2">
               <Label>İkincil Buton - Link</Label>
               <Input
                 value={hero.secondaryButtonLink}
-                onChange={(e) => setHero({ ...hero, secondaryButtonLink: e.target.value })}
+                onChange={(e) => updateHeroField("secondaryButtonLink", e.target.value)}
               />
             </div>
           </div>
@@ -198,14 +236,14 @@ export function HeroCTAEditor() {
             <Label>Başlık</Label>
             <Input
               value={cta.title}
-              onChange={(e) => setCTA({ ...cta, title: e.target.value })}
+              onChange={(e) => updateCTAField("title", e.target.value)}
             />
           </div>
           <div className="space-y-2">
             <Label>Açıklama</Label>
             <Textarea
               value={cta.description}
-              onChange={(e) => setCTA({ ...cta, description: e.target.value })}
+              onChange={(e) => updateCTAField("description", e.target.value)}
               rows={3}
             />
           </div>
@@ -214,14 +252,14 @@ export function HeroCTAEditor() {
               <Label>Buton Metni</Label>
               <Input
                 value={cta.buttonText}
-                onChange={(e) => setCTA({ ...cta, buttonText: e.target.value })}
+                onChange={(e) => updateCTAField("buttonText", e.target.value)}
               />
             </div>
             <div className="space-y-2">
               <Label>Buton Linki</Label>
               <Input
                 value={cta.buttonLink}
-                onChange={(e) => setCTA({ ...cta, buttonLink: e.target.value })}
+                onChange={(e) => updateCTAField("buttonLink", e.target.value)}
               />
             </div>
           </div>
@@ -231,7 +269,7 @@ export function HeroCTAEditor() {
       <div className="flex justify-end">
         <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} size="lg">
           <Save className="h-4 w-4 mr-2" />
-          {saveMutation.isPending ? "Kaydediliyor..." : "Tümünü Kaydet"}
+          {saveMutation.isPending ? t("common.saving") : t("common.saveAll")}
         </Button>
       </div>
     </div>

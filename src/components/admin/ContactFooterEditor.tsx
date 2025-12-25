@@ -1,13 +1,16 @@
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
-import { Save, Mail, Plus, X, Phone, MessageCircle, Instagram, Facebook } from "lucide-react";
+import { Save, Mail, Plus, X, Phone, MessageCircle, Instagram, Facebook, Copy } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { LanguageTabs } from "./LanguageTabs";
+import { useMultiLangContent, MultiLangContent } from "@/hooks/useMultiLangContent";
 
 interface ContactItem {
   icon: string;
@@ -65,10 +68,8 @@ const iconOptions = [
 
 export function ContactFooterEditor() {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
-
-  const [contact, setContact] = useState<ContactContent>(defaultContact);
-  const [footer, setFooter] = useState<FooterContent>(defaultFooter);
 
   const { data: pageContents, isLoading } = useQuery({
     queryKey: ["page-contents", "contact", "footer"],
@@ -82,19 +83,31 @@ export function ContactFooterEditor() {
     },
   });
 
-  useEffect(() => {
-    if (pageContents) {
-      const contactData = pageContents.find((p) => p.page_key === "contact");
-      const footerData = pageContents.find((p) => p.page_key === "footer");
-      
-      if (contactData?.content) {
-        setContact({ ...defaultContact, ...(contactData.content as unknown as ContactContent) });
-      }
-      if (footerData?.content) {
-        setFooter({ ...defaultFooter, ...(footerData.content as unknown as FooterContent) });
-      }
-    }
+  const contactData = useMemo(() => {
+    const found = pageContents?.find((p) => p.page_key === "contact");
+    return found?.content as unknown as MultiLangContent<ContactContent> | ContactContent | null;
   }, [pageContents]);
+
+  const footerData = useMemo(() => {
+    const found = pageContents?.find((p) => p.page_key === "footer");
+    return found?.content as unknown as MultiLangContent<FooterContent> | FooterContent | null;
+  }, [pageContents]);
+
+  const {
+    editingLang,
+    setEditingLang,
+    content: contactContent,
+    currentContent: contact,
+    updateContent: updateContact,
+    copyFromTurkish: copyContactFromTurkish,
+  } = useMultiLangContent(defaultContact, contactData);
+
+  const {
+    content: footerContent,
+    currentContent: footer,
+    updateContent: updateFooter,
+    copyFromTurkish: copyFooterFromTurkish,
+  } = useMultiLangContent(defaultFooter, footerData);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -103,7 +116,7 @@ export function ContactFooterEditor() {
         .from("page_contents")
         .insert({
           page_key: "contact",
-          content: contact,
+          content: contactContent,
         } as any);
       if (contactError) throw contactError;
 
@@ -112,28 +125,28 @@ export function ContactFooterEditor() {
         .from("page_contents")
         .insert({
           page_key: "footer",
-          content: footer,
+          content: footerContent,
         } as any);
       if (footerError) throw footerError;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["page-contents"] });
-      toast({ title: "Başarılı", description: "İletişim ve Footer güncellendi" });
+      toast({ title: t("common.success"), description: "İletişim ve Footer güncellendi" });
     },
     onError: (error: any) => {
-      toast({ title: "Hata", description: error.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     },
   });
 
   const addContactItem = () => {
-    setContact({
+    updateContact({
       ...contact,
       contactItems: [...contact.contactItems, { icon: "phone", label: "Yeni", value: "", href: "" }],
     });
   };
 
   const removeContactItem = (index: number) => {
-    setContact({
+    updateContact({
       ...contact,
       contactItems: contact.contactItems.filter((_, i) => i !== index),
     });
@@ -142,21 +155,27 @@ export function ContactFooterEditor() {
   const updateContactItem = (index: number, field: keyof ContactItem, value: string) => {
     const updated = [...contact.contactItems];
     updated[index] = { ...updated[index], [field]: value };
-    setContact({ ...contact, contactItems: updated });
+    updateContact({ ...contact, contactItems: updated });
   };
 
   const addFooterLink = () => {
-    setFooter({
+    updateFooter({
       ...footer,
       links: [...footer.links, { label: "Yeni Link", href: "#" }],
     });
   };
 
   const removeFooterLink = (index: number) => {
-    setFooter({
+    updateFooter({
       ...footer,
       links: footer.links.filter((_, i) => i !== index),
     });
+  };
+
+  const handleCopyAll = () => {
+    copyContactFromTurkish();
+    copyFooterFromTurkish();
+    toast({ title: t("common.copied"), description: "Türkçe içerik kopyalandı" });
   };
 
   if (isLoading) {
@@ -169,6 +188,17 @@ export function ContactFooterEditor() {
 
   return (
     <div className="space-y-6">
+      {/* Language Tabs */}
+      <div className="flex items-center justify-between">
+        <LanguageTabs selectedLang={editingLang} onLanguageChange={setEditingLang} />
+        {editingLang !== "tr" && (
+          <Button variant="outline" size="sm" onClick={handleCopyAll}>
+            <Copy className="h-4 w-4 mr-2" />
+            {t("common.copyFromTurkish")}
+          </Button>
+        )}
+      </div>
+
       {/* Contact Section */}
       <Card>
         <CardHeader>
@@ -183,14 +213,14 @@ export function ContactFooterEditor() {
               <Label>Sayfa Başlığı</Label>
               <Input
                 value={contact.pageTitle}
-                onChange={(e) => setContact({ ...contact, pageTitle: e.target.value })}
+                onChange={(e) => updateContact({ ...contact, pageTitle: e.target.value })}
               />
             </div>
             <div className="space-y-2">
               <Label>Destek Metni</Label>
               <Input
                 value={contact.supportText}
-                onChange={(e) => setContact({ ...contact, supportText: e.target.value })}
+                onChange={(e) => updateContact({ ...contact, supportText: e.target.value })}
               />
             </div>
           </div>
@@ -264,7 +294,7 @@ export function ContactFooterEditor() {
             <Label>Copyright Metni</Label>
             <Input
               value={footer.copyrightText}
-              onChange={(e) => setFooter({ ...footer, copyrightText: e.target.value })}
+              onChange={(e) => updateFooter({ ...footer, copyrightText: e.target.value })}
             />
           </div>
 
@@ -282,7 +312,7 @@ export function ContactFooterEditor() {
                   onChange={(e) => {
                     const updated = [...footer.links];
                     updated[index] = { ...updated[index], label: e.target.value };
-                    setFooter({ ...footer, links: updated });
+                    updateFooter({ ...footer, links: updated });
                   }}
                   placeholder="Label"
                   className="w-40"
@@ -292,7 +322,7 @@ export function ContactFooterEditor() {
                   onChange={(e) => {
                     const updated = [...footer.links];
                     updated[index] = { ...updated[index], href: e.target.value };
-                    setFooter({ ...footer, links: updated });
+                    updateFooter({ ...footer, links: updated });
                   }}
                   placeholder="Link"
                   className="flex-1"
@@ -314,7 +344,7 @@ export function ContactFooterEditor() {
       <div className="flex justify-end">
         <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} size="lg">
           <Save className="h-4 w-4 mr-2" />
-          {saveMutation.isPending ? "Kaydediliyor..." : "Tümünü Kaydet"}
+          {saveMutation.isPending ? t("common.saving") : t("common.saveAll")}
         </Button>
       </div>
     </div>
