@@ -3,12 +3,7 @@ import { LandingFooter } from "@/components/landing/LandingFooter";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from "@/components/ui/accordion";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { HelpCircle } from "lucide-react";
 
 interface FAQItem {
@@ -31,7 +26,8 @@ export default function SSS() {
     items: [
       {
         question: "Deneme dersi nasıl işliyor?",
-        answer: "Deneme dersimiz 40 dakika sürmektedir. Bu derste seviyenizi belirliyor ve ders içeriklerini tanıtıyoruz. Deneme dersi tamamen ücretsizdir.",
+        answer:
+          "Deneme dersimiz 40 dakika sürmektedir. Bu derste seviyenizi belirliyor ve ders içeriklerini tanıtıyoruz. Deneme dersi tamamen ücretsizdir.",
       },
       {
         question: "Dersler ne kadar sürüyor?",
@@ -39,19 +35,23 @@ export default function SSS() {
       },
       {
         question: "Grup dersleri kaç kişilik?",
-        answer: "Grup derslerimiz maksimum 5 kişi ile sınırlıdır. Bu sayede her öğrenciye yeterli ilgi gösterebiliyoruz.",
+        answer:
+          "Grup derslerimiz maksimum 5 kişi ile sınırlıdır. Bu sayede her öğrenciye yeterli ilgi gösterebiliyoruz.",
       },
       {
         question: "Hangi materyaller kullanılıyor?",
-        answer: "Derslerimizde Aula Internacional ders kitabı ve ihtiyaca göre ek materyaller kullanılmaktadır. Tüm materyaller tarafımızca sağlanmaktadır.",
+        answer:
+          "Derslerimizde Aula Internacional ders kitabı ve ihtiyaca göre ek materyaller kullanılmaktadır. Tüm materyaller tarafımızca sağlanmaktadır.",
       },
       {
         question: "Ders saatleri esnek mi?",
-        answer: "Evet, bireysel derslerde esnek ders saatleri sunuyoruz. Programınıza uygun saatleri birlikte belirleyebiliriz.",
+        answer:
+          "Evet, bireysel derslerde esnek ders saatleri sunuyoruz. Programınıza uygun saatleri birlikte belirleyebiliriz.",
       },
       {
         question: "Ödev veriliyor mu?",
-        answer: "Evet, derslerin pekişmesi için düzenli ödevler verilmektedir. Ödevlerinizi platform üzerinden takip edebilir ve geri bildirim alabilirsiniz.",
+        answer:
+          "Evet, derslerin pekişmesi için düzenli ödevler verilmektedir. Ödevlerinizi platform üzerinden takip edebilir ve geri bildirim alabilirsiniz.",
       },
     ],
   };
@@ -74,7 +74,7 @@ export default function SSS() {
   const content = pageContent ? { ...defaultSSS, ...pageContent } : defaultSSS;
 
   return (
-    <div className="min-h-screen bg-page-lessons">
+    <div className="min-h-screen bg-background">
       <LandingHeader />
 
       <main className="pt-24 lg:pt-28 pb-16">
@@ -87,9 +87,7 @@ export default function SSS() {
             <h1 className="text-3xl md:text-4xl lg:text-5xl font-montserrat font-bold text-[hsl(42_42%_94%)] mb-4">
               {content.pageTitle}
             </h1>
-            <p className="text-lg text-[hsl(1_85%_24%/0.8)] max-w-2xl mx-auto">
-              {content.pageSubtitle}
-            </p>
+            <p className="text-lg text-[hsl(1_85%_24%/0.8)] max-w-2xl mx-auto">{content.pageSubtitle}</p>
           </div>
 
           {/* FAQ Accordion */}
