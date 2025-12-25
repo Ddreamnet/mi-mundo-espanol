@@ -3,6 +3,7 @@ import { LandingFooter } from "@/components/landing/LandingFooter";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { HelpCircle } from "lucide-react";
 
@@ -17,46 +18,29 @@ interface SSSContent {
   items: FAQItem[];
 }
 
+interface MultiLangSSSContent {
+  tr: SSSContent;
+  en: SSSContent;
+  es: SSSContent;
+}
+
+function isMultiLangFormat(data: unknown): data is MultiLangSSSContent {
+  if (!data || typeof data !== "object") return false;
+  const obj = data as Record<string, unknown>;
+  return "tr" in obj && "en" in obj && "es" in obj;
+}
+
 export default function SSS() {
   const { t } = useTranslation();
+  const { language } = useLanguage();
 
   const defaultSSS: SSSContent = {
     pageTitle: t("sss.pageTitle"),
     pageSubtitle: t("sss.pageSubtitle"),
-    items: [
-      {
-        question: "Deneme dersi nasıl işliyor?",
-        answer:
-          "Deneme dersimiz 40 dakika sürmektedir. Bu derste seviyenizi belirliyor ve ders içeriklerini tanıtıyoruz. Deneme dersi tamamen ücretsizdir.",
-      },
-      {
-        question: "Dersler ne kadar sürüyor?",
-        answer: "Her ders 40 dakika sürmektedir. Bireysel ve grup dersleri için aynı süre geçerlidir.",
-      },
-      {
-        question: "Grup dersleri kaç kişilik?",
-        answer:
-          "Grup derslerimiz maksimum 5 kişi ile sınırlıdır. Bu sayede her öğrenciye yeterli ilgi gösterebiliyoruz.",
-      },
-      {
-        question: "Hangi materyaller kullanılıyor?",
-        answer:
-          "Derslerimizde Aula Internacional ders kitabı ve ihtiyaca göre ek materyaller kullanılmaktadır. Tüm materyaller tarafımızca sağlanmaktadır.",
-      },
-      {
-        question: "Ders saatleri esnek mi?",
-        answer:
-          "Evet, bireysel derslerde esnek ders saatleri sunuyoruz. Programınıza uygun saatleri birlikte belirleyebiliriz.",
-      },
-      {
-        question: "Ödev veriliyor mu?",
-        answer:
-          "Evet, derslerin pekişmesi için düzenli ödevler verilmektedir. Ödevlerinizi platform üzerinden takip edebilir ve geri bildirim alabilirsiniz.",
-      },
-    ],
+    items: [],
   };
 
-  const { data: pageContent } = useQuery({
+  const { data: rawContent } = useQuery({
     queryKey: ["page-content", "sss"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -65,21 +49,26 @@ export default function SSS() {
         .eq("page_key", "sss")
         .maybeSingle();
       if (error) throw error;
-      if (!data || !data.content) return null;
-      return data.content as unknown as SSSContent;
+      return data?.content as unknown;
     },
     staleTime: 1000 * 60 * 5,
   });
 
-  const content = pageContent ? { ...defaultSSS, ...pageContent } : defaultSSS;
+  let content: SSSContent = defaultSSS;
+  if (rawContent) {
+    if (isMultiLangFormat(rawContent)) {
+      const langContent = rawContent[language];
+      content = { ...defaultSSS, ...langContent };
+    } else {
+      content = { ...defaultSSS, ...(rawContent as SSSContent) };
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
       <LandingHeader />
-
       <main className="pt-24 lg:pt-28 pb-16">
         <div className="container mx-auto px-4 lg:px-8 max-w-4xl">
-          {/* Page Title */}
           <div className="text-center mb-12 lg:mb-16">
             <div className="inline-flex items-center justify-center p-3 rounded-full bg-primary/15 mb-4">
               <HelpCircle className="w-8 h-8 text-primary" />
@@ -90,7 +79,6 @@ export default function SSS() {
             <p className="text-lg text-[hsl(1_85%_24%/0.8)] max-w-2xl mx-auto">{content.pageSubtitle}</p>
           </div>
 
-          {/* FAQ Accordion */}
           <div className="bg-card rounded-2xl p-6 lg:p-8 shadow-[0_8px_30px_rgb(0,0,0,0.12)] border border-border/20">
             <Accordion type="single" collapsible className="w-full space-y-2">
               {content.items.map((item, index) => (
@@ -111,7 +99,6 @@ export default function SSS() {
           </div>
         </div>
       </main>
-
       <LandingFooter />
     </div>
   );

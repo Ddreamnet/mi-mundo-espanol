@@ -638,6 +638,17 @@
       "sectionAdded": "Yeni bölüm eklendi",
       "sectionUpdated": "Bölüm güncellendi",
       "sectionDeleted": "Bölüm silindi"
+    },
+    "testimonials": {
+      "title": "Referanslar",
+      "description": "Ana sayfadaki müşteri referanslarını yönetin",
+      "quotePlaceholder": "Referans metni...",
+      "authorPlaceholder": "Yazar adı (opsiyonel)",
+      "added": "Yeni referans eklendi",
+      "updated": "Referans güncellendi",
+      "deleted": "Referans silindi",
+      "empty": "Henüz referans eklenmemiş",
+      "addFirst": "İlk referansı ekle"
     }
   },
   "notifications": {

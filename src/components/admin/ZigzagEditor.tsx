@@ -7,9 +7,11 @@ import { Switch } from "@/components/ui/switch";
 import { useToast } from "@/hooks/use-toast";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
-import { Plus, Trash2, GripVertical, Save, LayoutTemplate, X } from "lucide-react";
+import { Plus, Trash2, GripVertical, Save, LayoutTemplate, X, Copy } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { ImageUpload } from "./ImageUpload";
+import { LanguageTabs } from "./LanguageTabs";
+import { Language } from "@/contexts/LanguageContext";
 import {
   DndContext,
   closestCenter,
@@ -28,14 +30,52 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 
+interface MultiLangText {
+  tr: string;
+  en: string;
+  es: string;
+}
+
+interface MultiLangItems {
+  tr: string[];
+  en: string[];
+  es: string[];
+}
+
 interface ZigzagSection {
   id: string;
-  title: string;
-  items: string[];
+  title: string | MultiLangText;
+  items: string[] | MultiLangItems;
   image_url: string | null;
   image_on_left: boolean;
   is_active: boolean;
   order_index: number;
+}
+
+function isMultiLangText(val: unknown): val is MultiLangText {
+  if (!val || typeof val !== "object") return false;
+  const obj = val as Record<string, unknown>;
+  return "tr" in obj && "en" in obj && "es" in obj;
+}
+
+function isMultiLangItems(val: unknown): val is MultiLangItems {
+  if (!val || typeof val !== "object") return false;
+  const obj = val as Record<string, unknown>;
+  return "tr" in obj && Array.isArray(obj.tr);
+}
+
+function getTitle(section: ZigzagSection, lang: Language): string {
+  if (isMultiLangText(section.title)) {
+    return section.title[lang] || section.title.tr || "";
+  }
+  return section.title as string;
+}
+
+function getItems(section: ZigzagSection, lang: Language): string[] {
+  if (isMultiLangItems(section.items)) {
+    return section.items[lang] || section.items.tr || [];
+  }
+  return Array.isArray(section.items) ? section.items : [];
 }
 
 function SortableZigzag({
@@ -43,11 +83,15 @@ function SortableZigzag({
   onUpdate,
   onDelete,
   t,
+  selectedLang,
+  onLangChange,
 }: {
   section: ZigzagSection;
   onUpdate: (id: string, data: Partial<ZigzagSection>) => void;
   onDelete: (id: string) => void;
   t: (key: string) => string;
+  selectedLang: Language;
+  onLangChange: (lang: Language) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: section.id,
@@ -59,14 +103,27 @@ function SortableZigzag({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const [localTitle, setLocalTitle] = useState(section.title);
-  const [localItems, setLocalItems] = useState<string[]>(section.items);
+  const [localTitle, setLocalTitle] = useState<MultiLangText>({ tr: "", en: "", es: "" });
+  const [localItems, setLocalItems] = useState<MultiLangItems>({ tr: [], en: [], es: [] });
   const [localImageUrl, setLocalImageUrl] = useState(section.image_url || "");
   const [newItem, setNewItem] = useState("");
 
   useEffect(() => {
-    setLocalTitle(section.title);
-    setLocalItems(section.items);
+    // Load title
+    if (isMultiLangText(section.title)) {
+      setLocalTitle(section.title);
+    } else {
+      setLocalTitle({ tr: section.title as string, en: "", es: "" });
+    }
+    
+    // Load items
+    if (isMultiLangItems(section.items)) {
+      setLocalItems(section.items);
+    } else {
+      const items = Array.isArray(section.items) ? section.items : [];
+      setLocalItems({ tr: items, en: [], es: [] });
+    }
+    
     setLocalImageUrl(section.image_url || "");
   }, [section]);
 
@@ -78,21 +135,36 @@ function SortableZigzag({
     });
   };
 
+  const copyFromTurkish = () => {
+    if (selectedLang !== "tr") {
+      setLocalTitle((prev) => ({ ...prev, [selectedLang]: prev.tr }));
+      setLocalItems((prev) => ({ ...prev, [selectedLang]: [...prev.tr] }));
+    }
+  };
+
   const addItem = () => {
     if (newItem.trim()) {
-      setLocalItems([...localItems, newItem.trim()]);
+      setLocalItems((prev) => ({
+        ...prev,
+        [selectedLang]: [...prev[selectedLang], newItem.trim()],
+      }));
       setNewItem("");
     }
   };
 
   const removeItem = (index: number) => {
-    setLocalItems(localItems.filter((_, i) => i !== index));
+    setLocalItems((prev) => ({
+      ...prev,
+      [selectedLang]: prev[selectedLang].filter((_, i) => i !== index),
+    }));
   };
 
   const updateItem = (index: number, value: string) => {
-    const updated = [...localItems];
-    updated[index] = value;
-    setLocalItems(updated);
+    setLocalItems((prev) => {
+      const updated = [...prev[selectedLang]];
+      updated[index] = value;
+      return { ...prev, [selectedLang]: updated };
+    });
   };
 
   return (
@@ -109,11 +181,21 @@ function SortableZigzag({
 
           <div className="flex-1 space-y-4">
             <div className="flex items-center justify-between gap-4">
+              <LanguageTabs selectedLang={selectedLang} onLanguageChange={onLangChange} />
+              {selectedLang !== "tr" && (
+                <Button variant="outline" size="sm" onClick={copyFromTurkish} className="gap-1">
+                  <Copy className="h-3 w-3" />
+                  {t("common.copyFromTurkish")}
+                </Button>
+              )}
+            </div>
+
+            <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
                 <Label className="text-xs text-muted-foreground">{t("editors.zigzag.title")}</Label>
                 <Input
-                  value={localTitle}
-                  onChange={(e) => setLocalTitle(e.target.value)}
+                  value={localTitle[selectedLang]}
+                  onChange={(e) => setLocalTitle((prev) => ({ ...prev, [selectedLang]: e.target.value }))}
                   placeholder={t("editors.zigzag.titlePlaceholder")}
                 />
               </div>
@@ -145,7 +227,7 @@ function SortableZigzag({
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">{t("editors.zigzag.items")}</Label>
               <div className="space-y-2">
-                {localItems.map((item, index) => (
+                {localItems[selectedLang].map((item, index) => (
                   <div key={index} className="flex gap-2">
                     <Input
                       value={item}
@@ -202,6 +284,7 @@ export function ZigzagEditor() {
   const { toast } = useToast();
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const [selectedLang, setSelectedLang] = useState<Language>("tr");
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -218,7 +301,7 @@ export function ZigzagEditor() {
       if (error) throw error;
       return data.map((s) => ({
         ...s,
-        items: Array.isArray(s.items) ? s.items : [],
+        items: s.items || [],
       })) as ZigzagSection[];
     },
   });
@@ -227,8 +310,8 @@ export function ZigzagEditor() {
     mutationFn: async () => {
       const maxOrder = sections.length > 0 ? Math.max(...sections.map((s) => s.order_index)) : -1;
       const { error } = await supabase.from("zigzag_sections").insert({
-        title: t("editors.zigzag.newSection"),
-        items: [t("editors.zigzag.item1"), t("editors.zigzag.item2")],
+        title: JSON.stringify({ tr: t("editors.zigzag.newSection"), en: "New Section", es: "Nueva Sección" }),
+        items: { tr: [t("editors.zigzag.item1"), t("editors.zigzag.item2")], en: [], es: [] },
         order_index: maxOrder + 1,
         is_active: true,
         image_on_left: sections.length % 2 === 1,
@@ -246,7 +329,15 @@ export function ZigzagEditor() {
 
   const updateMutation = useMutation({
     mutationFn: async ({ id, data }: { id: string; data: Partial<ZigzagSection> }) => {
-      const { error } = await supabase.from("zigzag_sections").update(data).eq("id", id);
+      // Convert multi-lang objects to JSON-compatible format
+      const updateData: Record<string, unknown> = {};
+      if (data.title !== undefined) updateData.title = data.title;
+      if (data.items !== undefined) updateData.items = data.items;
+      if (data.image_url !== undefined) updateData.image_url = data.image_url;
+      if (data.image_on_left !== undefined) updateData.image_on_left = data.image_on_left;
+      if (data.is_active !== undefined) updateData.is_active = data.is_active;
+      
+      const { error } = await supabase.from("zigzag_sections").update(updateData).eq("id", id);
       if (error) throw error;
     },
     onSuccess: () => {
@@ -341,6 +432,8 @@ export function ZigzagEditor() {
                 onUpdate={(id, data) => updateMutation.mutate({ id, data })}
                 onDelete={(id) => deleteMutation.mutate(id)}
                 t={t}
+                selectedLang={selectedLang}
+                onLangChange={setSelectedLang}
               />
             ))}
           </SortableContext>

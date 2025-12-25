@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface CTAContent {
   title: string;
@@ -10,8 +11,21 @@ interface CTAContent {
   buttonLink: string;
 }
 
+interface MultiLangCTAContent {
+  tr: CTAContent;
+  en: CTAContent;
+  es: CTAContent;
+}
+
+function isMultiLangFormat(data: unknown): data is MultiLangCTAContent {
+  if (!data || typeof data !== "object") return false;
+  const obj = data as Record<string, unknown>;
+  return "tr" in obj && "en" in obj && "es" in obj;
+}
+
 export function CTASection() {
   const { t } = useTranslation();
+  const { language } = useLanguage();
 
   const defaultCTA: CTAContent = {
     title: t("cta.title"),
@@ -20,7 +34,7 @@ export function CTASection() {
     buttonLink: "https://wa.me/+905304721875",
   };
 
-  const { data: content } = useQuery({
+  const { data: rawContent } = useQuery({
     queryKey: ["page-content", "cta"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -29,12 +43,21 @@ export function CTASection() {
         .eq("page_key", "cta")
         .maybeSingle();
       if (error) throw error;
-      return data?.content as unknown as CTAContent | null;
+      return data?.content as unknown;
     },
     staleTime: 1000 * 60 * 5,
   });
 
-  const cta = content ? { ...defaultCTA, ...content } : defaultCTA;
+  // Get content for current language
+  let cta: CTAContent = defaultCTA;
+  if (rawContent) {
+    if (isMultiLangFormat(rawContent)) {
+      const langContent = rawContent[language];
+      cta = { ...defaultCTA, ...langContent };
+    } else {
+      cta = { ...defaultCTA, ...(rawContent as CTAContent) };
+    }
+  }
 
   return (
     <section id="iletisim" className="py-16 lg:py-24">
