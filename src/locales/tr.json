@@ -114,7 +114,11 @@
     "resources": "kaynaklar",
     "noTeacher": "Başka öğretmen yok",
     "noStudentsForTeacher": "Bu öğretmene ait öğrenci yok",
-    "nameSurname": "Ad Soyad"
+    "nameSurname": "Ad Soyad",
+    "editLanguage": "İçerik dili",
+    "copyFromTurkish": "Türkçe'den Kopyala",
+    "copied": "Kopyalandı",
+    "noContentForLanguage": "Bu dil için içerik henüz girilmemiş"
   },
   "auth": {
     "signUp": "Kayıt Ol",

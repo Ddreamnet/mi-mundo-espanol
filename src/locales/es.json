@@ -114,7 +114,11 @@
     "resources": "recursos",
     "noTeacher": "No hay otro profesor",
     "noStudentsForTeacher": "No hay estudiantes para este profesor",
-    "nameSurname": "Nombre Completo"
+    "nameSurname": "Nombre Completo",
+    "editLanguage": "Idioma del contenido",
+    "copyFromTurkish": "Copiar del turco",
+    "copied": "Copiado",
+    "noContentForLanguage": "Aún no se ha ingresado contenido para este idioma"
   },
   "auth": {
     "signUp": "Registrarse",

@@ -1,12 +1,15 @@
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
+import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
-import { Save, BookOpen, Plus, X } from "lucide-react";
+import { Save, BookOpen, Plus, X, Copy } from "lucide-react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { LanguageTabs } from "./LanguageTabs";
+import { useMultiLangContent, MultiLangContent } from "@/hooks/useMultiLangContent";
 
 interface LessonsContent {
   pageTitle: string;
@@ -59,9 +62,9 @@ const defaultLessons: LessonsContent = {
 
 export function LessonsEditor() {
   const { toast } = useToast();
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
 
-  const [content, setContent] = useState<LessonsContent>(defaultLessons);
   const [newIndividualItem, setNewIndividualItem] = useState("");
   const [newGroupItem, setNewGroupItem] = useState("");
 
@@ -78,11 +81,18 @@ export function LessonsEditor() {
     },
   });
 
-  useEffect(() => {
-    if (pageContent?.content) {
-      setContent({ ...defaultLessons, ...(pageContent.content as unknown as LessonsContent) });
-    }
+  const savedContent = useMemo(() => {
+    return pageContent?.content as unknown as MultiLangContent<LessonsContent> | LessonsContent | null;
   }, [pageContent]);
+
+  const {
+    editingLang,
+    setEditingLang,
+    content,
+    currentContent,
+    updateContent,
+    copyFromTurkish,
+  } = useMultiLangContent(defaultLessons, savedContent);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -97,24 +107,24 @@ export function LessonsEditor() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["page-contents"] });
-      toast({ title: "Başarılı", description: "Dersler sayfası güncellendi" });
+      toast({ title: t("common.success"), description: "Dersler sayfası güncellendi" });
     },
     onError: (error: any) => {
-      toast({ title: "Hata", description: error.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     },
   });
 
   const addFeature = (type: "individual" | "group") => {
     if (type === "individual" && newIndividualItem.trim()) {
-      setContent({
-        ...content,
-        individualFeatures: [...content.individualFeatures, newIndividualItem.trim()],
+      updateContent({
+        ...currentContent,
+        individualFeatures: [...currentContent.individualFeatures, newIndividualItem.trim()],
       });
       setNewIndividualItem("");
     } else if (type === "group" && newGroupItem.trim()) {
-      setContent({
-        ...content,
-        groupFeatures: [...content.groupFeatures, newGroupItem.trim()],
+      updateContent({
+        ...currentContent,
+        groupFeatures: [...currentContent.groupFeatures, newGroupItem.trim()],
       });
       setNewGroupItem("");
     }
@@ -122,28 +132,33 @@ export function LessonsEditor() {
 
   const removeFeature = (type: "individual" | "group", index: number) => {
     if (type === "individual") {
-      setContent({
-        ...content,
-        individualFeatures: content.individualFeatures.filter((_, i) => i !== index),
+      updateContent({
+        ...currentContent,
+        individualFeatures: currentContent.individualFeatures.filter((_, i) => i !== index),
       });
     } else {
-      setContent({
-        ...content,
-        groupFeatures: content.groupFeatures.filter((_, i) => i !== index),
+      updateContent({
+        ...currentContent,
+        groupFeatures: currentContent.groupFeatures.filter((_, i) => i !== index),
       });
     }
   };
 
   const updateFeature = (type: "individual" | "group", index: number, value: string) => {
     if (type === "individual") {
-      const updated = [...content.individualFeatures];
+      const updated = [...currentContent.individualFeatures];
       updated[index] = value;
-      setContent({ ...content, individualFeatures: updated });
+      updateContent({ ...currentContent, individualFeatures: updated });
     } else {
-      const updated = [...content.groupFeatures];
+      const updated = [...currentContent.groupFeatures];
       updated[index] = value;
-      setContent({ ...content, groupFeatures: updated });
+      updateContent({ ...currentContent, groupFeatures: updated });
     }
+  };
+
+  const handleCopyFromTurkish = () => {
+    copyFromTurkish();
+    toast({ title: t("common.copied"), description: "Türkçe içerik kopyalandı" });
   };
 
   if (isLoading) {
@@ -156,6 +171,17 @@ export function LessonsEditor() {
 
   return (
     <div className="space-y-6">
+      {/* Language Tabs */}
+      <div className="flex items-center justify-between">
+        <LanguageTabs selectedLang={editingLang} onLanguageChange={setEditingLang} />
+        {editingLang !== "tr" && (
+          <Button variant="outline" size="sm" onClick={handleCopyFromTurkish}>
+            <Copy className="h-4 w-4 mr-2" />
+            {t("common.copyFromTurkish")}
+          </Button>
+        )}
+      </div>
+
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -168,15 +194,15 @@ export function LessonsEditor() {
             <div className="space-y-2">
               <Label>Ana Başlık</Label>
               <Input
-                value={content.pageTitle}
-                onChange={(e) => setContent({ ...content, pageTitle: e.target.value })}
+                value={currentContent.pageTitle}
+                onChange={(e) => updateContent({ ...currentContent, pageTitle: e.target.value })}
               />
             </div>
             <div className="space-y-2">
               <Label>Alt Başlık</Label>
               <Input
-                value={content.pageSubtitle}
-                onChange={(e) => setContent({ ...content, pageSubtitle: e.target.value })}
+                value={currentContent.pageSubtitle}
+                onChange={(e) => updateContent({ ...currentContent, pageSubtitle: e.target.value })}
               />
             </div>
           </div>
@@ -190,7 +216,7 @@ export function LessonsEditor() {
             <CardTitle>Bireysel Ders Özellikleri</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {content.individualFeatures.map((feature, index) => (
+            {currentContent.individualFeatures.map((feature, index) => (
               <div key={index} className="flex gap-2">
                 <Input
                   value={feature}
@@ -227,7 +253,7 @@ export function LessonsEditor() {
             <CardTitle>Grup Ders Özellikleri</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
-            {content.groupFeatures.map((feature, index) => (
+            {currentContent.groupFeatures.map((feature, index) => (
               <div key={index} className="flex gap-2">
                 <Input
                   value={feature}
@@ -268,22 +294,22 @@ export function LessonsEditor() {
             <div className="space-y-2">
               <Label>İletişim Başlığı</Label>
               <Input
-                value={content.contactTitle}
-                onChange={(e) => setContent({ ...content, contactTitle: e.target.value })}
+                value={currentContent.contactTitle}
+                onChange={(e) => updateContent({ ...currentContent, contactTitle: e.target.value })}
               />
             </div>
             <div className="space-y-2">
               <Label>Telefon</Label>
               <Input
-                value={content.phone}
-                onChange={(e) => setContent({ ...content, phone: e.target.value })}
+                value={currentContent.phone}
+                onChange={(e) => updateContent({ ...currentContent, phone: e.target.value })}
               />
             </div>
             <div className="space-y-2">
               <Label>E-posta</Label>
               <Input
-                value={content.email}
-                onChange={(e) => setContent({ ...content, email: e.target.value })}
+                value={currentContent.email}
+                onChange={(e) => updateContent({ ...currentContent, email: e.target.value })}
               />
             </div>
           </div>
@@ -293,7 +319,7 @@ export function LessonsEditor() {
       <div className="flex justify-end">
         <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} size="lg">
           <Save className="h-4 w-4 mr-2" />
-          {saveMutation.isPending ? "Kaydediliyor..." : "Kaydet"}
+          {saveMutation.isPending ? t("common.saving") : t("common.save")}
         </Button>
       </div>
     </div>

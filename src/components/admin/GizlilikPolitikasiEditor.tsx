@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
-import { Save, Plus, Trash2, GripVertical, Shield } from "lucide-react";
+import { Save, Plus, Trash2, GripVertical, Shield, Copy } from "lucide-react";
+import { LanguageTabs } from "./LanguageTabs";
+import { useMultiLangContent, MultiLangContent } from "@/hooks/useMultiLangContent";
 
 interface PolicySection {
   title: string;
@@ -32,7 +34,6 @@ const defaultPrivacy: PrivacyContent = {
 export function GizlilikPolitikasiEditor() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
-  const [formData, setFormData] = useState<PrivacyContent>(defaultPrivacy);
 
   const { data: pageContent, isLoading } = useQuery({
     queryKey: ["page-content", "gizlilik-politikasi"],
@@ -47,19 +48,29 @@ export function GizlilikPolitikasiEditor() {
     },
   });
 
-  useEffect(() => {
-    if (pageContent?.content) {
-      const savedContent = pageContent.content as unknown as PrivacyContent;
-      setFormData({ ...defaultPrivacy, ...savedContent });
-    } else {
-      // Load defaults if no saved content
-      setFormData(defaultPrivacy);
-    }
+  const savedContent = useMemo(() => {
+    return pageContent?.content as unknown as MultiLangContent<PrivacyContent> | PrivacyContent | null;
   }, [pageContent]);
 
+  const {
+    editingLang,
+    setEditingLang,
+    content,
+    currentContent: formData,
+    updateContent,
+    copyFromTurkish,
+  } = useMultiLangContent(defaultPrivacy, savedContent);
+
   const saveMutation = useMutation({
-    mutationFn: async (data: PrivacyContent) => {
-      const jsonContent = JSON.parse(JSON.stringify(data));
+    mutationFn: async () => {
+      // Update lastUpdated for all languages
+      const updatedContent = {
+        tr: { ...content.tr, lastUpdated: new Date().toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" }) },
+        en: { ...content.en, lastUpdated: new Date().toLocaleDateString("en-US", { day: "numeric", month: "long", year: "numeric" }) },
+        es: { ...content.es, lastUpdated: new Date().toLocaleDateString("es-ES", { day: "numeric", month: "long", year: "numeric" }) },
+      };
+      
+      const jsonContent = JSON.parse(JSON.stringify(updatedContent));
       if (pageContent?.id) {
         const { error } = await supabase
           .from("page_contents")
@@ -83,24 +94,18 @@ export function GizlilikPolitikasiEditor() {
   });
 
   const handleSave = () => {
-    // Update lastUpdated on save
-    const updatedData = {
-      ...formData,
-      lastUpdated: new Date().toLocaleDateString("tr-TR", { day: "numeric", month: "long", year: "numeric" }),
-    };
-    setFormData(updatedData);
-    saveMutation.mutate(updatedData);
+    saveMutation.mutate();
   };
 
   const addSection = () => {
-    setFormData({
+    updateContent({
       ...formData,
       sections: [...formData.sections, { title: "", content: "" }],
     });
   };
 
   const removeSection = (index: number) => {
-    setFormData({
+    updateContent({
       ...formData,
       sections: formData.sections.filter((_, i) => i !== index),
     });
@@ -109,7 +114,12 @@ export function GizlilikPolitikasiEditor() {
   const updateSection = (index: number, field: keyof PolicySection, value: string) => {
     const newSections = [...formData.sections];
     newSections[index] = { ...newSections[index], [field]: value };
-    setFormData({ ...formData, sections: newSections });
+    updateContent({ ...formData, sections: newSections });
+  };
+
+  const handleCopyFromTurkish = () => {
+    copyFromTurkish();
+    toast.success(t("common.copied"));
   };
 
   if (isLoading) {
@@ -118,6 +128,17 @@ export function GizlilikPolitikasiEditor() {
 
   return (
     <div className="space-y-6">
+      {/* Language Tabs */}
+      <div className="flex items-center justify-between">
+        <LanguageTabs selectedLang={editingLang} onLanguageChange={setEditingLang} />
+        {editingLang !== "tr" && (
+          <Button variant="outline" size="sm" onClick={handleCopyFromTurkish}>
+            <Copy className="h-4 w-4 mr-2" />
+            {t("common.copyFromTurkish")}
+          </Button>
+        )}
+      </div>
+
       {/* Page Settings */}
       <Card>
         <CardHeader className="pb-3">
@@ -132,7 +153,7 @@ export function GizlilikPolitikasiEditor() {
               <Label>{t("editors.privacy.pageTitle")}</Label>
               <Input
                 value={formData.pageTitle}
-                onChange={(e) => setFormData({ ...formData, pageTitle: e.target.value })}
+                onChange={(e) => updateContent({ ...formData, pageTitle: e.target.value })}
                 placeholder={t("editors.privacy.pageTitlePlaceholder")}
               />
             </div>
@@ -140,7 +161,7 @@ export function GizlilikPolitikasiEditor() {
               <Label>{t("editors.privacy.subtitle")}</Label>
               <Input
                 value={formData.pageSubtitle}
-                onChange={(e) => setFormData({ ...formData, pageSubtitle: e.target.value })}
+                onChange={(e) => updateContent({ ...formData, pageSubtitle: e.target.value })}
                 placeholder={t("editors.privacy.subtitlePlaceholder")}
               />
             </div>
@@ -149,7 +170,7 @@ export function GizlilikPolitikasiEditor() {
             <Label>{t("editors.privacy.lastUpdated")}</Label>
             <Input
               value={formData.lastUpdated}
-              onChange={(e) => setFormData({ ...formData, lastUpdated: e.target.value })}
+              onChange={(e) => updateContent({ ...formData, lastUpdated: e.target.value })}
               placeholder={t("editors.privacy.lastUpdatedPlaceholder")}
             />
             <p className="text-xs text-muted-foreground">{t("editors.privacy.autoUpdateNote")}</p>

@@ -112,7 +112,11 @@
     "noTeacher": "No other teacher",
     "noStudentsForTeacher": "No students for this teacher",
     "click": "Click",
-    "nameSurname": "Full Name"
+    "nameSurname": "Full Name",
+    "editLanguage": "Content language",
+    "copyFromTurkish": "Copy from Turkish",
+    "copied": "Copied",
+    "noContentForLanguage": "No content entered for this language yet"
   },
   "auth": {
     "signUp": "Sign Up",
