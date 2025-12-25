@@ -279,7 +279,7 @@ export function StudentDashboard() {
           </>
         }
       >
-        <div className="text-center">
+        <div className="text-left">
           <h1 className="text-xl sm:text-2xl font-bold text-card-foreground">{t("dashboard.student.title")}</h1>
           <p className="text-sm sm:text-lg text-card-foreground/70 hidden sm:block">{t("dashboard.student.welcome")}, {profile?.full_name}</p>
         </div>
