@@ -3,11 +3,25 @@ import { ChevronLeft, ChevronRight, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { useTranslation } from "react-i18next";
+
+interface MultiLangText {
+  tr: string;
+  en: string;
+  es: string;
+}
 
 interface Testimonial {
   id: string;
-  quote: string;
+  quote: string | MultiLangText;
   author_name: string | null;
+}
+
+function isMultiLangText(val: unknown): val is MultiLangText {
+  if (!val || typeof val !== "object") return false;
+  const obj = val as Record<string, unknown>;
+  return "tr" in obj && "en" in obj && "es" in obj;
 }
 
 // Fallback testimonials
@@ -43,6 +57,8 @@ export function TestimonialsSection() {
   const [activeIndex, setActiveIndex] = useState(0);
   const dragStart = useRef<{ x: number; y: number } | null>(null);
   const isDragging = useRef(false);
+  const { language } = useLanguage();
+  const { t } = useTranslation();
 
   const { data: dbTestimonials } = useQuery({
     queryKey: ["testimonials-public"],
@@ -59,6 +75,27 @@ export function TestimonialsSection() {
   });
 
   const testimonials = dbTestimonials && dbTestimonials.length > 0 ? dbTestimonials : defaultTestimonials;
+
+  // Get quote for current language
+  const getQuote = (testimonial: Testimonial): string => {
+    // Try to parse if it's a JSON string
+    let quote = testimonial.quote;
+    if (typeof quote === "string") {
+      try {
+        const parsed = JSON.parse(quote);
+        if (isMultiLangText(parsed)) {
+          return parsed[language] || parsed.tr || quote;
+        }
+      } catch {
+        // Not JSON, return as is
+        return quote;
+      }
+    }
+    if (isMultiLangText(quote)) {
+      return quote[language] || quote.tr || "";
+    }
+    return quote as string;
+  };
 
   const handlePrev = useCallback(() => {
     setActiveIndex((prev) => (prev === 0 ? testimonials.length - 1 : prev - 1));
@@ -164,11 +201,18 @@ export function TestimonialsSection() {
     };
   };
 
+  // Title based on language
+  const sectionTitle = language === "tr" 
+    ? "Öğrencilerimiz Ne Diyor?" 
+    : language === "en" 
+    ? "What Our Students Say?" 
+    : "¿Qué Dicen Nuestros Estudiantes?";
+
   return (
     <section className="py-16 lg:py-24 overflow-hidden">
       <div className="container mx-auto px-4 lg:px-8">
         <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-foreground text-center mb-16">
-          Öğrencilerimiz Ne Diyor?
+          {sectionTitle}
         </h2>
 
         {/* Desktop Carousel */}
@@ -179,7 +223,7 @@ export function TestimonialsSection() {
               size="icon"
               onClick={handlePrev}
               className="absolute left-4 lg:left-12 z-40 h-12 w-12 rounded-full bg-card shadow-lg hover:bg-accent transition-all duration-300"
-              aria-label="Önceki referans"
+              aria-label="Previous testimonial"
             >
               <ChevronLeft className="h-6 w-6" />
             </Button>
@@ -207,7 +251,7 @@ export function TestimonialsSection() {
                       pointerEvents: style.pointerEvents,
                     }}
                   >
-                    <TestimonialCard quote={testimonial.quote} />
+                    <TestimonialCard quote={getQuote(testimonial)} />
                   </div>
                 );
               })}
@@ -218,7 +262,7 @@ export function TestimonialsSection() {
               size="icon"
               onClick={handleNext}
               className="absolute right-4 lg:right-12 z-40 h-12 w-12 rounded-full bg-card shadow-lg hover:bg-accent transition-all duration-300"
-              aria-label="Sonraki referans"
+              aria-label="Next testimonial"
             >
               <ChevronRight className="h-6 w-6" />
             </Button>
@@ -232,7 +276,7 @@ export function TestimonialsSection() {
                 className={`h-2 rounded-full transition-all duration-300 ${
                   index === activeIndex ? "w-8 bg-primary" : "w-2 bg-muted-foreground/30 hover:bg-muted-foreground/50"
                 }`}
-                aria-label={`Referans ${index + 1}`}
+                aria-label={`Testimonial ${index + 1}`}
               />
             ))}
           </div>
@@ -246,13 +290,13 @@ export function TestimonialsSection() {
               size="icon"
               onClick={handlePrev}
               className="shrink-0 h-10 w-10 rounded-full bg-card shadow-lg hover:bg-accent"
-              aria-label="Önceki referans"
+              aria-label="Previous testimonial"
             >
               <ChevronLeft className="h-5 w-5" />
             </Button>
 
             <div className="w-full max-w-[280px]">
-              <TestimonialCard quote={testimonials[activeIndex].quote} />
+              <TestimonialCard quote={getQuote(testimonials[activeIndex])} />
             </div>
 
             <Button
@@ -260,7 +304,7 @@ export function TestimonialsSection() {
               size="icon"
               onClick={handleNext}
               className="shrink-0 h-10 w-10 rounded-full bg-card shadow-lg hover:bg-accent"
-              aria-label="Sonraki referans"
+              aria-label="Next testimonial"
             >
               <ChevronRight className="h-5 w-5" />
             </Button>
@@ -274,7 +318,7 @@ export function TestimonialsSection() {
                 className={`h-2 rounded-full transition-all duration-300 ${
                   index === activeIndex ? "w-6 bg-primary" : "w-2 bg-muted-foreground/30"
                 }`}
-                aria-label={`Referans ${index + 1}`}
+                aria-label={`Testimonial ${index + 1}`}
               />
             ))}
           </div>

@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface HeroContent {
   mainTitle: string;
@@ -14,10 +15,23 @@ interface HeroContent {
   secondaryButtonLink: string;
 }
 
+interface MultiLangHeroContent {
+  tr: HeroContent;
+  en: HeroContent;
+  es: HeroContent;
+}
+
 const defaultImageUrl = "/lovable-uploads/2da228c0-e8c3-4d4d-ae77-9eeca2c98996.png";
+
+function isMultiLangFormat(data: unknown): data is MultiLangHeroContent {
+  if (!data || typeof data !== "object") return false;
+  const obj = data as Record<string, unknown>;
+  return "tr" in obj && "en" in obj && "es" in obj;
+}
 
 export function HeroSection() {
   const { t } = useTranslation();
+  const { language } = useLanguage();
 
   const defaultHero: HeroContent = {
     mainTitle: t("hero.mainTitle"),
@@ -29,7 +43,7 @@ export function HeroSection() {
     secondaryButtonLink: "/dersler",
   };
 
-  const { data: content } = useQuery({
+  const { data: rawContent } = useQuery({
     queryKey: ["page-content", "hero"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -38,12 +52,22 @@ export function HeroSection() {
         .eq("page_key", "hero")
         .maybeSingle();
       if (error) throw error;
-      return data?.content as unknown as HeroContent | null;
+      return data?.content as unknown;
     },
     staleTime: 1000 * 60 * 5,
   });
 
-  const hero = content ? { ...defaultHero, ...content } : defaultHero;
+  // Get content for current language
+  let hero: HeroContent = defaultHero;
+  if (rawContent) {
+    if (isMultiLangFormat(rawContent)) {
+      const langContent = rawContent[language];
+      hero = { ...defaultHero, ...langContent };
+    } else {
+      hero = { ...defaultHero, ...(rawContent as HeroContent) };
+    }
+  }
+
   const imageUrl = hero.imageUrl && hero.imageUrl.trim() !== '' ? hero.imageUrl : defaultImageUrl;
 
   return (

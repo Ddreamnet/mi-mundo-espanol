@@ -636,6 +636,17 @@
       "sectionAdded": "New section added",
       "sectionUpdated": "Section updated",
       "sectionDeleted": "Section deleted"
+    },
+    "testimonials": {
+      "title": "Testimonials",
+      "description": "Manage customer testimonials on the homepage",
+      "quotePlaceholder": "Testimonial text...",
+      "authorPlaceholder": "Author name (optional)",
+      "added": "New testimonial added",
+      "updated": "Testimonial updated",
+      "deleted": "Testimonial deleted",
+      "empty": "No testimonials yet",
+      "addFirst": "Add first testimonial"
     }
   },
   "notifications": {

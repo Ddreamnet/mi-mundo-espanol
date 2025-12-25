@@ -630,6 +630,17 @@
       "sectionAdded": "Nueva sección agregada",
       "sectionUpdated": "Sección actualizada",
       "sectionDeleted": "Sección eliminada"
+    },
+    "testimonials": {
+      "title": "Testimonios",
+      "description": "Administrar testimonios de clientes en la página principal",
+      "quotePlaceholder": "Texto del testimonio...",
+      "authorPlaceholder": "Nombre del autor (opcional)",
+      "added": "Nuevo testimonio agregado",
+      "updated": "Testimonio actualizado",
+      "deleted": "Testimonio eliminado",
+      "empty": "No hay testimonios todavía",
+      "addFirst": "Agregar primer testimonio"
     }
   },
   "notifications": {

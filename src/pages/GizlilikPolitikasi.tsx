@@ -3,6 +3,7 @@ import { LandingFooter } from "@/components/landing/LandingFooter";
 import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Shield } from "lucide-react";
 
@@ -18,42 +19,30 @@ interface PrivacyContent {
   sections: PolicySection[];
 }
 
+interface MultiLangPrivacyContent {
+  tr: PrivacyContent;
+  en: PrivacyContent;
+  es: PrivacyContent;
+}
+
+function isMultiLangFormat(data: unknown): data is MultiLangPrivacyContent {
+  if (!data || typeof data !== "object") return false;
+  const obj = data as Record<string, unknown>;
+  return "tr" in obj && "en" in obj && "es" in obj;
+}
+
 export default function GizlilikPolitikasi() {
   const { t } = useTranslation();
+  const { language } = useLanguage();
 
   const defaultPrivacy: PrivacyContent = {
     pageTitle: t("privacy.pageTitle"),
     pageSubtitle: t("privacy.pageSubtitle"),
     lastUpdated: "24 Aralık 2024",
-    sections: [
-      {
-        title: "Toplanan Bilgiler",
-        content:
-          "Hizmetlerimizi kullanırken ad, soyad, e-posta adresi ve telefon numarası gibi kişisel bilgilerinizi topluyoruz.",
-      },
-      {
-        title: "Bilgilerin Kullanımı",
-        content:
-          "Toplanan bilgiler; ders programlarının düzenlenmesi, ödev takibi, ilerleme raporları ve sizinle iletişim kurmak amacıyla kullanılmaktadır.",
-      },
-      {
-        title: "Veri Güvenliği",
-        content: "Kişisel verileriniz endüstri standardı güvenlik önlemleri ile korunmaktadır.",
-      },
-      { title: "Çerezler", content: "Web sitemiz, kullanıcı deneyimini iyileştirmek için çerezler kullanmaktadır." },
-      {
-        title: "Haklarınız",
-        content: "KVKK kapsamında kişisel verilerinize erişim, düzeltme ve silme haklarına sahipsiniz.",
-      },
-      {
-        title: "İletişim",
-        content:
-          "Gizlilik politikamız hakkında sorularınız için info@mimundoespanol.com adresinden bize ulaşabilirsiniz.",
-      },
-    ],
+    sections: [],
   };
 
-  const { data: pageContent } = useQuery({
+  const { data: rawContent } = useQuery({
     queryKey: ["page-content", "gizlilik-politikasi"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -62,19 +51,20 @@ export default function GizlilikPolitikasi() {
         .eq("page_key", "gizlilik-politikasi")
         .maybeSingle();
       if (error) throw error;
-      if (!data || !data.content) return null;
-      return data.content as unknown as PrivacyContent;
+      return data?.content as unknown;
     },
     staleTime: 1000 * 60 * 5,
   });
 
-  const content: PrivacyContent = pageContent
-    ? {
-        ...defaultPrivacy,
-        ...pageContent,
-        sections: pageContent.sections?.length > 0 ? pageContent.sections : defaultPrivacy.sections,
-      }
-    : defaultPrivacy;
+  let content: PrivacyContent = defaultPrivacy;
+  if (rawContent) {
+    if (isMultiLangFormat(rawContent)) {
+      const langContent = rawContent[language];
+      content = { ...defaultPrivacy, ...langContent };
+    } else {
+      content = { ...defaultPrivacy, ...(rawContent as PrivacyContent) };
+    }
+  }
 
   return (
     <div className="min-h-screen bg-background">
