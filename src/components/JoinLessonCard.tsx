@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Video, ExternalLink } from "lucide-react";
@@ -10,6 +11,7 @@ interface JoinLessonCardProps {
 }
 
 export function JoinLessonCard({ studentId }: JoinLessonCardProps) {
+  const { t } = useTranslation();
   const [lessonLink, setLessonLink] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const { toast } = useToast();
@@ -63,8 +65,8 @@ export function JoinLessonCard({ studentId }: JoinLessonCardProps) {
       window.open(lessonLink, "_blank");
     } else {
       toast({
-        title: "Link Bulunamadı",
-        description: "Öğretmeniniz henüz bir ders linki eklememiş.",
+        title: t("common.linkNotFound"),
+        description: t("common.teacherNoLink"),
         variant: "destructive",
       });
     }
@@ -92,9 +94,9 @@ export function JoinLessonCard({ studentId }: JoinLessonCardProps) {
           <div className="flex items-center gap-3">
             <Video className="h-8 w-8 text-primary" />
             <div>
-              <p className="font-semibold">Canlı Ders</p>
+              <p className="font-semibold">{t("common.liveLesson")}</p>
               <p className="text-sm text-muted-foreground">
-                {lessonLink ? "Derse katılmak için tıklayın" : "Link henüz eklenmedi"}
+                {lessonLink ? t("common.clickToJoin") : t("common.linkNotAdded")}
               </p>
             </div>
           </div>
@@ -104,7 +106,7 @@ export function JoinLessonCard({ studentId }: JoinLessonCardProps) {
             className="shrink-0"
           >
             <ExternalLink className="h-4 w-4 mr-2" />
-            Derse Katıl
+            {t("common.joinLesson")}
           </Button>
         </div>
       </CardContent>
