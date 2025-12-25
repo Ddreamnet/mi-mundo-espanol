@@ -4,6 +4,7 @@
 // Bu bileşen öğretmen ve öğrenci ödevlerini listeler ve yeni ödev yükleme sağlar.
 
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,9 +13,10 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { FileText, Calendar, Download, FileImage, File, Edit2, Trash2, Upload, FolderOpen } from "lucide-react";
 import { format } from "date-fns";
-import { tr } from "date-fns/locale";
+import { tr, enUS, es } from "date-fns/locale";
 import { EditHomeworkDialog } from "./EditHomeworkDialog";
 import { UploadHomeworkDialog } from "./UploadHomeworkDialog";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // ============================================================================
 // TİPLER
@@ -57,6 +59,8 @@ interface GroupedHomework {
   }[];
 }
 
+const localeMap = { tr, en: enUS, es };
+
 // ============================================================================
 // ANA BİLEŞEN
 // ============================================================================
@@ -68,6 +72,8 @@ export function HomeworkSection({
   uploadedByUserId,
   isTeacher = false 
 }: HomeworkSectionProps) {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const [homeworks, setHomeworks] = useState<Homework[]>([]);
   const [groupedHomeworks, setGroupedHomeworks] = useState<GroupedHomework[]>([]);
   const [loading, setLoading] = useState(true);
@@ -132,8 +138,8 @@ export function HomeworkSection({
       setGroupedHomeworks(sortedGroups);
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: "Ödevler yüklenemedi",
+        title: t("common.error"),
+        description: t("common.homeworkLoadError"),
         variant: "destructive",
       });
     } finally {
@@ -179,8 +185,8 @@ export function HomeworkSection({
       URL.revokeObjectURL(url);
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: "Dosya indirilemedi",
+        title: t("common.error"),
+        description: t("common.fileDownloadError"),
         variant: "destructive",
       });
     }
@@ -207,15 +213,15 @@ export function HomeworkSection({
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Ödev silindi",
+        title: t("common.success"),
+        description: t("common.homeworkDeleted"),
       });
 
       fetchHomeworks();
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: "Ödev silinemedi",
+        title: t("common.error"),
+        description: t("common.homeworkDeleteError"),
         variant: "destructive",
       });
     }
@@ -246,14 +252,14 @@ export function HomeworkSection({
       {/* Header with Upload Button */}
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold">Ödevler</h3>
+          <h3 className="text-lg font-semibold">{t("dashboard.student.homework")}</h3>
           <p className="text-sm text-muted-foreground">
-            {groupedHomeworks.length} ödev yüklendi
+            {groupedHomeworks.length} {t("common.homeworkCount")}
           </p>
         </div>
         <Button onClick={() => setUploadDialogOpen(true)}>
           <Upload className="h-4 w-4 mr-2" />
-          Yükle
+          {t("common.upload")}
         </Button>
       </div>
 
@@ -262,14 +268,14 @@ export function HomeworkSection({
         <Card>
           <CardContent className="flex flex-col items-center justify-center py-12">
             <FolderOpen className="h-12 w-12 opacity-50 mb-4" />
-            <p className="text-muted-foreground">Henüz ödev yok</p>
+            <p className="text-muted-foreground">{t("common.noHomeworkYet")}</p>
             <Button 
               variant="outline" 
               className="mt-4"
               onClick={() => setUploadDialogOpen(true)}
             >
               <Upload className="h-4 w-4 mr-2" />
-              İlk Ödevi Yükle
+              {t("common.uploadFirstHomework")}
             </Button>
           </CardContent>
         </Card>
@@ -295,7 +301,7 @@ export function HomeworkSection({
                       <div className="flex items-center gap-2 text-xs text-muted-foreground">
                         <span className="flex items-center gap-1">
                           <Calendar className="h-3 w-3" />
-                          {format(new Date(group.created_at), "dd MMM yyyy HH:mm", { locale: tr })}
+                          {format(new Date(group.created_at), "dd MMM yyyy HH:mm", { locale: localeMap[language] || tr })}
                         </span>
                       </div>
                     </div>
@@ -309,7 +315,7 @@ export function HomeworkSection({
                               const firstFile = homeworks.find(h => h.batch_id === group.batch_id);
                               if (firstFile) setEditHomework(firstFile);
                             }}
-                            title="Düzenle"
+                            title={t("common.edit")}
                           >
                             <Edit2 className="h-4 w-4" />
                           </Button>
@@ -318,7 +324,7 @@ export function HomeworkSection({
                               <Button
                                 size="icon"
                                 variant="ghost"
-                                title="Sil"
+                                title={t("common.delete")}
                                 className="text-destructive hover:text-destructive"
                               >
                                 <Trash2 className="h-4 w-4" />
@@ -326,18 +332,18 @@ export function HomeworkSection({
                             </AlertDialogTrigger>
                             <AlertDialogContent>
                               <AlertDialogHeader>
-                                <AlertDialogTitle>Ödevi Sil</AlertDialogTitle>
+                                <AlertDialogTitle>{t("common.deleteHomework")}</AlertDialogTitle>
                                 <AlertDialogDescription>
-                                  Bu ödevi ve tüm dosyalarını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+                                  {t("common.deleteHomeworkConfirm")}
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel>İptal</AlertDialogCancel>
+                                <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
                                 <AlertDialogAction
                                   onClick={() => handleDelete(group.batch_id)}
                                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                                 >
-                                  Sil
+                                  {t("common.delete")}
                                 </AlertDialogAction>
                               </AlertDialogFooter>
                             </AlertDialogContent>
@@ -366,7 +372,7 @@ export function HomeworkSection({
                             variant="ghost"
                             size="sm"
                             onClick={() => handleDownload(file.file_url, file.file_name)}
-                            title="İndir"
+                            title={t("common.download")}
                             className="shrink-0"
                           >
                             <Download className="h-4 w-4" />
@@ -380,7 +386,7 @@ export function HomeworkSection({
                     variant="outline" 
                     className={`absolute bottom-2 right-2 text-xs ${uploadedByStudent ? "bg-primary/10 border-primary" : ""}`}
                   >
-                    {uploadedByStudent ? "Öğrenci" : "Öğretmen"}
+                    {uploadedByStudent ? t("common.byStudent") : t("common.byTeacher")}
                   </Badge>
                 </CardContent>
               </Card>
@@ -398,8 +404,8 @@ export function HomeworkSection({
         uploadedByUserId={uploadedByUserId}
         onSuccess={() => {
           toast({
-            title: "Başarılı",
-            description: "Ödev başarıyla yüklendi",
+            title: t("common.success"),
+            description: t("common.homeworkUploaded"),
           });
           fetchHomeworks();
         }}

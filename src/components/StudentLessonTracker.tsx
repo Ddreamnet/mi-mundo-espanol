@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { BookCheck, Ban } from "lucide-react";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface StudentLessonTrackerProps {
   studentId: string;
@@ -23,6 +24,7 @@ interface LessonOverride {
 
 export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
   const { t } = useTranslation();
+  const { language } = useLanguage();
   const [lessonsPerWeek, setLessonsPerWeek] = useState<number>(1);
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const [lessonDates, setLessonDates] = useState<LessonDates>({});
@@ -221,7 +223,7 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
               <p className="text-2x1 font-bold">
                 {completedLessons.length}/{totalLessonsPerMonth}
               </p>
-              <p className="text-sm opacity-70">{t("lessonTracker.completedLessons")}</p>
+              <p className="text-sm opacity-70">{t("common.processedLessons")}</p>
             </div>
           </div>
           <div className="flex flex-col gap-1.5 flex-1">
