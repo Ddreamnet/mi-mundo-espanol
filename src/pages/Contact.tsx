@@ -139,8 +139,8 @@ export default function Contact() {
             </div>
 
             {/* Right Column - Illustration */}
-            <div className="flex items-center justify-center lg:justify-end order-first lg:order-last">
-              <img src={contactIllustration} alt={t("contact.imageAlt")} className="w-full max-w-sm lg:max-w-md xl:max-w-lg object-contain" />
+            <div className="flex items-center justify-center order-first lg:order-last lg:justify-center lg:pr-8">
+              <img src={contactIllustration} alt={t("contact.imageAlt")} className="w-full max-w-xs sm:max-w-sm lg:max-w-md xl:max-w-lg object-contain" />
             </div>
           </div>
         </div>
