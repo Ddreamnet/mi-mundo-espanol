@@ -5,6 +5,7 @@ import { Logo } from "@/components/Logo";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate, useLocation } from "react-router-dom";
+import { useLanguage, Language } from "@/contexts/LanguageContext";
 
 // WhatsApp icon component
 function WhatsAppIcon({ className }: { className?: string }) {
@@ -21,6 +22,12 @@ interface FooterContent {
   copyrightText: string;
 }
 
+type MultiLangContent = {
+  tr: FooterContent;
+  en: FooterContent;
+  es: FooterContent;
+};
+
 const getIcon = (iconName: string) => {
   switch (iconName) {
     case "instagram": return Instagram;
@@ -30,27 +37,58 @@ const getIcon = (iconName: string) => {
   }
 };
 
-export function LandingFooter() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { t } = useTranslation();
-
-  const defaultFooter: FooterContent = {
+const defaultFooter: MultiLangContent = {
+  tr: {
     links: [
-      { label: t("footer.contact"), href: "/iletisim" },
-      { label: t("footer.faq"), href: "/sss" },
-      { label: t("footer.blog"), href: "/blog" },
-      { label: t("footer.privacy"), href: "/gizlilik-politikasi" },
+      { label: "İletişim", href: "/iletisim" },
+      { label: "SSS", href: "/sss" },
+      { label: "Blog", href: "/blog" },
+      { label: "Gizlilik Politikası", href: "/gizlilik-politikasi" },
     ],
     socialLinks: [
       { icon: "instagram", href: "https://www.instagram.com/mi.mundo_espanol/", label: "Instagram" },
       { icon: "facebook", href: "#", label: "Facebook" },
       { icon: "whatsapp", href: "https://wa.me/+905304721875", label: "WhatsApp" },
     ],
-    copyrightText: t("footer.copyright"),
-  };
+    copyrightText: "Mi Mundo Español. Tüm hakları saklıdır.",
+  },
+  en: {
+    links: [
+      { label: "Contact", href: "/iletisim" },
+      { label: "FAQ", href: "/sss" },
+      { label: "Blog", href: "/blog" },
+      { label: "Privacy Policy", href: "/gizlilik-politikasi" },
+    ],
+    socialLinks: [
+      { icon: "instagram", href: "https://www.instagram.com/mi.mundo_espanol/", label: "Instagram" },
+      { icon: "facebook", href: "#", label: "Facebook" },
+      { icon: "whatsapp", href: "https://wa.me/+905304721875", label: "WhatsApp" },
+    ],
+    copyrightText: "Mi Mundo Español. All rights reserved.",
+  },
+  es: {
+    links: [
+      { label: "Contacto", href: "/iletisim" },
+      { label: "Preguntas Frecuentes", href: "/sss" },
+      { label: "Blog", href: "/blog" },
+      { label: "Política de Privacidad", href: "/gizlilik-politikasi" },
+    ],
+    socialLinks: [
+      { icon: "instagram", href: "https://www.instagram.com/mi.mundo_espanol/", label: "Instagram" },
+      { icon: "facebook", href: "#", label: "Facebook" },
+      { icon: "whatsapp", href: "https://wa.me/+905304721875", label: "WhatsApp" },
+    ],
+    copyrightText: "Mi Mundo Español. Todos los derechos reservados.",
+  },
+};
 
-  const { data: content } = useQuery({
+export function LandingFooter() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { t } = useTranslation();
+  const { language } = useLanguage();
+
+  const { data: pageContent } = useQuery({
     queryKey: ["page-content", "footer"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -59,12 +97,30 @@ export function LandingFooter() {
         .eq("page_key", "footer")
         .maybeSingle();
       if (error) throw error;
-      return data?.content as unknown as FooterContent | null;
+      return data?.content as unknown as MultiLangContent | FooterContent | null;
     },
     staleTime: 1000 * 60 * 5,
   });
 
-  const footer = content ? { ...defaultFooter, ...content } : defaultFooter;
+  // Handle both multi-lang and legacy single-lang content
+  const getContent = (): FooterContent => {
+    if (!pageContent) return defaultFooter[language];
+
+    // Check if it's multi-lang format
+    if ('tr' in pageContent && 'en' in pageContent && 'es' in pageContent) {
+      const multiLang = pageContent as MultiLangContent;
+      return multiLang[language] || multiLang.tr;
+    }
+
+    // Legacy single-lang format - use as Turkish
+    if (language === 'tr') {
+      return { ...defaultFooter.tr, ...(pageContent as FooterContent) };
+    }
+
+    return defaultFooter[language];
+  };
+
+  const footer = getContent();
 
   const normalizeHref = (href: string) => {
     // Backward compatibility for older DB content

@@ -10,13 +10,15 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Save, Eye } from "lucide-react";
+import { Save, Eye, Copy } from "lucide-react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
 import { TextStyle } from "@tiptap/extension-text-style";
 import Color from "@tiptap/extension-color";
 import { ImageUpload } from "./ImageUpload";
+import { LanguageTabs } from "./LanguageTabs";
+import { Language } from "@/contexts/LanguageContext";
 
 interface BlogPost {
   id: string;
@@ -31,6 +33,18 @@ interface BlogPost {
   updated_at: string;
   author_id: string;
 }
+
+interface MultiLangBlogContent {
+  title: string;
+  excerpt: string;
+  content: string;
+}
+
+type MultiLangContent = {
+  tr: MultiLangBlogContent;
+  en: MultiLangBlogContent;
+  es: MultiLangBlogContent;
+};
 
 interface BlogEditorDialogProps {
   open: boolean;
@@ -53,15 +67,21 @@ function slugify(text: string): string {
     .trim();
 }
 
+const defaultMultiLang: MultiLangContent = {
+  tr: { title: "", excerpt: "", content: "" },
+  en: { title: "", excerpt: "", content: "" },
+  es: { title: "", excerpt: "", content: "" },
+};
+
 export function BlogEditorDialog({ open, onOpenChange, post }: BlogEditorDialogProps) {
   const { toast } = useToast();
   const { t } = useTranslation();
   const { profile } = useAuth();
   const queryClient = useQueryClient();
 
-  const [title, setTitle] = useState("");
+  const [selectedLang, setSelectedLang] = useState<Language>("tr");
+  const [multiLangContent, setMultiLangContent] = useState<MultiLangContent>(defaultMultiLang);
   const [slug, setSlug] = useState("");
-  const [excerpt, setExcerpt] = useState("");
   const [coverImageUrl, setCoverImageUrl] = useState("");
   const [isPublished, setIsPublished] = useState(false);
   const [autoSlug, setAutoSlug] = useState(true);
@@ -75,49 +95,111 @@ export function BlogEditorDialog({ open, onOpenChange, post }: BlogEditorDialogP
           "prose prose-sm max-w-none min-h-[300px] p-4 focus:outline-none border rounded-md",
       },
     },
+    onUpdate: ({ editor }) => {
+      setMultiLangContent((prev) => ({
+        ...prev,
+        [selectedLang]: {
+          ...prev[selectedLang],
+          content: editor.getHTML(),
+        },
+      }));
+    },
   });
+
+  // Parse existing post content to determine if it's multi-lang
+  const parsePostContent = (postData: BlogPost): MultiLangContent => {
+    // Check if content is JSON (multi-lang format)
+    try {
+      const parsed = JSON.parse(postData.content);
+      if (parsed.tr && parsed.en && parsed.es) {
+        return parsed;
+      }
+    } catch {
+      // Not JSON, it's legacy single-lang format
+    }
+
+    // Legacy format - use as Turkish content
+    return {
+      tr: {
+        title: postData.title,
+        excerpt: postData.excerpt || "",
+        content: postData.content,
+      },
+      en: { title: "", excerpt: "", content: "" },
+      es: { title: "", excerpt: "", content: "" },
+    };
+  };
 
   useEffect(() => {
     if (open) {
       if (post) {
-        setTitle(post.title);
+        const parsed = parsePostContent(post);
+        setMultiLangContent(parsed);
         setSlug(post.slug);
-        setExcerpt(post.excerpt || "");
         setCoverImageUrl(post.cover_image_url || "");
         setIsPublished(post.is_published);
         setAutoSlug(false);
-        editor?.commands.setContent(post.content);
+        editor?.commands.setContent(parsed.tr.content);
+        setSelectedLang("tr");
       } else {
-        setTitle("");
+        setMultiLangContent(defaultMultiLang);
         setSlug("");
-        setExcerpt("");
         setCoverImageUrl("");
         setIsPublished(false);
         setAutoSlug(true);
         editor?.commands.setContent("");
+        setSelectedLang("tr");
       }
     }
   }, [open, post, editor]);
 
+  // Update editor content when language changes
   useEffect(() => {
-    if (autoSlug && title) {
-      setSlug(slugify(title));
+    if (editor) {
+      editor.commands.setContent(multiLangContent[selectedLang].content);
     }
-  }, [title, autoSlug]);
+  }, [selectedLang, editor]);
+
+  useEffect(() => {
+    if (autoSlug && multiLangContent.tr.title) {
+      setSlug(slugify(multiLangContent.tr.title));
+    }
+  }, [multiLangContent.tr.title, autoSlug]);
+
+  const updateField = (field: keyof MultiLangBlogContent, value: string) => {
+    setMultiLangContent((prev) => ({
+      ...prev,
+      [selectedLang]: {
+        ...prev[selectedLang],
+        [field]: value,
+      },
+    }));
+  };
+
+  const copyFromTurkish = () => {
+    if (selectedLang === "tr") return;
+    setMultiLangContent((prev) => ({
+      ...prev,
+      [selectedLang]: { ...prev.tr },
+    }));
+    editor?.commands.setContent(multiLangContent.tr.content);
+    toast({ title: t("common.success"), description: t("common.copiedFromTurkish") });
+  };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const content = editor?.getHTML() || "";
-      
-      if (!title.trim()) throw new Error(t("editors.blog.titleRequired"));
+      if (!multiLangContent.tr.title.trim()) throw new Error(t("editors.blog.titleRequired"));
       if (!slug.trim()) throw new Error(t("editors.blog.urlRequired"));
-      if (!content.trim()) throw new Error(t("editors.blog.contentRequired"));
+      if (!multiLangContent.tr.content.trim()) throw new Error(t("editors.blog.contentRequired"));
+
+      // Store multi-lang content as JSON in content field
+      const contentJson = JSON.stringify(multiLangContent);
 
       const postData = {
-        title: title.trim(),
+        title: multiLangContent.tr.title.trim(), // Use Turkish title as primary
         slug: slug.trim(),
-        excerpt: excerpt.trim() || null,
-        content,
+        excerpt: multiLangContent.tr.excerpt.trim() || null, // Use Turkish excerpt as primary
+        content: contentJson, // Store all languages as JSON
         cover_image_url: coverImageUrl.trim() || null,
         is_published: isPublished,
         published_at: isPublished ? new Date().toISOString() : null,
@@ -137,6 +219,7 @@ export function BlogEditorDialog({ open, onOpenChange, post }: BlogEditorDialogP
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-blog-posts"] });
+      queryClient.invalidateQueries({ queryKey: ["blog-posts"] });
       toast({
         title: t("common.success"),
         description: post ? t("editors.blog.postUpdated") : t("editors.blog.postCreated"),
@@ -156,51 +239,66 @@ export function BlogEditorDialog({ open, onOpenChange, post }: BlogEditorDialogP
         </DialogHeader>
 
         <div className="space-y-6">
+          {/* Language Tabs */}
+          <div className="flex items-center justify-between">
+            <LanguageTabs selectedLang={selectedLang} onLanguageChange={setSelectedLang} />
+            {selectedLang !== "tr" && (
+              <Button variant="outline" size="sm" onClick={copyFromTurkish}>
+                <Copy className="h-4 w-4 mr-2" />
+                {t("common.copyFromTurkish")}
+              </Button>
+            )}
+          </div>
+
           <div className="grid gap-4">
             <div className="space-y-2">
               <Label htmlFor="title">{t("editors.blog.title")}</Label>
               <Input
                 id="title"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
+                value={multiLangContent[selectedLang].title}
+                onChange={(e) => updateField("title", e.target.value)}
                 placeholder={t("editors.blog.titlePlaceholder")}
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="slug">{t("editors.blog.url")}</Label>
-              <div className="flex gap-2">
-                <span className="text-sm text-muted-foreground flex items-center">/blog/</span>
-                <Input
-                  id="slug"
-                  value={slug}
-                  onChange={(e) => {
-                    setSlug(e.target.value);
-                    setAutoSlug(false);
-                  }}
-                  placeholder={t("editors.blog.urlPlaceholder")}
-                />
+            {selectedLang === "tr" && (
+              <div className="space-y-2">
+                <Label htmlFor="slug">{t("editors.blog.url")}</Label>
+                <div className="flex gap-2">
+                  <span className="text-sm text-muted-foreground flex items-center">/blog/</span>
+                  <Input
+                    id="slug"
+                    value={slug}
+                    onChange={(e) => {
+                      setSlug(e.target.value);
+                      setAutoSlug(false);
+                    }}
+                    placeholder={t("editors.blog.urlPlaceholder")}
+                  />
+                </div>
               </div>
-            </div>
+            )}
 
             <div className="space-y-2">
               <Label htmlFor="excerpt">{t("editors.blog.excerpt")}</Label>
               <Textarea
                 id="excerpt"
-                value={excerpt}
-                onChange={(e) => setExcerpt(e.target.value)}
+                value={multiLangContent[selectedLang].excerpt}
+                onChange={(e) => updateField("excerpt", e.target.value)}
                 placeholder={t("editors.blog.excerptPlaceholder")}
                 className="resize-none"
                 rows={2}
               />
             </div>
 
-            <ImageUpload
-              label={t("editors.blog.coverImage")}
-              value={coverImageUrl}
-              onChange={setCoverImageUrl}
-              folder="blog"
-            />
+            {selectedLang === "tr" && (
+              <ImageUpload
+                label={t("editors.blog.coverImage")}
+                value={coverImageUrl}
+                onChange={setCoverImageUrl}
+                folder="blog"
+              />
+            )}
           </div>
 
           <div className="space-y-2">

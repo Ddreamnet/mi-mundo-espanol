@@ -5,6 +5,7 @@ import { Check, Phone, Mail, User, Users } from "lucide-react";
 import lessonsIllustration from "@/assets/lessons-illustration.png";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { useLanguage, Language } from "@/contexts/LanguageContext";
 
 interface LessonsContent {
   pageTitle: string;
@@ -18,45 +19,126 @@ interface LessonsContent {
   email: string;
 }
 
-const defaultLessons: LessonsContent = {
-  pageTitle: "Ders Programlarımız",
-  pageSubtitle: "İhtiyaçlarınıza uygun ders seçeneğini keşfedin",
-  individualTitle: "Bireysel",
-  individualFeatures: [
-    "40 dakikalık birebir ders",
-    "Ücretsiz deneme dersi (seviye belirleme + içerik tanıtımı)",
-    "Kişiye özel program (seviye, hedef ve öğrenme hızına göre)",
-    "Esnek ders saatleriyle planlama",
-    "Aula Internacional + gerekli ek materyallerin sağlanması",
-    "Konuşma odaklı ders (akıcılık + telaffuz çalışmaları)",
-    "Seviyeye uygun dil bilgisi anlatımı (örneklerle)",
-    "Tema bazlı kelime çalışmaları",
-    "Düzenli ödevlendirme ve geri bildirim",
-    "Aylık ilerleme raporu",
-    "Ders takibi",
-    "Kur sonu sınavını başarıyla tamamlayanlara başarı sertifikası",
-  ],
-  groupTitle: "Grup",
-  groupFeatures: [
-    "40 dakikalık canlı grup dersleri",
-    "Seviyeye göre küçük gruplar (max 5)",
-    "Kurs öncesi seviye tespiti",
-    "Seviye bazlı sınıflar (A1–A2–B1–B2)",
-    "Aula Internacional ile yapılandırılmış müfredat",
-    "Grup içi konuşma pratiği (diyaloglar + etkileşim)",
-    "Grup seviyesine uygun dil bilgisi anlatımı",
-    "Tema bazlı kelime çalışmaları",
-    "Grup düzeyine uygun ödevlendirme",
-    "Ödev kontrolü + genel geri bildirim",
-    "Kur sonunda başarı sertifikası",
-  ],
-  contactTitle: "Ücretlendirme için iletişim",
-  phone: "+90 555 123 45 67",
-  email: "info@mimundoespanol.com",
+type MultiLangContent = {
+  tr: LessonsContent;
+  en: LessonsContent;
+  es: LessonsContent;
+};
+
+const defaultLessons: MultiLangContent = {
+  tr: {
+    pageTitle: "Ders Programlarımız",
+    pageSubtitle: "İhtiyaçlarınıza uygun ders seçeneğini keşfedin",
+    individualTitle: "Bireysel",
+    individualFeatures: [
+      "40 dakikalık birebir ders",
+      "Ücretsiz deneme dersi (seviye belirleme + içerik tanıtımı)",
+      "Kişiye özel program (seviye, hedef ve öğrenme hızına göre)",
+      "Esnek ders saatleriyle planlama",
+      "Aula Internacional + gerekli ek materyallerin sağlanması",
+      "Konuşma odaklı ders (akıcılık + telaffuz çalışmaları)",
+      "Seviyeye uygun dil bilgisi anlatımı (örneklerle)",
+      "Tema bazlı kelime çalışmaları",
+      "Düzenli ödevlendirme ve geri bildirim",
+      "Aylık ilerleme raporu",
+      "Ders takibi",
+      "Kur sonu sınavını başarıyla tamamlayanlara başarı sertifikası",
+    ],
+    groupTitle: "Grup",
+    groupFeatures: [
+      "40 dakikalık canlı grup dersleri",
+      "Seviyeye göre küçük gruplar (max 5)",
+      "Kurs öncesi seviye tespiti",
+      "Seviye bazlı sınıflar (A1–A2–B1–B2)",
+      "Aula Internacional ile yapılandırılmış müfredat",
+      "Grup içi konuşma pratiği (diyaloglar + etkileşim)",
+      "Grup seviyesine uygun dil bilgisi anlatımı",
+      "Tema bazlı kelime çalışmaları",
+      "Grup düzeyine uygun ödevlendirme",
+      "Ödev kontrolü + genel geri bildirim",
+      "Kur sonunda başarı sertifikası",
+    ],
+    contactTitle: "Ücretlendirme için iletişim",
+    phone: "+90 555 123 45 67",
+    email: "info@mimundoespanol.com",
+  },
+  en: {
+    pageTitle: "Our Lesson Programs",
+    pageSubtitle: "Discover the lesson option that suits your needs",
+    individualTitle: "Individual",
+    individualFeatures: [
+      "40-minute one-on-one lesson",
+      "Free trial lesson (level assessment + content introduction)",
+      "Personalized program (based on level, goals and learning pace)",
+      "Flexible scheduling",
+      "Aula Internacional + additional materials provided",
+      "Conversation-focused lesson (fluency + pronunciation practice)",
+      "Level-appropriate grammar instruction (with examples)",
+      "Theme-based vocabulary work",
+      "Regular homework and feedback",
+      "Monthly progress report",
+      "Lesson tracking",
+      "Certificate of achievement for those who successfully complete the course exam",
+    ],
+    groupTitle: "Group",
+    groupFeatures: [
+      "40-minute live group lessons",
+      "Small groups by level (max 5)",
+      "Pre-course level assessment",
+      "Level-based classes (A1–A2–B1–B2)",
+      "Structured curriculum with Aula Internacional",
+      "Group conversation practice (dialogues + interaction)",
+      "Group-level grammar instruction",
+      "Theme-based vocabulary work",
+      "Group-level homework assignments",
+      "Homework review + general feedback",
+      "Certificate of achievement at course completion",
+    ],
+    contactTitle: "Contact for pricing",
+    phone: "+90 555 123 45 67",
+    email: "info@mimundoespanol.com",
+  },
+  es: {
+    pageTitle: "Nuestros Programas de Clases",
+    pageSubtitle: "Descubre la opción de clase que se adapta a tus necesidades",
+    individualTitle: "Individual",
+    individualFeatures: [
+      "Clase individual de 40 minutos",
+      "Clase de prueba gratuita (evaluación de nivel + presentación de contenido)",
+      "Programa personalizado (según nivel, objetivos y ritmo de aprendizaje)",
+      "Horarios flexibles",
+      "Aula Internacional + materiales adicionales proporcionados",
+      "Clase enfocada en conversación (fluidez + práctica de pronunciación)",
+      "Instrucción de gramática apropiada al nivel (con ejemplos)",
+      "Trabajo de vocabulario temático",
+      "Tareas regulares y retroalimentación",
+      "Informe de progreso mensual",
+      "Seguimiento de clases",
+      "Certificado de logro para quienes completen exitosamente el examen del curso",
+    ],
+    groupTitle: "Grupal",
+    groupFeatures: [
+      "Clases grupales en vivo de 40 minutos",
+      "Grupos pequeños por nivel (máx. 5)",
+      "Evaluación de nivel previa al curso",
+      "Clases por nivel (A1–A2–B1–B2)",
+      "Currículo estructurado con Aula Internacional",
+      "Práctica de conversación grupal (diálogos + interacción)",
+      "Instrucción de gramática a nivel grupal",
+      "Trabajo de vocabulario temático",
+      "Tareas adecuadas al nivel del grupo",
+      "Revisión de tareas + retroalimentación general",
+      "Certificado de logro al completar el curso",
+    ],
+    contactTitle: "Contacto para precios",
+    phone: "+90 555 123 45 67",
+    email: "info@mimundoespanol.com",
+  },
 };
 
 export default function Lessons() {
   const { t } = useTranslation();
+  const { language } = useLanguage();
 
   const { data: pageContent } = useQuery({
     queryKey: ["page-content", "lessons"],
@@ -67,12 +149,30 @@ export default function Lessons() {
         .eq("page_key", "lessons")
         .maybeSingle();
       if (error) throw error;
-      return data?.content as unknown as LessonsContent | null;
+      return data?.content as unknown as MultiLangContent | LessonsContent | null;
     },
     staleTime: 1000 * 60 * 5,
   });
 
-  const content = pageContent ? { ...defaultLessons, ...pageContent } : defaultLessons;
+  // Handle both multi-lang and legacy single-lang content
+  const getContent = (): LessonsContent => {
+    if (!pageContent) return defaultLessons[language];
+    
+    // Check if it's multi-lang format
+    if ('tr' in pageContent && 'en' in pageContent && 'es' in pageContent) {
+      const multiLang = pageContent as MultiLangContent;
+      return multiLang[language] || multiLang.tr;
+    }
+    
+    // Legacy single-lang format - use as Turkish
+    if (language === 'tr') {
+      return { ...defaultLessons.tr, ...(pageContent as LessonsContent) };
+    }
+    
+    return defaultLessons[language];
+  };
+
+  const content = getContent();
 
   return (
     <div className="min-h-screen bg-page-lessons">
@@ -165,6 +265,14 @@ export default function Lessons() {
               {content.contactTitle.includes("iletişim") ? (
                 <>
                   {content.contactTitle.replace("iletişim", "")}<span className="text-primary">iletişim</span>
+                </>
+              ) : content.contactTitle.includes("contact") ? (
+                <>
+                  {content.contactTitle.replace("contact", "")}<span className="text-primary">contact</span>
+                </>
+              ) : content.contactTitle.includes("Contacto") ? (
+                <>
+                  <span className="text-primary">Contacto</span>{content.contactTitle.replace("Contacto", "")}
                 </>
               ) : (
                 content.contactTitle
