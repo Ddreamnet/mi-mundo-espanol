@@ -40,7 +40,15 @@ interface AdminWeeklyScheduleProps {
   teacherId: string;
 }
 
-const DAYS = ["Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi", "Pazar"];
+const getDayLabel = (t: any) => [
+  t("days.monday"),
+  t("days.tuesday"),
+  t("days.wednesday"),
+  t("days.thursday"),
+  t("days.friday"),
+  t("days.saturday"),
+  t("days.sunday"),
+];
 const STUDENT_COLORS = [
   "schedule-color-1",
   "schedule-color-2",
@@ -173,8 +181,8 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
       setTrialLessons(trialData || []);
     } catch (error: any) {
       toast({
-        title: "Hata",
-        description: "Ders programı yüklenemedi",
+        title: t("common.error"),
+        description: t("dialogs.weeklySchedule.scheduleLoadError"),
         variant: "destructive",
       });
     } finally {
@@ -358,14 +366,14 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Deneme dersi silindi",
+        title: t("common.success"),
+        description: t("dialogs.trialLessonActions.lessonDeleted"),
       });
 
       fetchSchedule();
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -391,14 +399,14 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
       await updateTeacherBalance(selectedTrialLesson);
 
       toast({
-        title: "Başarılı",
-        description: "Ders işlendi olarak işaretlendi",
+        title: t("common.success"),
+        description: t("dialogs.trialLessonActions.lessonMarked"),
       });
 
       fetchSchedule();
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -423,14 +431,14 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
       await subtractFromTeacherBalance(selectedTrialLesson);
 
       toast({
-        title: "Başarılı",
-        description: "Ders işlenmedi olarak geri alındı",
+        title: t("common.success"),
+        description: t("dialogs.trialLessonActions.lessonUnmarked"),
       });
 
       fetchSchedule();
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -527,13 +535,13 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
         studentColors: colorRecord,
       });
       toast({
-        title: "Başarılı",
-        description: "Ders programı PNG olarak indirildi",
+        title: t("common.success"),
+        description: t("dialogs.weeklySchedule.pngDownloaded"),
       });
     } catch (error) {
       toast({
-        title: "Hata",
-        description: "PNG oluşturulamadı",
+        title: t("common.error"),
+        description: t("dialogs.weeklySchedule.pngError"),
         variant: "destructive",
       });
     }
@@ -549,16 +557,18 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
     );
   }
 
+  const DAYS = getDayLabel(t);
+  
   if (lessons.length === 0 && trialLessons.length === 0) {
     return (
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle>Haftalık Ders Programı</CardTitle>
+            <CardTitle>{t("dialogs.weeklySchedule.title")}</CardTitle>
             <div className="flex gap-2">
               <Button onClick={handleExportPNG} size="sm" variant="outline">
                 <Download className="h-4 w-4 mr-2" />
-                PNG İndir
+                {t("dialogs.weeklySchedule.downloadPng")}
               </Button>
               <Button onClick={() => setShowAddTrial(true)} size="sm">
                 <Plus className="h-4 w-4 mr-2" />
@@ -585,10 +595,10 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
       <Card>
         <CardHeader>
           <div className="flex justify-between items-center">
-            <CardTitle>Haftalık Ders Programı</CardTitle>
+            <CardTitle>{t("dialogs.weeklySchedule.title")}</CardTitle>
             <Button onClick={() => setShowAddTrial(true)} size="sm">
               <Plus className="h-4 w-4 mr-2" />
-              Deneme Ekle
+              {t("dialogs.weeklySchedule.addTrial")}
             </Button>
           </div>
         </CardHeader>
@@ -597,7 +607,7 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
             <table className="w-full border-collapse">
               <thead>
                 <tr>
-                  <th className="border border-border p-2 bg-muted font-medium text-sm">Saat</th>
+                  <th className="border border-border p-2 bg-muted font-medium text-sm">{t("dialogs.weeklySchedule.hour")}</th>
                   {DAYS.map((day) => (
                     <th key={day} className="border border-border p-2 bg-muted font-medium text-sm">
                       {day}
@@ -652,7 +662,7 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
                               onClick={() => handleTrialLessonClick(trialLesson)}
                             >
                               <div className="text-center w-full">
-                                <div className="font-medium">Deneme Dersi</div>
+                                <div className="font-medium">{t("dialogs.weeklySchedule.trialLesson")}</div>
                                 <div className="text-xs mt-1">
                                   {formatTime(trialLesson.start_time)} - {formatTime(trialLesson.end_time)}
                                 </div>
@@ -681,7 +691,7 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
       <Dialog open={showTrialActionDialog} onOpenChange={setShowTrialActionDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Deneme Dersi İşlemleri</DialogTitle>
+            <DialogTitle>{t("dialogs.trialLessonActions.title")}</DialogTitle>
             <DialogDescription>
               {selectedTrialLesson && `${formatTime(selectedTrialLesson.start_time)} - ${formatTime(selectedTrialLesson.end_time)}`}
             </DialogDescription>
@@ -697,7 +707,7 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
                 }}
               >
                 <Undo2 className="h-5 w-5 text-warning" />
-                İşlendiyi Geri Al
+                {t("dialogs.trialLessonActions.undoComplete")}
               </Button>
             ) : (
               <Button
@@ -709,7 +719,7 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
                 }}
               >
                 <CheckCircle className="h-5 w-5 text-success" />
-                İşlendi Olarak İşaretle
+                {t("dialogs.trialLessonActions.markComplete")}
               </Button>
             )}
             <Button
@@ -721,7 +731,7 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
               }}
             >
               <Trash2 className="h-5 w-5" />
-              Deneme Dersini Sil
+              {t("dialogs.trialLessonActions.deleteTrialLesson")}
             </Button>
           </div>
         </DialogContent>
@@ -730,14 +740,14 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
       <AlertDialog open={showMarkAlert} onOpenChange={setShowMarkAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Bu dersi işlediniz mi?</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.trialLessonActions.markConfirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Deneme dersini tamamlandı olarak işaretlemek istediğinizden emin misiniz?
+              {t("dialogs.trialLessonActions.markConfirmDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>İptal</AlertDialogCancel>
-            <AlertDialogAction onClick={handleMarkComplete}>Onayla</AlertDialogAction>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleMarkComplete}>{t("common.confirm")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -745,14 +755,14 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
       <AlertDialog open={showUnmarkAlert} onOpenChange={setShowUnmarkAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>İşlenmedi olarak geri almak istiyor musunuz?</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.trialLessonActions.unmarkConfirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Deneme dersini işlenmedi durumuna geri almak istediğinizden emin misiniz?
+              {t("dialogs.trialLessonActions.unmarkConfirmDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>İptal</AlertDialogCancel>
-            <AlertDialogAction onClick={handleMarkIncomplete}>Onayla</AlertDialogAction>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={handleMarkIncomplete}>{t("common.confirm")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
@@ -760,15 +770,15 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
       <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Deneme Dersini Sil</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.trialLessonActions.deleteConfirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Bu deneme dersini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.
+              {t("dialogs.trialLessonActions.deleteConfirmDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteTrialLesson} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-              Sil
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
