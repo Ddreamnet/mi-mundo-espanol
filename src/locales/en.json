@@ -586,6 +586,50 @@
     },
     "pageSettings": "Page Settings"
   },
+"blog": {
+    "title": "Blog Posts",
+    "description": "Manage blog posts on the blog page",
+    "newPost": "New Post",
+    "noPostsYet": "No blog posts yet",
+    "addFirstPost": "Add first post",
+    "published": "Published",
+    "draft": "Draft",
+    "deleteTitle": "Delete blog post?",
+    "deleteDescription": "This action cannot be undone. The post will be permanently deleted.",
+    "postDeleted": "Blog post deleted",
+    "postPublished": "Post published",
+    "postUnpublished": "Post unpublished",
+    "unpublish": "Unpublish",
+    "publish": "Publish"
+  },
+  "editStudentLessons": {
+    "title": "Student Settings",
+    "description": "Update the student's name and lesson schedule.",
+    "studentName": "Student Name",
+    "studentNamePlaceholder": "Enter student name",
+    "schedule": "Lesson Schedule",
+    "addLesson": "Add Lesson",
+    "day": "Day",
+    "start": "Start",
+    "end": "End",
+    "removeStudent": "Remove Student",
+    "saveChanges": "Save Changes"
+  },
+  "trialLessonActions": {
+    "title": "Trial Lesson Actions",
+    "markComplete": "Mark as Completed",
+    "undoComplete": "Undo Completion",
+    "deleteTrialLesson": "Delete Trial Lesson",
+    "markConfirmTitle": "Did you complete this lesson?",
+    "markConfirmDesc": "Are you sure you want to mark this trial lesson as completed?",
+    "unmarkConfirmTitle": "Undo completion?",
+    "unmarkConfirmDesc": "Are you sure you want to mark this trial lesson as incomplete?",
+    "deleteConfirmTitle": "Delete Trial Lesson",
+    "deleteConfirmDesc": "Are you sure you want to delete this trial lesson? This action cannot be undone.",
+    "lessonMarked": "Lesson marked as completed",
+    "lessonUnmarked": "Lesson marked as incomplete",
+    "lessonDeleted": "Trial lesson deleted"
+  },
   "editors": {
     "sss": {
       "pageTitle": "Page Title",

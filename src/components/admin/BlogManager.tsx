@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -8,7 +9,7 @@ import { Plus, Edit, Trash2, Eye, EyeOff, FileText, Calendar } from "lucide-reac
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { BlogEditorDialog } from "./BlogEditorDialog";
 import { format } from "date-fns";
-import { tr } from "date-fns/locale";
+import { tr, enUS, es } from "date-fns/locale";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -35,11 +36,20 @@ interface BlogPost {
 }
 
 export function BlogManager() {
+  const { t, i18n } = useTranslation();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [editingPost, setEditingPost] = useState<BlogPost | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [deletingPostId, setDeletingPostId] = useState<string | null>(null);
+  
+  const getLocale = () => {
+    switch (i18n.language) {
+      case "en": return enUS;
+      case "es": return es;
+      default: return tr;
+    }
+  };
 
   const { data: posts = [], isLoading } = useQuery({
     queryKey: ["admin-blog-posts"],
@@ -60,11 +70,11 @@ export function BlogManager() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-blog-posts"] });
-      toast({ title: "Başarılı", description: "Blog yazısı silindi" });
+      toast({ title: t("common.success"), description: t("dialogs.blog.postDeleted") });
       setDeletingPostId(null);
     },
     onError: (error: any) => {
-      toast({ title: "Hata", description: error.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -82,12 +92,12 @@ export function BlogManager() {
     onSuccess: (_, { is_published }) => {
       queryClient.invalidateQueries({ queryKey: ["admin-blog-posts"] });
       toast({
-        title: "Başarılı",
-        description: is_published ? "Yazı yayınlandı" : "Yazı yayından kaldırıldı",
+        title: t("common.success"),
+        description: is_published ? t("dialogs.blog.postPublished") : t("dialogs.blog.postUnpublished"),
       });
     },
     onError: (error: any) => {
-      toast({ title: "Hata", description: error.message, variant: "destructive" });
+      toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     },
   });
 
@@ -113,23 +123,23 @@ export function BlogManager() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="font-semibold text-lg">Blog Yazıları</h3>
+          <h3 className="font-semibold text-lg">{t("dialogs.blog.title")}</h3>
           <p className="text-sm text-muted-foreground">
-            Blog sayfasındaki yazıları yönetin
+            {t("dialogs.blog.description")}
           </p>
         </div>
         <Button onClick={handleNewPost}>
           <Plus className="h-4 w-4 mr-2" />
-          Yeni Yazı
+          {t("dialogs.blog.newPost")}
         </Button>
       </div>
 
       {posts.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
           <FileText className="h-12 w-12 mb-4" />
-          <p>Henüz blog yazısı eklenmemiş</p>
+          <p>{t("dialogs.blog.noPostsYet")}</p>
           <Button variant="outline" className="mt-4" onClick={handleNewPost}>
-            İlk yazıyı ekle
+            {t("dialogs.blog.addFirstPost")}
           </Button>
         </div>
       ) : (
@@ -152,7 +162,7 @@ export function BlogManager() {
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-medium truncate">{post.title}</h4>
                         <Badge variant={post.is_published ? "default" : "secondary"}>
-                          {post.is_published ? "Yayında" : "Taslak"}
+                          {post.is_published ? t("dialogs.blog.published") : t("dialogs.blog.draft")}
                         </Badge>
                       </div>
                       {post.excerpt && (
@@ -161,7 +171,7 @@ export function BlogManager() {
                       <div className="flex items-center gap-2 mt-2 text-xs text-muted-foreground">
                         <Calendar className="h-3 w-3" />
                         <span>
-                          {format(new Date(post.created_at), "d MMMM yyyy", { locale: tr })}
+                          {format(new Date(post.created_at), "d MMMM yyyy", { locale: getLocale() })}
                         </span>
                         <span className="text-muted-foreground/50">•</span>
                         <span className="font-mono text-xs">/blog/{post.slug}</span>
@@ -178,7 +188,7 @@ export function BlogManager() {
                             is_published: !post.is_published,
                           })
                         }
-                        title={post.is_published ? "Yayından kaldır" : "Yayınla"}
+                        title={post.is_published ? t("dialogs.blog.unpublish") : t("dialogs.blog.publish")}
                         className="border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
                       >
                         {post.is_published ? (
@@ -191,7 +201,7 @@ export function BlogManager() {
                         variant="outline"
                         size="icon"
                         onClick={() => handleEditPost(post)}
-                        title="Düzenle"
+                        title={t("common.edit")}
                         className="border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
                       >
                         <Edit className="h-4 w-4" />
@@ -201,7 +211,7 @@ export function BlogManager() {
                         size="icon"
                         onClick={() => setDeletingPostId(post.id)}
                         className="border-destructive/50 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                        title="Sil"
+                        title={t("common.delete")}
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -223,18 +233,18 @@ export function BlogManager() {
       <AlertDialog open={!!deletingPostId} onOpenChange={() => setDeletingPostId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Blog yazısını silmek istiyor musunuz?</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.blog.deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              Bu işlem geri alınamaz. Yazı kalıcı olarak silinecektir.
+              {t("dialogs.blog.deleteDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>İptal</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deletingPostId && deleteMutation.mutate(deletingPostId)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Sil
+              {t("common.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

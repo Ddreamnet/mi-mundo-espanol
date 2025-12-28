@@ -588,6 +588,50 @@
     },
     "pageSettings": "Sayfa Ayarları"
   },
+"blog": {
+    "title": "Blog Yazıları",
+    "description": "Blog sayfasındaki yazıları yönetin",
+    "newPost": "Yeni Yazı",
+    "noPostsYet": "Henüz blog yazısı eklenmemiş",
+    "addFirstPost": "İlk yazıyı ekle",
+    "published": "Yayında",
+    "draft": "Taslak",
+    "deleteTitle": "Blog yazısını silmek istiyor musunuz?",
+    "deleteDescription": "Bu işlem geri alınamaz. Yazı kalıcı olarak silinecektir.",
+    "postDeleted": "Blog yazısı silindi",
+    "postPublished": "Yazı yayınlandı",
+    "postUnpublished": "Yazı yayından kaldırıldı",
+    "unpublish": "Yayından kaldır",
+    "publish": "Yayınla"
+  },
+  "editStudentLessons": {
+    "title": "Öğrenci Ayarları",
+    "description": "Öğrencinin adını ve ders programını güncelleyin.",
+    "studentName": "Öğrenci Adı",
+    "studentNamePlaceholder": "Öğrenci adını girin",
+    "schedule": "Ders Programı",
+    "addLesson": "Ders Ekle",
+    "day": "Gün",
+    "start": "Başlangıç",
+    "end": "Bitiş",
+    "removeStudent": "Öğrenciyi Kaldır",
+    "saveChanges": "Değişiklikleri Kaydet"
+  },
+  "trialLessonActions": {
+    "title": "Deneme Dersi İşlemleri",
+    "markComplete": "İşlendi Olarak İşaretle",
+    "undoComplete": "İşlendiyi Geri Al",
+    "deleteTrialLesson": "Deneme Dersini Sil",
+    "markConfirmTitle": "Bu dersi işlediniz mi?",
+    "markConfirmDesc": "Deneme dersini tamamlandı olarak işaretlemek istediğinizden emin misiniz?",
+    "unmarkConfirmTitle": "İşlenmedi olarak geri almak istiyor musunuz?",
+    "unmarkConfirmDesc": "Deneme dersini işlenmedi durumuna geri almak istediğinizden emin misiniz?",
+    "deleteConfirmTitle": "Deneme Dersini Sil",
+    "deleteConfirmDesc": "Bu deneme dersini silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    "lessonMarked": "Ders işlendi olarak işaretlendi",
+    "lessonUnmarked": "Ders işlenmedi olarak geri alındı",
+    "lessonDeleted": "Deneme dersi silindi"
+  },
   "editors": {
     "sss": {
       "pageTitle": "Sayfa Başlığı",

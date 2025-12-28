@@ -580,6 +580,50 @@
     },
     "pageSettings": "Configuración de Página"
   },
+"blog": {
+    "title": "Publicaciones de Blog",
+    "description": "Administrar publicaciones en la página del blog",
+    "newPost": "Nueva Publicación",
+    "noPostsYet": "No hay publicaciones de blog todavía",
+    "addFirstPost": "Agregar primera publicación",
+    "published": "Publicado",
+    "draft": "Borrador",
+    "deleteTitle": "¿Eliminar publicación?",
+    "deleteDescription": "Esta acción no se puede deshacer. La publicación será eliminada permanentemente.",
+    "postDeleted": "Publicación eliminada",
+    "postPublished": "Publicación publicada",
+    "postUnpublished": "Publicación despublicada",
+    "unpublish": "Despublicar",
+    "publish": "Publicar"
+  },
+  "editStudentLessons": {
+    "title": "Configuración del Estudiante",
+    "description": "Actualizar el nombre y horario de clases del estudiante.",
+    "studentName": "Nombre del Estudiante",
+    "studentNamePlaceholder": "Ingrese el nombre del estudiante",
+    "schedule": "Horario de Clases",
+    "addLesson": "Agregar Clase",
+    "day": "Día",
+    "start": "Inicio",
+    "end": "Fin",
+    "removeStudent": "Eliminar Estudiante",
+    "saveChanges": "Guardar Cambios"
+  },
+  "trialLessonActions": {
+    "title": "Acciones de Clase de Prueba",
+    "markComplete": "Marcar como Completada",
+    "undoComplete": "Deshacer Completado",
+    "deleteTrialLesson": "Eliminar Clase de Prueba",
+    "markConfirmTitle": "¿Completaste esta clase?",
+    "markConfirmDesc": "¿Estás seguro de que quieres marcar esta clase de prueba como completada?",
+    "unmarkConfirmTitle": "¿Deshacer completado?",
+    "unmarkConfirmDesc": "¿Estás seguro de que quieres marcar esta clase de prueba como incompleta?",
+    "deleteConfirmTitle": "Eliminar Clase de Prueba",
+    "deleteConfirmDesc": "¿Estás seguro de que quieres eliminar esta clase de prueba? Esta acción no se puede deshacer.",
+    "lessonMarked": "Clase marcada como completada",
+    "lessonUnmarked": "Clase marcada como incompleta",
+    "lessonDeleted": "Clase de prueba eliminada"
+  },
   "editors": {
     "sss": {
       "pageTitle": "Título de Página",
