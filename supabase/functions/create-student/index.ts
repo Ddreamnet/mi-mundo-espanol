@@ -126,7 +126,9 @@ serve(async (req) => {
     }
 
     // Create lesson schedule if provided
+    let lessonsPerWeek = 1; // default
     if (lessons && lessons.length > 0) {
+      lessonsPerWeek = lessons.length;
       const lessonsToInsert = lessons.map((lesson: any) => ({
         student_id: authData.user.id,
         teacher_id: teacherId,
@@ -144,6 +146,23 @@ serve(async (req) => {
         // Note: We don't rollback here as the student is created
         // Lessons can be added later
       }
+    }
+
+    // Create initial lesson tracking record
+    const { error: trackingError } = await supabaseAdmin
+      .from('student_lesson_tracking')
+      .insert({
+        student_id: authData.user.id,
+        teacher_id: teacherId,
+        lessons_per_week: lessonsPerWeek,
+        completed_lessons: [],
+        lesson_dates: {}
+      })
+
+    if (trackingError) {
+      console.error('Lesson tracking error:', trackingError)
+      // Note: We don't rollback here as the student is created
+      // Tracking can be created later when teacher accesses the panel
     }
 
     return new Response(
