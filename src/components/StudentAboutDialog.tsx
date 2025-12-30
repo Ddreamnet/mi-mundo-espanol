@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogContent,
@@ -33,18 +34,6 @@ interface StudentAboutDialogProps {
   onSaved?: () => void;
 }
 
-const COLORS = [
-  { name: "Varsayılan", value: "inherit" },
-  { name: "Kırmızı", value: "#ef4444" },
-  { name: "Turuncu", value: "#f97316" },
-  { name: "Sarı", value: "#eab308" },
-  { name: "Yeşil", value: "#22c55e" },
-  { name: "Mavi", value: "#3b82f6" },
-  { name: "Mor", value: "#8b5cf6" },
-  { name: "Pembe", value: "#ec4899" },
-  { name: "Gri", value: "#6b7280" },
-];
-
 export function StudentAboutDialog({
   open,
   onOpenChange,
@@ -54,9 +43,22 @@ export function StudentAboutDialog({
   isReadOnly = false,
   onSaved,
 }: StudentAboutDialogProps) {
+  const { t } = useTranslation();
   const [saving, setSaving] = useState(false);
   const [currentAboutText, setCurrentAboutText] = useState<string | null>(aboutText);
   const [loading, setLoading] = useState(false);
+
+  const COLORS = [
+    { name: t("studentAbout.colorDefault"), value: "inherit" },
+    { name: t("studentAbout.colorRed"), value: "#ef4444" },
+    { name: t("studentAbout.colorOrange"), value: "#f97316" },
+    { name: t("studentAbout.colorYellow"), value: "#eab308" },
+    { name: t("studentAbout.colorGreen"), value: "#22c55e" },
+    { name: t("studentAbout.colorBlue"), value: "#3b82f6" },
+    { name: t("studentAbout.colorPurple"), value: "#8b5cf6" },
+    { name: t("studentAbout.colorPink"), value: "#ec4899" },
+    { name: t("studentAbout.colorGray"), value: "#6b7280" },
+  ];
 
   // Diyalog açıldığında veritabanından güncel veriyi çek
   useEffect(() => {
@@ -156,12 +158,12 @@ export function StudentAboutDialog({
 
       if (error) throw error;
 
-      toast.success("Bilgiler kaydedildi");
+      toast.success(t("studentAbout.infoSaved"));
       await onSaved?.();
       onOpenChange(false);
     } catch (error) {
       console.error("Error saving about text:", error);
-      toast.error("Kaydetme sırasında bir hata oluştu");
+      toast.error(t("studentAbout.saveError"));
     } finally {
       setSaving(false);
     }
@@ -186,7 +188,7 @@ export function StudentAboutDialog({
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <span className="text-primary">📝</span>
-            {studentName} Hakkında
+            {t("studentAbout.aboutTitle", { name: studentName })}
           </DialogTitle>
         </DialogHeader>
 
@@ -198,8 +200,8 @@ export function StudentAboutDialog({
                 size="sm"
                 pressed={editor.isActive("heading", { level: 1 })}
                 onPressedChange={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
-                aria-label="Başlık 1"
-                title="Başlık 1"
+                aria-label={t("studentAbout.heading1")}
+                title={t("studentAbout.heading1")}
               >
                 <Heading1 className="h-4 w-4" />
               </Toggle>
@@ -207,8 +209,8 @@ export function StudentAboutDialog({
                 size="sm"
                 pressed={editor.isActive("heading", { level: 2 })}
                 onPressedChange={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
-                aria-label="Başlık 2"
-                title="Başlık 2"
+                aria-label={t("studentAbout.heading2")}
+                title={t("studentAbout.heading2")}
               >
                 <Heading2 className="h-4 w-4" />
               </Toggle>
@@ -216,8 +218,8 @@ export function StudentAboutDialog({
                 size="sm"
                 pressed={editor.isActive("heading", { level: 3 })}
                 onPressedChange={() => editor.chain().focus().toggleHeading({ level: 3 }).run()}
-                aria-label="Başlık 3"
-                title="Başlık 3"
+                aria-label={t("studentAbout.heading3")}
+                title={t("studentAbout.heading3")}
               >
                 <Heading3 className="h-4 w-4" />
               </Toggle>
@@ -229,8 +231,8 @@ export function StudentAboutDialog({
                 size="sm"
                 pressed={editor.isActive("bold")}
                 onPressedChange={() => editor.chain().focus().toggleBold().run()}
-                aria-label="Kalın"
-                title="Kalın"
+                aria-label={t("studentAbout.bold")}
+                title={t("studentAbout.bold")}
               >
                 <Bold className="h-4 w-4" />
               </Toggle>
@@ -238,8 +240,8 @@ export function StudentAboutDialog({
                 size="sm"
                 pressed={editor.isActive("italic")}
                 onPressedChange={() => editor.chain().focus().toggleItalic().run()}
-                aria-label="İtalik"
-                title="İtalik"
+                aria-label={t("studentAbout.italic")}
+                title={t("studentAbout.italic")}
               >
                 <Italic className="h-4 w-4" />
               </Toggle>
@@ -247,8 +249,8 @@ export function StudentAboutDialog({
                 size="sm"
                 pressed={editor.isActive("underline")}
                 onPressedChange={() => editor.chain().focus().toggleUnderline().run()}
-                aria-label="Altı çizili"
-                title="Altı çizili"
+                aria-label={t("studentAbout.underline")}
+                title={t("studentAbout.underline")}
               >
                 <UnderlineIcon className="h-4 w-4" />
               </Toggle>
@@ -256,7 +258,7 @@ export function StudentAboutDialog({
               {/* Color picker */}
               <Popover>
                 <PopoverTrigger asChild>
-                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title="Yazı rengi">
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0" title={t("studentAbout.textColor")}>
                     <Palette className="h-4 w-4" />
                   </Button>
                 </PopoverTrigger>
@@ -287,8 +289,8 @@ export function StudentAboutDialog({
                 size="sm"
                 pressed={editor.isActive("bulletList")}
                 onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
-                aria-label="Madde listesi"
-                title="Madde listesi"
+                aria-label={t("studentAbout.bulletList")}
+                title={t("studentAbout.bulletList")}
               >
                 <List className="h-4 w-4" />
               </Toggle>
@@ -296,8 +298,8 @@ export function StudentAboutDialog({
                 size="sm"
                 pressed={editor.isActive("orderedList")}
                 onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}
-                aria-label="Numaralı liste"
-                title="Numaralı liste"
+                aria-label={t("studentAbout.orderedList")}
+                title={t("studentAbout.orderedList")}
               >
                 <ListOrdered className="h-4 w-4" />
               </Toggle>
@@ -311,7 +313,7 @@ export function StudentAboutDialog({
                 onClick={() => editor.chain().focus().undo().run()}
                 disabled={!editor.can().undo()}
                 className="h-8 w-8 p-0"
-                title="Geri al"
+                title={t("studentAbout.undo")}
               >
                 <Undo className="h-4 w-4" />
               </Button>
@@ -321,7 +323,7 @@ export function StudentAboutDialog({
                 onClick={() => editor.chain().focus().redo().run()}
                 disabled={!editor.can().redo()}
                 className="h-8 w-8 p-0"
-                title="İleri al"
+                title={t("studentAbout.redo")}
               >
                 <Redo className="h-4 w-4" />
               </Button>
@@ -335,7 +337,7 @@ export function StudentAboutDialog({
           >
             {isReadOnly && (!aboutText || aboutText === "<p></p>") ? (
               <div className="min-h-[150px] p-4 flex items-center justify-center">
-                <span className="opacity-70 italic">Henüz bilgi eklenmemiş</span>
+                <span className="opacity-70 italic">{t("studentAbout.noInfoYet")}</span>
               </div>
             ) : (
               <EditorContent editor={editor} />
@@ -350,10 +352,10 @@ export function StudentAboutDialog({
               onClick={() => onOpenChange(false)}
               disabled={saving}
             >
-              İptal
+              {t("common.cancel")}
             </Button>
             <Button onClick={handleSave} disabled={saving}>
-              {saving ? "Kaydediliyor..." : "Kaydet"}
+              {saving ? t("common.saving") : t("common.save")}
             </Button>
           </DialogFooter>
         )}
