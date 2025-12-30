@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,25 +39,17 @@ interface EditStudentLessonsDialogProps {
   onRemoveStudent: (studentId: string) => Promise<void>;
 }
 
-const daysOfWeek = [
-  { value: 1, label: "Pazartesi" },
-  { value: 2, label: "Salı" },
-  { value: 3, label: "Çarşamba" },
-  { value: 4, label: "Perşembe" },
-  { value: 5, label: "Cuma" },
-  { value: 6, label: "Cumartesi" },
-  { value: 0, label: "Pazar" },
-];
-
 interface SortableLessonItemProps {
   lesson: StudentLesson;
   index: number;
   updateLesson: (index: number, field: keyof StudentLesson, value: string | number) => void;
   removeLesson: (index: number) => void;
   canRemove: boolean;
+  t: (key: string) => string;
+  daysOfWeek: { value: number; label: string }[];
 }
 
-function SortableLessonItem({ lesson, index, updateLesson, removeLesson, canRemove }: SortableLessonItemProps) {
+function SortableLessonItem({ lesson, index, updateLesson, removeLesson, canRemove, t, daysOfWeek }: SortableLessonItemProps) {
   const { attributes, listeners, setNodeRef, transform, transition } = useSortable({ id: index.toString() });
 
   const style = {
@@ -80,7 +73,7 @@ function SortableLessonItem({ lesson, index, updateLesson, removeLesson, canRemo
       </div>
 
       <div className="space-y-2">
-        <Label>Gün</Label>
+        <Label>{t("editStudentLessons.day")}</Label>
         <Select
           value={lesson.dayOfWeek.toString()}
           onValueChange={(value) => updateLesson(index, "dayOfWeek", Number(value))}
@@ -99,7 +92,7 @@ function SortableLessonItem({ lesson, index, updateLesson, removeLesson, canRemo
       </div>
 
       <div className="space-y-2">
-        <Label>Başlangıç</Label>
+        <Label>{t("editStudentLessons.start")}</Label>
         <Input
           type="time"
           value={lesson.startTime}
@@ -109,7 +102,7 @@ function SortableLessonItem({ lesson, index, updateLesson, removeLesson, canRemo
       </div>
 
       <div className="space-y-2">
-        <Label>Bitiş</Label>
+        <Label>{t("editStudentLessons.end")}</Label>
         <Input
           type="time"
           value={lesson.endTime}
@@ -135,10 +128,21 @@ export function EditStudentLessonsDialog({
   onSaveChanges,
   onRemoveStudent,
 }: EditStudentLessonsDialogProps) {
+  const { t } = useTranslation();
   const [name, setName] = useState("");
   const [lessons, setLessons] = useState<StudentLesson[]>([{ dayOfWeek: 1, startTime: "", endTime: "" }]);
   const [isLoading, setIsLoading] = useState(false);
   const [isRemoving, setIsRemoving] = useState(false);
+
+  const daysOfWeek = [
+    { value: 1, label: t("days.monday") },
+    { value: 2, label: t("days.tuesday") },
+    { value: 3, label: t("days.wednesday") },
+    { value: 4, label: t("days.thursday") },
+    { value: 5, label: t("days.friday") },
+    { value: 6, label: t("days.saturday") },
+    { value: 0, label: t("days.sunday") },
+  ];
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -224,24 +228,24 @@ export function EditStudentLessonsDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Öğrenci Ayarları</DialogTitle>
-          <DialogDescription>Öğrencinin adını ve ders programını güncelleyin.</DialogDescription>
+          <DialogTitle>{t("editStudentLessons.title")}</DialogTitle>
+          <DialogDescription>{t("editStudentLessons.description")}</DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-6">
           <div className="space-y-2">
-            <Label htmlFor="student-name">Öğrenci Adı</Label>
+            <Label htmlFor="student-name">{t("editStudentLessons.studentName")}</Label>
             <Input
               id="student-name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="Öğrenci adını girin"
+              placeholder={t("editStudentLessons.studentNamePlaceholder")}
               required
             />
           </div>
 
           <div className="space-y-4">
             <div className="flex justify-between items-center">
-              <Label className="text-base font-medium">Ders Programı</Label>
+              <Label className="text-base font-medium">{t("editStudentLessons.schedule")}</Label>
               <Button
                 type="button"
                 variant="outline"
@@ -251,7 +255,7 @@ export function EditStudentLessonsDialog({
                 className="flex items-center gap-2"
               >
                 <Plus className="h-4 w-4" />
-                Ders Ekle
+                {t("editStudentLessons.addLesson")}
               </Button>
             </div>
 
@@ -268,6 +272,8 @@ export function EditStudentLessonsDialog({
                     updateLesson={updateLesson}
                     removeLesson={removeLesson}
                     canRemove={lessons.length > 1}
+                    t={t}
+                    daysOfWeek={daysOfWeek}
                   />
                 ))}
               </SortableContext>
@@ -277,7 +283,7 @@ export function EditStudentLessonsDialog({
           <div className="flex justify-between items-center">
             <Button type="button" variant="destructive" onClick={handleRemove} disabled={isLoading || isRemoving}>
               {isRemoving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Öğrenciyi Kaldır
+              {t("editStudentLessons.removeStudent")}
             </Button>
 
             <div className="flex gap-2">
@@ -287,11 +293,11 @@ export function EditStudentLessonsDialog({
                 onClick={() => onOpenChange(false)}
                 disabled={isLoading || isRemoving}
               >
-                İptal
+                {t("editStudentLessons.cancel")}
               </Button>
               <Button type="submit" disabled={isLoading || isRemoving || !isFormValid()}>
                 {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Değişiklikleri Kaydet
+                {t("editStudentLessons.saveChanges")}
               </Button>
             </div>
           </div>

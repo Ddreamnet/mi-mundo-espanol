@@ -151,8 +151,8 @@ export function GlobalTopicsManager({ open, onOpenChange, isAdmin = false }: Glo
     } catch (error: any) {
       // Revert on error
       toast({
-        title: "Hata",
-        description: "Sıra güncellenemedi",
+        title: t("common.error"),
+        description: t("globalTopicsMessages.orderUpdateError"),
         variant: "destructive",
       });
       fetchGlobalTopics();
@@ -193,8 +193,8 @@ export function GlobalTopicsManager({ open, onOpenChange, isAdmin = false }: Glo
     } catch (error: any) {
       // Revert on error
       toast({
-        title: "Hata",
-        description: "Kaynak sırası güncellenemedi",
+        title: t("common.error"),
+        description: t("globalTopicsMessages.resourceOrderError"),
         variant: "destructive",
       });
       fetchGlobalTopics();
@@ -242,8 +242,8 @@ export function GlobalTopicsManager({ open, onOpenChange, isAdmin = false }: Glo
       
       if (!user?.id) {
         toast({
-          title: "Hata",
-          description: "Oturum bilgisi bulunamadı. Lütfen tekrar giriş yapın.",
+          title: t("common.error"),
+          description: t("globalTopicsMessages.sessionError"),
           variant: "destructive",
         });
         return;
@@ -261,15 +261,15 @@ export function GlobalTopicsManager({ open, onOpenChange, isAdmin = false }: Glo
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Global konu başarıyla eklendi",
+        title: t("common.success"),
+        description: t("globalTopicsMessages.topicAdded"),
       });
 
       fetchGlobalTopics();
       setShowAddTopic(false);
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -292,14 +292,14 @@ export function GlobalTopicsManager({ open, onOpenChange, isAdmin = false }: Glo
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Global konu başarıyla silindi",
+        title: t("common.success"),
+        description: t("globalTopicsMessages.topicDeleted"),
       });
 
       fetchGlobalTopics();
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -324,15 +324,15 @@ export function GlobalTopicsManager({ open, onOpenChange, isAdmin = false }: Glo
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Kaynak başarıyla eklendi",
+        title: t("common.success"),
+        description: t("globalTopicsMessages.resourceAdded"),
       });
 
       fetchGlobalTopics();
       setShowAddResource(false);
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -352,15 +352,15 @@ export function GlobalTopicsManager({ open, onOpenChange, isAdmin = false }: Glo
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Konu başarıyla güncellendi",
+        title: t("common.success"),
+        description: t("globalTopicsMessages.topicUpdated"),
       });
 
       fetchGlobalTopics();
       setShowEditTopic(false);
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -388,15 +388,15 @@ export function GlobalTopicsManager({ open, onOpenChange, isAdmin = false }: Glo
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Kaynak başarıyla güncellendi",
+        title: t("common.success"),
+        description: t("globalTopicsMessages.resourceUpdated"),
       });
 
       fetchGlobalTopics();
       setShowEditResource(false);
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -410,14 +410,14 @@ export function GlobalTopicsManager({ open, onOpenChange, isAdmin = false }: Glo
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Kaynak başarıyla silindi",
+        title: t("common.success"),
+        description: t("globalTopicsMessages.resourceDeleted"),
       });
 
       fetchGlobalTopics();
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });

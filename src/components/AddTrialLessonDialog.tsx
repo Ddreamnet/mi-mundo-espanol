@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -15,6 +16,7 @@ interface AddTrialLessonDialogProps {
 }
 
 export function AddTrialLessonDialog({ open, onOpenChange, teacherId, onSuccess }: AddTrialLessonDialogProps) {
+  const { t } = useTranslation();
   const [dayOfWeek, setDayOfWeek] = useState<string>("");
   const [startTime, setStartTime] = useState("");
   const [endTime, setEndTime] = useState("");
@@ -22,13 +24,13 @@ export function AddTrialLessonDialog({ open, onOpenChange, teacherId, onSuccess 
   const { toast } = useToast();
 
   const days = [
-    { value: "1", label: "Pazartesi" },
-    { value: "2", label: "Salı" },
-    { value: "3", label: "Çarşamba" },
-    { value: "4", label: "Perşembe" },
-    { value: "5", label: "Cuma" },
-    { value: "6", label: "Cumartesi" },
-    { value: "0", label: "Pazar" },
+    { value: "1", label: t("days.monday") },
+    { value: "2", label: t("days.tuesday") },
+    { value: "3", label: t("days.wednesday") },
+    { value: "4", label: t("days.thursday") },
+    { value: "5", label: t("days.friday") },
+    { value: "6", label: t("days.saturday") },
+    { value: "0", label: t("days.sunday") },
   ];
 
   // Calculate the next occurrence of a specific day of week
@@ -54,8 +56,8 @@ export function AddTrialLessonDialog({ open, onOpenChange, teacherId, onSuccess 
   const handleSubmit = async () => {
     if (!dayOfWeek || !startTime || !endTime) {
       toast({
-        title: "Eksik Bilgi",
-        description: "Lütfen tüm alanları doldurun",
+        title: t("addTrialLesson.missingFields"),
+        description: t("addTrialLesson.fillAllFields"),
         variant: "destructive",
       });
       return;
@@ -77,8 +79,8 @@ export function AddTrialLessonDialog({ open, onOpenChange, teacherId, onSuccess 
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Deneme dersi eklendi",
+        title: t("addTrialLesson.success"),
+        description: t("addTrialLesson.lessonAdded"),
       });
 
       setDayOfWeek("");
@@ -88,7 +90,7 @@ export function AddTrialLessonDialog({ open, onOpenChange, teacherId, onSuccess 
       onSuccess();
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("addTrialLesson.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -101,14 +103,14 @@ export function AddTrialLessonDialog({ open, onOpenChange, teacherId, onSuccess 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Deneme Dersi Ekle</DialogTitle>
+          <DialogTitle>{t("addTrialLesson.title")}</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label>Gün</Label>
+            <Label>{t("addTrialLesson.day")}</Label>
             <Select value={dayOfWeek} onValueChange={setDayOfWeek}>
               <SelectTrigger>
-                <SelectValue placeholder="Gün seçin" />
+                <SelectValue placeholder={t("addTrialLesson.dayPlaceholder")} />
               </SelectTrigger>
               <SelectContent>
                 {days.map((day) => (
@@ -121,21 +123,21 @@ export function AddTrialLessonDialog({ open, onOpenChange, teacherId, onSuccess 
           </div>
 
           <div className="space-y-2">
-            <Label>Başlangıç Saati</Label>
+            <Label>{t("addTrialLesson.startTime")}</Label>
             <Input type="time" value={startTime} onChange={(e) => setStartTime(e.target.value)} />
           </div>
 
           <div className="space-y-2">
-            <Label>Bitiş Saati</Label>
+            <Label>{t("addTrialLesson.endTime")}</Label>
             <Input type="time" value={endTime} onChange={(e) => setEndTime(e.target.value)} />
           </div>
 
           <div className="flex justify-end gap-2 pt-4">
             <Button variant="outline" onClick={() => onOpenChange(false)}>
-              İptal
+              {t("addTrialLesson.cancel")}
             </Button>
             <Button onClick={handleSubmit} disabled={loading}>
-              {loading ? "Ekleniyor..." : "Onayla"}
+              {loading ? t("addTrialLesson.adding") : t("addTrialLesson.confirm")}
             </Button>
           </div>
         </div>
