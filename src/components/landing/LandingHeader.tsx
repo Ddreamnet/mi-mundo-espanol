@@ -85,11 +85,11 @@ export function LandingHeader() {
               {/* Language Selector */}
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="text-[hsl(var(--landing-header-foreground))] hover:bg-muted/20">
-                    <Globe className="h-[30px] w-[30px]" />
+                  <Button variant="ghost" size="icon" className="text-[hsl(var(--landing-header-foreground))] hover:bg-muted/20 h-10 w-10">
+                    <Globe className="!h-6 !w-6" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="bg-card">
+                <DropdownMenuContent align="end" className="bg-card border-border z-[60]">
                   {languages.map(lang => <DropdownMenuItem key={lang.code} onClick={() => setLanguage(lang.code)} className={language === lang.code ? "bg-accent" : ""}>
                       {lang.flag} {lang.label}
                     </DropdownMenuItem>)}
@@ -127,7 +127,7 @@ export function LandingHeader() {
                         {currentLanguage.flag} {t("nav.language")}
                       </Button>
                     </DropdownMenuTrigger>
-                    <DropdownMenuContent className="bg-card">
+                    <DropdownMenuContent className="bg-card border-border z-[60]">
                       {languages.map(lang => <DropdownMenuItem key={lang.code} onClick={() => setLanguage(lang.code)} className={language === lang.code ? "bg-accent" : ""}>
                           {lang.flag} {lang.label}
                         </DropdownMenuItem>)}
