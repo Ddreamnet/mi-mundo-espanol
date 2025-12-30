@@ -10,7 +10,7 @@ import { useTranslation } from "react-i18next";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/useAuth";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { Save, Eye, Copy } from "lucide-react";
+import { Save, Eye } from "lucide-react";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Underline from "@tiptap/extension-underline";
@@ -176,15 +176,6 @@ export function BlogEditorDialog({ open, onOpenChange, post }: BlogEditorDialogP
     }));
   };
 
-  const copyFromTurkish = () => {
-    if (selectedLang === "tr") return;
-    setMultiLangContent((prev) => ({
-      ...prev,
-      [selectedLang]: { ...prev.tr },
-    }));
-    editor?.commands.setContent(multiLangContent.tr.content);
-    toast({ title: t("common.success"), description: t("common.copiedFromTurkish") });
-  };
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -240,15 +231,7 @@ export function BlogEditorDialog({ open, onOpenChange, post }: BlogEditorDialogP
 
         <div className="space-y-6">
           {/* Language Tabs */}
-          <div className="flex items-center justify-between">
-            <LanguageTabs selectedLang={selectedLang} onLanguageChange={setSelectedLang} />
-            {selectedLang !== "tr" && (
-              <Button variant="outline" size="sm" onClick={copyFromTurkish}>
-                <Copy className="h-4 w-4 mr-2" />
-                {t("common.copyFromTurkish")}
-              </Button>
-            )}
-          </div>
+          <LanguageTabs selectedLang={selectedLang} onLanguageChange={setSelectedLang} />
 
           <div className="grid gap-4">
             <div className="space-y-2">
@@ -304,7 +287,7 @@ export function BlogEditorDialog({ open, onOpenChange, post }: BlogEditorDialogP
           <div className="space-y-2">
             <Label>{t("editors.blog.content")}</Label>
             <div className="border rounded-md">
-              <div className="flex gap-1 p-2 border-b bg-muted/50 flex-wrap">
+              <div className="flex gap-1 p-2 border-b bg-muted flex-wrap">
                 <Button
                   type="button"
                   variant="ghost"
