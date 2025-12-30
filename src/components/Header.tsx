@@ -26,13 +26,13 @@ export function Header({
   const currentLanguage = languages.find(l => l.code === language) || languages[0];
   const LanguageSelector = () => <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="sm" className="gap-1.5">
-          <Globe className="h-4 w-4" />
+        <Button variant="ghost" size="sm" className="gap-1.5 h-10 w-10 p-0">
+          <Globe className="!h-6 !w-6" />
           <span className="hidden sm:inline">{currentLanguage.flag}</span>
           <ChevronDown className="h-3 w-3" />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="bg-popover border-border z-50">
+      <DropdownMenuContent align="end" className="bg-card border-border z-[60]">
         {languages.map(lang => <DropdownMenuItem key={lang.code} onClick={() => setLanguage(lang.code)} className={language === lang.code ? "bg-accent" : ""}>
             <span className="mr-2">{lang.flag}</span>
             {lang.label}
