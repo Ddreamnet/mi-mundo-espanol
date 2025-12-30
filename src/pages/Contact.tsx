@@ -121,7 +121,7 @@ export default function Contact() {
   const content = getContent();
 
   return (
-    <div className="min-h-screen flex flex-col bg-page-contact">
+    <div className="min-h-screen min-w-[100vw] flex flex-col bg-page-contact">
       <LandingHeader />
 
       <main className="flex-1 pt-20 lg:pt-24">

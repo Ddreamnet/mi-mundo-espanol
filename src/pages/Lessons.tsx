@@ -175,7 +175,7 @@ export default function Lessons() {
   const content = getContent();
 
   return (
-    <div className="min-h-screen bg-page-lessons">
+    <div className="min-h-screen min-w-[100vw] bg-page-lessons">
       <LandingHeader />
 
       <main className="pt-24 lg:pt-28 pb-16">
