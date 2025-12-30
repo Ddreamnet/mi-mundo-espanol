@@ -124,7 +124,7 @@ export default function Blog() {
         </div>
       </section>
 
-      <section className="py-12 lg:py-16">
+      <section className="py-12 lg:py-16 pt-0">
         <div className="container mx-auto px-4 lg:px-8">
           {isLoading ? <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
               {[1, 2, 3].map(i => <Card key={i} className="overflow-hidden">
