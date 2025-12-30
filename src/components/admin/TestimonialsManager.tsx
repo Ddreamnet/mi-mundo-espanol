@@ -44,32 +44,34 @@ interface Testimonial {
   is_active: boolean;
 }
 
+interface LocalTestimonialData {
+  id: string;
+  quote: MultiLangText;
+  author_name: string;
+  is_active: boolean;
+}
+
 function isMultiLangText(val: unknown): val is MultiLangText {
   if (!val || typeof val !== "object") return false;
   const obj = val as Record<string, unknown>;
   return "tr" in obj && "en" in obj && "es" in obj;
 }
 
-function getQuote(testimonial: Testimonial, lang: Language): string {
-  if (isMultiLangText(testimonial.quote)) {
-    return testimonial.quote[lang] || testimonial.quote.tr || "";
-  }
-  return testimonial.quote as string;
-}
-
 function SortableTestimonial({
   testimonial,
-  onUpdate,
+  localData,
+  onLocalChange,
   onDelete,
+  onToggleActive,
   selectedLang,
-  onLangChange,
   t,
 }: {
   testimonial: Testimonial;
-  onUpdate: (id: string, data: Partial<Testimonial>) => void;
+  localData: LocalTestimonialData;
+  onLocalChange: (data: LocalTestimonialData) => void;
   onDelete: (id: string) => void;
+  onToggleActive: (id: string, checked: boolean) => void;
   selectedLang: Language;
-  onLangChange: (lang: Language) => void;
   t: (key: string) => string;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -80,28 +82,6 @@ function SortableTestimonial({
     transform: CSS.Transform.toString(transform),
     transition,
     opacity: isDragging ? 0.5 : 1,
-  };
-
-  const [localQuote, setLocalQuote] = useState<MultiLangText>({ tr: "", en: "", es: "" });
-  const [localAuthor, setLocalAuthor] = useState(testimonial.author_name || "");
-
-  useEffect(() => {
-    if (isMultiLangText(testimonial.quote)) {
-      setLocalQuote(testimonial.quote);
-    } else {
-      setLocalQuote({ tr: testimonial.quote as string, en: "", es: "" });
-    }
-    setLocalAuthor(testimonial.author_name || "");
-  }, [testimonial.quote, testimonial.author_name]);
-
-  const handleSave = () => {
-    onUpdate(testimonial.id, { quote: localQuote, author_name: localAuthor || null });
-  };
-
-  const copyFromTurkish = () => {
-    if (selectedLang !== "tr") {
-      setLocalQuote((prev) => ({ ...prev, [selectedLang]: prev.tr }));
-    }
   };
 
   return (
@@ -117,21 +97,16 @@ function SortableTestimonial({
           </div>
 
           <div className="flex-1 space-y-3">
-            <div className="flex items-center justify-between gap-2">
-              <LanguageTabs selectedLang={selectedLang} onLanguageChange={onLangChange} />
-              {selectedLang !== "tr" && (
-                <Button variant="outline" size="sm" onClick={copyFromTurkish} className="gap-1">
-                  <Copy className="h-3 w-3" />
-                  {t("common.copyFromTurkish")}
-                </Button>
-              )}
-            </div>
-
             <div className="flex items-center gap-3">
               <MessageSquareQuote className="h-5 w-5 text-muted-foreground shrink-0" />
               <Textarea
-                value={localQuote[selectedLang]}
-                onChange={(e) => setLocalQuote((prev) => ({ ...prev, [selectedLang]: e.target.value }))}
+                value={localData.quote[selectedLang]}
+                onChange={(e) =>
+                  onLocalChange({
+                    ...localData,
+                    quote: { ...localData.quote, [selectedLang]: e.target.value },
+                  })
+                }
                 placeholder={t("editors.testimonials.quotePlaceholder")}
                 className="min-h-[80px] resize-none"
               />
@@ -139,32 +114,23 @@ function SortableTestimonial({
 
             <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
               <Input
-                value={localAuthor}
-                onChange={(e) => setLocalAuthor(e.target.value)}
+                value={localData.author_name}
+                onChange={(e) => onLocalChange({ ...localData, author_name: e.target.value })}
                 placeholder={t("editors.testimonials.authorPlaceholder")}
                 className="max-w-xs"
               />
 
               <div className="flex items-center gap-2">
                 <Switch
-                  checked={testimonial.is_active}
-                  onCheckedChange={(checked) => onUpdate(testimonial.id, { is_active: checked })}
+                  checked={localData.is_active}
+                  onCheckedChange={(checked) => onToggleActive(testimonial.id, checked)}
                 />
-                <Label className="text-sm text-muted-foreground">{t("common.active")}</Label>
+                <Label className="text-sm text-muted-foreground">{t("editors.zigzag.active")}</Label>
               </div>
             </div>
           </div>
 
           <div className="flex flex-col gap-2">
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={handleSave}
-              className="h-8 w-8"
-              title={t("common.save")}
-            >
-              <Save className="h-4 w-4" />
-            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -186,6 +152,8 @@ export function TestimonialsManager() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [selectedLang, setSelectedLang] = useState<Language>("tr");
+  const [localTestimonials, setLocalTestimonials] = useState<Record<string, LocalTestimonialData>>({});
+  const [hasChanges, setHasChanges] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -206,11 +174,66 @@ export function TestimonialsManager() {
     },
   });
 
+  // Initialize local state from fetched testimonials
+  useEffect(() => {
+    const newLocalTestimonials: Record<string, LocalTestimonialData> = {};
+    testimonials.forEach((testimonial) => {
+      if (!localTestimonials[testimonial.id]) {
+        const quote = isMultiLangText(testimonial.quote)
+          ? testimonial.quote
+          : { tr: testimonial.quote as string, en: "", es: "" };
+
+        newLocalTestimonials[testimonial.id] = {
+          id: testimonial.id,
+          quote,
+          author_name: testimonial.author_name || "",
+          is_active: testimonial.is_active,
+        };
+      } else {
+        newLocalTestimonials[testimonial.id] = localTestimonials[testimonial.id];
+      }
+    });
+    setLocalTestimonials(newLocalTestimonials);
+  }, [testimonials]);
+
+  const handleLocalChange = (data: LocalTestimonialData) => {
+    setLocalTestimonials((prev) => ({ ...prev, [data.id]: data }));
+    setHasChanges(true);
+  };
+
+  const handleToggleActive = (id: string, checked: boolean) => {
+    setLocalTestimonials((prev) => ({
+      ...prev,
+      [id]: { ...prev[id], is_active: checked },
+    }));
+    setHasChanges(true);
+  };
+
+  const copyFromTurkish = () => {
+    if (selectedLang === "tr") return;
+    setLocalTestimonials((prev) => {
+      const updated: Record<string, LocalTestimonialData> = {};
+      Object.entries(prev).forEach(([id, data]) => {
+        updated[id] = {
+          ...data,
+          quote: { ...data.quote, [selectedLang]: data.quote.tr },
+        };
+      });
+      return updated;
+    });
+    setHasChanges(true);
+    toast({ title: t("common.copied"), description: t("common.copiedFromTurkish") });
+  };
+
   const addMutation = useMutation({
     mutationFn: async () => {
       const maxOrder = testimonials.length > 0 ? Math.max(...testimonials.map((t) => t.order_index)) : -1;
       const { error } = await supabase.from("testimonials").insert({
-        quote: JSON.stringify({ tr: "Yeni referans metni...", en: "New testimonial text...", es: "Nuevo texto de testimonio..." }),
+        quote: JSON.stringify({
+          tr: "Yeni referans metni...",
+          en: "New testimonial text...",
+          es: "Nuevo texto de testimonio...",
+        }),
         order_index: maxOrder + 1,
         is_active: true,
       });
@@ -225,21 +248,23 @@ export function TestimonialsManager() {
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<Testimonial> }) => {
-      // Convert multi-lang objects to JSON-compatible format
-      const updateData: Record<string, unknown> = {};
-      if (data.quote !== undefined) {
-        updateData.quote = typeof data.quote === 'object' ? JSON.stringify(data.quote) : data.quote;
+  const saveAllMutation = useMutation({
+    mutationFn: async () => {
+      for (const [id, data] of Object.entries(localTestimonials)) {
+        const { error } = await supabase
+          .from("testimonials")
+          .update({
+            quote: JSON.stringify(data.quote),
+            author_name: data.author_name || null,
+            is_active: data.is_active,
+          })
+          .eq("id", id);
+        if (error) throw error;
       }
-      if (data.author_name !== undefined) updateData.author_name = data.author_name;
-      if (data.is_active !== undefined) updateData.is_active = data.is_active;
-      
-      const { error } = await supabase.from("testimonials").update(updateData).eq("id", id);
-      if (error) throw error;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-testimonials"] });
+      setHasChanges(false);
       toast({ title: t("common.success"), description: t("editors.testimonials.updated") });
     },
     onError: (error: any) => {
@@ -286,7 +311,10 @@ export function TestimonialsManager() {
     const newOrder = newArray.map((item, index) => ({ id: item.id, order_index: index }));
 
     // Optimistic update
-    queryClient.setQueryData(["admin-testimonials"], newArray.map((item, index) => ({ ...item, order_index: index })));
+    queryClient.setQueryData(
+      ["admin-testimonials"],
+      newArray.map((item, index) => ({ ...item, order_index: index }))
+    );
     reorderMutation.mutate(newOrder);
   };
 
@@ -303,14 +331,23 @@ export function TestimonialsManager() {
       <div className="flex justify-between items-center">
         <div>
           <h3 className="font-semibold text-lg">{t("editors.testimonials.title")}</h3>
-          <p className="text-sm text-muted-foreground">
-            {t("editors.testimonials.description")}
-          </p>
+          <p className="text-sm text-muted-foreground">{t("editors.testimonials.description")}</p>
         </div>
         <Button onClick={() => addMutation.mutate()} disabled={addMutation.isPending}>
           <Plus className="h-4 w-4 mr-2" />
-          {t("common.addNew")}
+          {t("common.add")}
         </Button>
+      </div>
+
+      {/* Language Tabs - Single selector at top */}
+      <div className="flex items-center justify-between">
+        <LanguageTabs selectedLang={selectedLang} onLanguageChange={setSelectedLang} />
+        {selectedLang !== "tr" && (
+          <Button variant="outline" size="sm" onClick={copyFromTurkish}>
+            <Copy className="h-4 w-4 mr-2" />
+            {t("common.copyFromTurkish")}
+          </Button>
+        )}
       </div>
 
       {testimonials.length === 0 ? (
@@ -322,21 +359,43 @@ export function TestimonialsManager() {
           </Button>
         </div>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={testimonials.map((t) => t.id)} strategy={verticalListSortingStrategy}>
-            {testimonials.map((testimonial) => (
-              <SortableTestimonial
-                key={testimonial.id}
-                testimonial={testimonial}
-                onUpdate={(id, data) => updateMutation.mutate({ id, data })}
-                onDelete={(id) => deleteMutation.mutate(id)}
-                selectedLang={selectedLang}
-                onLangChange={setSelectedLang}
-                t={t}
-              />
-            ))}
-          </SortableContext>
-        </DndContext>
+        <>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={testimonials.map((t) => t.id)} strategy={verticalListSortingStrategy}>
+              {testimonials.map((testimonial) => (
+                <SortableTestimonial
+                  key={testimonial.id}
+                  testimonial={testimonial}
+                  localData={
+                    localTestimonials[testimonial.id] || {
+                      id: testimonial.id,
+                      quote: { tr: "", en: "", es: "" },
+                      author_name: "",
+                      is_active: true,
+                    }
+                  }
+                  onLocalChange={handleLocalChange}
+                  onDelete={(id) => deleteMutation.mutate(id)}
+                  onToggleActive={handleToggleActive}
+                  selectedLang={selectedLang}
+                  t={t}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+
+          {/* Single Save Button at bottom */}
+          <div className="flex justify-end pt-4">
+            <Button
+              onClick={() => saveAllMutation.mutate()}
+              disabled={saveAllMutation.isPending}
+              size="lg"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {saveAllMutation.isPending ? t("common.saving") : t("common.save")}
+            </Button>
+          </div>
+        </>
       )}
     </div>
   );

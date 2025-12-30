@@ -344,7 +344,7 @@ export function ContactFooterEditor() {
       <div className="flex justify-end">
         <Button onClick={() => saveMutation.mutate()} disabled={saveMutation.isPending} size="lg">
           <Save className="h-4 w-4 mr-2" />
-          {saveMutation.isPending ? t("common.saving") : t("common.saveAll")}
+          {saveMutation.isPending ? t("common.saving") : t("common.save")}
         </Button>
       </div>
     </div>

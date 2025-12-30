@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useTranslation } from "react-i18next";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { TestimonialsManager } from "./TestimonialsManager";
@@ -17,6 +18,7 @@ interface PagesManagerDialogProps {
 }
 
 export function PagesManagerDialog({ open, onOpenChange }: PagesManagerDialogProps) {
+  const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("hero");
 
   return (
@@ -25,7 +27,7 @@ export function PagesManagerDialog({ open, onOpenChange }: PagesManagerDialogPro
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Layout className="h-5 w-5" />
-            Sayfa Yönetimi
+            {t("dialogs.pageSettings")}
           </DialogTitle>
         </DialogHeader>
 
