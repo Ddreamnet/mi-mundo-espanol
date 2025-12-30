@@ -18,7 +18,6 @@ export function LanguageTabs({ selectedLang, onLanguageChange }: LanguageTabsPro
 
   return (
     <div className="flex items-center gap-2 mb-4">
-      <span className="text-sm text-muted-foreground">{t("common.editLanguage")}:</span>
       <Tabs value={selectedLang} onValueChange={(v) => onLanguageChange(v as Language)}>
         <TabsList className="h-9">
           {languages.map((lang) => (

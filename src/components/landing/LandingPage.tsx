@@ -44,6 +44,19 @@ function isMultiLangItems(val: unknown): val is MultiLangItems {
   return "tr" in obj && Array.isArray(obj.tr);
 }
 
+// Parse potentially nested JSON string (handles double-encoded JSON)
+function parseNestedJson(val: unknown): unknown {
+  if (typeof val === "string") {
+    try {
+      const parsed = JSON.parse(val);
+      return parseNestedJson(parsed); // Recursively parse if still a string
+    } catch {
+      return val; // Return as-is if not valid JSON
+    }
+  }
+  return val;
+}
+
 const defaultZigzags = [
   {
     id: "default-1",
@@ -96,10 +109,13 @@ export function LandingPage() {
 
   // Helper to get title for current language
   const getTitle = (section: ZigzagData): string => {
-    if (isMultiLangText(section.title)) {
-      return section.title[language] || section.title.tr || "";
+    // Parse in case of nested JSON
+    const parsedTitle = parseNestedJson(section.title);
+    
+    if (isMultiLangText(parsedTitle)) {
+      return parsedTitle[language] || parsedTitle.tr || "";
     }
-    return section.title as string;
+    return typeof parsedTitle === "string" ? parsedTitle : String(section.title);
   };
 
   // Helper to get items for current language

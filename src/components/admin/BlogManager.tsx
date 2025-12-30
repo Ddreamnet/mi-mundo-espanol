@@ -70,7 +70,7 @@ export function BlogManager() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-blog-posts"] });
-      toast({ title: t("common.success"), description: t("dialogs.blog.postDeleted") });
+      toast({ title: t("common.success"), description: t("blog.postDeleted") });
       setDeletingPostId(null);
     },
     onError: (error: any) => {
@@ -93,7 +93,7 @@ export function BlogManager() {
       queryClient.invalidateQueries({ queryKey: ["admin-blog-posts"] });
       toast({
         title: t("common.success"),
-        description: is_published ? t("dialogs.blog.postPublished") : t("dialogs.blog.postUnpublished"),
+        description: is_published ? t("blog.postPublished") : t("blog.postUnpublished"),
       });
     },
     onError: (error: any) => {
@@ -123,23 +123,23 @@ export function BlogManager() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <div>
-          <h3 className="font-semibold text-lg">{t("dialogs.blog.title")}</h3>
+          <h3 className="font-semibold text-lg">{t("blog.title")}</h3>
           <p className="text-sm text-muted-foreground">
-            {t("dialogs.blog.description")}
+            {t("blog.description")}
           </p>
         </div>
         <Button onClick={handleNewPost}>
           <Plus className="h-4 w-4 mr-2" />
-          {t("dialogs.blog.newPost")}
+          {t("blog.newPost")}
         </Button>
       </div>
 
       {posts.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
           <FileText className="h-12 w-12 mb-4" />
-          <p>{t("dialogs.blog.noPostsYet")}</p>
+          <p>{t("blog.noPostsYet")}</p>
           <Button variant="outline" className="mt-4" onClick={handleNewPost}>
-            {t("dialogs.blog.addFirstPost")}
+            {t("blog.addFirstPost")}
           </Button>
         </div>
       ) : (
@@ -162,7 +162,7 @@ export function BlogManager() {
                       <div className="flex items-center gap-2 mb-1">
                         <h4 className="font-medium truncate">{post.title}</h4>
                         <Badge variant={post.is_published ? "default" : "secondary"}>
-                          {post.is_published ? t("dialogs.blog.published") : t("dialogs.blog.draft")}
+                          {post.is_published ? t("blog.published") : t("blog.draft")}
                         </Badge>
                       </div>
                       {post.excerpt && (
@@ -188,7 +188,7 @@ export function BlogManager() {
                             is_published: !post.is_published,
                           })
                         }
-                        title={post.is_published ? t("dialogs.blog.unpublish") : t("dialogs.blog.publish")}
+                        title={post.is_published ? t("blog.unpublish") : t("blog.publish")}
                         className="border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground"
                       >
                         {post.is_published ? (
@@ -233,9 +233,9 @@ export function BlogManager() {
       <AlertDialog open={!!deletingPostId} onOpenChange={() => setDeletingPostId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("dialogs.blog.deleteTitle")}</AlertDialogTitle>
+            <AlertDialogTitle>{t("blog.deleteTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("dialogs.blog.deleteDescription")}
+              {t("blog.deleteDescription")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
