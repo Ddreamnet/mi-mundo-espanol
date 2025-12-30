@@ -52,6 +52,15 @@ interface ZigzagSection {
   order_index: number;
 }
 
+interface LocalSectionData {
+  id: string;
+  title: MultiLangText;
+  items: MultiLangItems;
+  image_url: string;
+  image_on_left: boolean;
+  is_active: boolean;
+}
+
 function isMultiLangText(val: unknown): val is MultiLangText {
   if (!val || typeof val !== "object") return false;
   const obj = val as Record<string, unknown>;
@@ -64,34 +73,24 @@ function isMultiLangItems(val: unknown): val is MultiLangItems {
   return "tr" in obj && Array.isArray(obj.tr);
 }
 
-function getTitle(section: ZigzagSection, lang: Language): string {
-  if (isMultiLangText(section.title)) {
-    return section.title[lang] || section.title.tr || "";
-  }
-  return section.title as string;
-}
-
-function getItems(section: ZigzagSection, lang: Language): string[] {
-  if (isMultiLangItems(section.items)) {
-    return section.items[lang] || section.items.tr || [];
-  }
-  return Array.isArray(section.items) ? section.items : [];
-}
-
 function SortableZigzag({
   section,
-  onUpdate,
+  localData,
+  onLocalChange,
   onDelete,
+  onToggleImageLeft,
+  onToggleActive,
   t,
   selectedLang,
-  onLangChange,
 }: {
   section: ZigzagSection;
-  onUpdate: (id: string, data: Partial<ZigzagSection>) => void;
+  localData: LocalSectionData;
+  onLocalChange: (data: LocalSectionData) => void;
   onDelete: (id: string) => void;
+  onToggleImageLeft: (id: string, checked: boolean) => void;
+  onToggleActive: (id: string, checked: boolean) => void;
   t: (key: string) => string;
   selectedLang: Language;
-  onLangChange: (lang: Language) => void;
 }) {
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: section.id,
@@ -103,67 +102,37 @@ function SortableZigzag({
     opacity: isDragging ? 0.5 : 1,
   };
 
-  const [localTitle, setLocalTitle] = useState<MultiLangText>({ tr: "", en: "", es: "" });
-  const [localItems, setLocalItems] = useState<MultiLangItems>({ tr: [], en: [], es: [] });
-  const [localImageUrl, setLocalImageUrl] = useState(section.image_url || "");
   const [newItem, setNewItem] = useState("");
-
-  useEffect(() => {
-    // Load title
-    if (isMultiLangText(section.title)) {
-      setLocalTitle(section.title);
-    } else {
-      setLocalTitle({ tr: section.title as string, en: "", es: "" });
-    }
-    
-    // Load items
-    if (isMultiLangItems(section.items)) {
-      setLocalItems(section.items);
-    } else {
-      const items = Array.isArray(section.items) ? section.items : [];
-      setLocalItems({ tr: items, en: [], es: [] });
-    }
-    
-    setLocalImageUrl(section.image_url || "");
-  }, [section]);
-
-  const handleSave = () => {
-    onUpdate(section.id, {
-      title: localTitle,
-      items: localItems,
-      image_url: localImageUrl || null,
-    });
-  };
-
-  const copyFromTurkish = () => {
-    if (selectedLang !== "tr") {
-      setLocalTitle((prev) => ({ ...prev, [selectedLang]: prev.tr }));
-      setLocalItems((prev) => ({ ...prev, [selectedLang]: [...prev.tr] }));
-    }
-  };
 
   const addItem = () => {
     if (newItem.trim()) {
-      setLocalItems((prev) => ({
-        ...prev,
-        [selectedLang]: [...prev[selectedLang], newItem.trim()],
-      }));
+      onLocalChange({
+        ...localData,
+        items: {
+          ...localData.items,
+          [selectedLang]: [...localData.items[selectedLang], newItem.trim()],
+        },
+      });
       setNewItem("");
     }
   };
 
   const removeItem = (index: number) => {
-    setLocalItems((prev) => ({
-      ...prev,
-      [selectedLang]: prev[selectedLang].filter((_, i) => i !== index),
-    }));
+    onLocalChange({
+      ...localData,
+      items: {
+        ...localData.items,
+        [selectedLang]: localData.items[selectedLang].filter((_, i) => i !== index),
+      },
+    });
   };
 
   const updateItem = (index: number, value: string) => {
-    setLocalItems((prev) => {
-      const updated = [...prev[selectedLang]];
-      updated[index] = value;
-      return { ...prev, [selectedLang]: updated };
+    const updated = [...localData.items[selectedLang]];
+    updated[index] = value;
+    onLocalChange({
+      ...localData,
+      items: { ...localData.items, [selectedLang]: updated },
     });
   };
 
@@ -181,36 +150,33 @@ function SortableZigzag({
 
           <div className="flex-1 space-y-4">
             <div className="flex items-center justify-between gap-4">
-              <LanguageTabs selectedLang={selectedLang} onLanguageChange={onLangChange} />
-              {selectedLang !== "tr" && (
-                <Button variant="outline" size="sm" onClick={copyFromTurkish} className="gap-1">
-                  <Copy className="h-3 w-3" />
-                  {t("common.copyFromTurkish")}
-                </Button>
-              )}
-            </div>
-
-            <div className="flex items-center justify-between gap-4">
               <div className="flex-1">
                 <Label className="text-xs text-muted-foreground">{t("editors.zigzag.title")}</Label>
                 <Input
-                  value={localTitle[selectedLang]}
-                  onChange={(e) => setLocalTitle((prev) => ({ ...prev, [selectedLang]: e.target.value }))}
+                  value={localData.title[selectedLang]}
+                  onChange={(e) =>
+                    onLocalChange({
+                      ...localData,
+                      title: { ...localData.title, [selectedLang]: e.target.value },
+                    })
+                  }
                   placeholder={t("editors.zigzag.titlePlaceholder")}
                 />
               </div>
               <div className="flex items-center gap-3 pt-5">
                 <div className="flex items-center gap-2">
                   <Switch
-                    checked={section.image_on_left}
-                    onCheckedChange={(checked) => onUpdate(section.id, { image_on_left: checked })}
+                    checked={localData.image_on_left}
+                    onCheckedChange={(checked) => onToggleImageLeft(section.id, checked)}
                   />
-                  <Label className="text-xs text-muted-foreground whitespace-nowrap">{t("editors.zigzag.imageOnLeft")}</Label>
+                  <Label className="text-xs text-muted-foreground whitespace-nowrap">
+                    {t("editors.zigzag.imageOnLeft")}
+                  </Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <Switch
-                    checked={section.is_active}
-                    onCheckedChange={(checked) => onUpdate(section.id, { is_active: checked })}
+                    checked={localData.is_active}
+                    onCheckedChange={(checked) => onToggleActive(section.id, checked)}
                   />
                   <Label className="text-xs text-muted-foreground">{t("editors.zigzag.active")}</Label>
                 </div>
@@ -219,15 +185,15 @@ function SortableZigzag({
 
             <ImageUpload
               label={t("editors.zigzag.sectionImage")}
-              value={localImageUrl}
-              onChange={setLocalImageUrl}
+              value={localData.image_url}
+              onChange={(url) => onLocalChange({ ...localData, image_url: url })}
               folder="zigzag"
             />
 
             <div className="space-y-2">
               <Label className="text-xs text-muted-foreground">{t("editors.zigzag.items")}</Label>
               <div className="space-y-2">
-                {localItems[selectedLang].map((item, index) => (
+                {localData.items[selectedLang].map((item, index) => (
                   <div key={index} className="flex gap-2">
                     <Input
                       value={item}
@@ -261,9 +227,6 @@ function SortableZigzag({
           </div>
 
           <div className="flex flex-col gap-2 pt-2">
-            <Button variant="outline" size="icon" onClick={handleSave} className="h-8 w-8" title={t("common.save")}>
-              <Save className="h-4 w-4" />
-            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -285,6 +248,8 @@ export function ZigzagEditor() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [selectedLang, setSelectedLang] = useState<Language>("tr");
+  const [localSections, setLocalSections] = useState<Record<string, LocalSectionData>>({});
+  const [hasChanges, setHasChanges] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor),
@@ -305,6 +270,71 @@ export function ZigzagEditor() {
       })) as ZigzagSection[];
     },
   });
+
+  // Initialize local state from fetched sections
+  useEffect(() => {
+    const newLocalSections: Record<string, LocalSectionData> = {};
+    sections.forEach((section) => {
+      if (!localSections[section.id]) {
+        const title = isMultiLangText(section.title)
+          ? section.title
+          : { tr: section.title as string, en: "", es: "" };
+        const items = isMultiLangItems(section.items)
+          ? section.items
+          : { tr: Array.isArray(section.items) ? section.items : [], en: [], es: [] };
+
+        newLocalSections[section.id] = {
+          id: section.id,
+          title,
+          items,
+          image_url: section.image_url || "",
+          image_on_left: section.image_on_left,
+          is_active: section.is_active,
+        };
+      } else {
+        newLocalSections[section.id] = localSections[section.id];
+      }
+    });
+    setLocalSections(newLocalSections);
+  }, [sections]);
+
+  const handleLocalChange = (data: LocalSectionData) => {
+    setLocalSections((prev) => ({ ...prev, [data.id]: data }));
+    setHasChanges(true);
+  };
+
+  const handleToggleImageLeft = (id: string, checked: boolean) => {
+    setLocalSections((prev) => ({
+      ...prev,
+      [id]: { ...prev[id], image_on_left: checked },
+    }));
+    setHasChanges(true);
+  };
+
+  const handleToggleActive = (id: string, checked: boolean) => {
+    setLocalSections((prev) => ({
+      ...prev,
+      [id]: { ...prev[id], is_active: checked },
+    }));
+    setHasChanges(true);
+  };
+
+  const copyFromTurkish = () => {
+    if (selectedLang === "tr") return;
+    setLocalSections((prev) => {
+      const updated: Record<string, LocalSectionData> = {};
+      Object.entries(prev).forEach(([id, data]) => {
+        updated[id] = {
+          ...data,
+          title: { ...data.title, [selectedLang]: data.title.tr },
+          items: { ...data.items, [selectedLang]: [...data.items.tr] },
+        };
+      });
+      return updated;
+    });
+    setHasChanges(true);
+    toast({ title: t("common.copied"), description: t("common.copiedFromTurkish") });
+  };
 
   const addMutation = useMutation({
     mutationFn: async () => {
@@ -327,21 +357,26 @@ export function ZigzagEditor() {
     },
   });
 
-  const updateMutation = useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: Partial<ZigzagSection> }) => {
-      // Convert multi-lang objects to JSON-compatible format
-      const updateData: Record<string, unknown> = {};
-      if (data.title !== undefined) updateData.title = data.title;
-      if (data.items !== undefined) updateData.items = data.items;
-      if (data.image_url !== undefined) updateData.image_url = data.image_url;
-      if (data.image_on_left !== undefined) updateData.image_on_left = data.image_on_left;
-      if (data.is_active !== undefined) updateData.is_active = data.is_active;
-      
-      const { error } = await supabase.from("zigzag_sections").update(updateData).eq("id", id);
-      if (error) throw error;
+  const saveAllMutation = useMutation({
+    mutationFn: async () => {
+      for (const [id, data] of Object.entries(localSections)) {
+        const updateData = {
+          title: data.title,
+          items: data.items,
+          image_url: data.image_url || null,
+          image_on_left: data.image_on_left,
+          is_active: data.is_active,
+        };
+        const { error } = await supabase
+          .from("zigzag_sections")
+          .update(updateData as any)
+          .eq("id", id);
+        if (error) throw error;
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["admin-zigzag-sections"] });
+      setHasChanges(false);
       toast({ title: t("common.success"), description: t("editors.zigzag.sectionUpdated") });
     },
     onError: (error: any) => {
@@ -404,14 +439,23 @@ export function ZigzagEditor() {
       <div className="flex justify-between items-center">
         <div>
           <h3 className="font-semibold text-lg">{t("editors.zigzag.zigzagSections")}</h3>
-          <p className="text-sm text-muted-foreground">
-            {t("editors.zigzag.manageSections")}
-          </p>
+          <p className="text-sm text-muted-foreground">{t("editors.zigzag.manageSections")}</p>
         </div>
         <Button onClick={() => addMutation.mutate()} disabled={addMutation.isPending}>
           <Plus className="h-4 w-4 mr-2" />
           {t("editors.zigzag.newSection")}
         </Button>
+      </div>
+
+      {/* Language Tabs - Single selector at top */}
+      <div className="flex items-center justify-between">
+        <LanguageTabs selectedLang={selectedLang} onLanguageChange={setSelectedLang} />
+        {selectedLang !== "tr" && (
+          <Button variant="outline" size="sm" onClick={copyFromTurkish}>
+            <Copy className="h-4 w-4 mr-2" />
+            {t("common.copyFromTurkish")}
+          </Button>
+        )}
       </div>
 
       {sections.length === 0 ? (
@@ -423,21 +467,46 @@ export function ZigzagEditor() {
           </Button>
         </div>
       ) : (
-        <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
-          <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
-            {sections.map((section) => (
-              <SortableZigzag
-                key={section.id}
-                section={section}
-                onUpdate={(id, data) => updateMutation.mutate({ id, data })}
-                onDelete={(id) => deleteMutation.mutate(id)}
-                t={t}
-                selectedLang={selectedLang}
-                onLangChange={setSelectedLang}
-              />
-            ))}
-          </SortableContext>
-        </DndContext>
+        <>
+          <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+            <SortableContext items={sections.map((s) => s.id)} strategy={verticalListSortingStrategy}>
+              {sections.map((section) => (
+                <SortableZigzag
+                  key={section.id}
+                  section={section}
+                  localData={
+                    localSections[section.id] || {
+                      id: section.id,
+                      title: { tr: "", en: "", es: "" },
+                      items: { tr: [], en: [], es: [] },
+                      image_url: "",
+                      image_on_left: false,
+                      is_active: true,
+                    }
+                  }
+                  onLocalChange={handleLocalChange}
+                  onDelete={(id) => deleteMutation.mutate(id)}
+                  onToggleImageLeft={handleToggleImageLeft}
+                  onToggleActive={handleToggleActive}
+                  t={t}
+                  selectedLang={selectedLang}
+                />
+              ))}
+            </SortableContext>
+          </DndContext>
+
+          {/* Single Save Button at bottom */}
+          <div className="flex justify-end pt-4">
+            <Button
+              onClick={() => saveAllMutation.mutate()}
+              disabled={saveAllMutation.isPending}
+              size="lg"
+            >
+              <Save className="h-4 w-4 mr-2" />
+              {saveAllMutation.isPending ? t("common.saving") : t("common.save")}
+            </Button>
+          </div>
+        </>
       )}
     </div>
   );
