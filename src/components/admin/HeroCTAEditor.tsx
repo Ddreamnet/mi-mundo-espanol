@@ -173,13 +173,26 @@ export function HeroCTAEditor() {
             </div>
           </div>
 
-          {syncedEditingLang === "tr" && (
+          {syncedEditingLang === "tr" ? (
             <ImageUpload
               label="Hero Görseli"
               value={hero.imageUrl}
               onChange={(url) => updateHeroField("imageUrl", url)}
               folder="hero"
             />
+          ) : (
+            <div className="p-4 bg-muted/50 rounded-lg border border-dashed">
+              <p className="text-sm text-muted-foreground">
+                📷 Hero görseli tüm dillerde aynı kullanılır. Görseli değiştirmek için Türkçe sekmesine geçin.
+              </p>
+              {hero.imageUrl && (
+                <img 
+                  src={hero.imageUrl} 
+                  alt="Mevcut hero görseli" 
+                  className="mt-2 h-20 w-auto rounded object-cover"
+                />
+              )}
+            </div>
           )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
