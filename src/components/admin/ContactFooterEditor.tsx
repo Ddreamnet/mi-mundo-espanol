@@ -189,15 +189,7 @@ export function ContactFooterEditor() {
   return (
     <div className="space-y-6">
       {/* Language Tabs */}
-      <div className="flex items-center justify-between">
-        <LanguageTabs selectedLang={editingLang} onLanguageChange={setEditingLang} />
-        {editingLang !== "tr" && (
-          <Button variant="outline" size="sm" onClick={handleCopyAll}>
-            <Copy className="h-4 w-4 mr-2" />
-            {t("common.copyFromTurkish")}
-          </Button>
-        )}
-      </div>
+      <LanguageTabs selectedLang={editingLang} onLanguageChange={setEditingLang} />
 
       {/* Contact Section */}
       <Card>
