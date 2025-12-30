@@ -13,6 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useLanguage, Language } from "@/contexts/LanguageContext";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 interface BlogPostData {
   id: string;
@@ -222,7 +223,13 @@ export default function BlogPost() {
           {post.cover_image_url && (
             <div className="container mx-auto px-4 lg:px-8 max-w-5xl mb-12">
               <div className="relative rounded-2xl overflow-hidden shadow-xl">
-                <img src={post.cover_image_url} alt={localized.title} className="w-full h-64 lg:h-96 object-cover" />
+                <OptimizedImage
+                  src={post.cover_image_url}
+                  alt={localized.title}
+                  aspectRatio="aspect-video"
+                  priority
+                  className="object-cover"
+                />
               </div>
             </div>
           )}

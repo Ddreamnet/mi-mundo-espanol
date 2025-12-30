@@ -1,4 +1,5 @@
 import { Check } from "lucide-react";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 interface ZigzagSectionProps {
   id?: string;
@@ -21,10 +22,11 @@ export function ZigzagSection({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           {/* Image */}
           <div className={`${imageOnLeft ? "lg:order-1" : "lg:order-2"}`}>
-            <img 
+            <OptimizedImage 
               src={imageSrc} 
               alt={title} 
-              className="w-full aspect-[4/3] object-contain" 
+              aspectRatio="aspect-[4/3]"
+              className="object-contain" 
             />
           </div>
 

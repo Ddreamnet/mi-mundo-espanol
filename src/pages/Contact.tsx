@@ -5,6 +5,7 @@ import contactIllustration from "@/assets/contact-illustration.png";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 interface ContactItem {
   icon: string;
@@ -156,11 +157,14 @@ export default function Contact() {
 
             {/* Right Column - Illustration */}
             <div className="flex items-center justify-center order-first lg:order-last lg:justify-center lg:pr-8">
-              <img
-                src={contactIllustration}
-                alt="İletişim İllüstrasyonu"
-                className="w-full max-w-xs sm:max-w-sm lg:max-w-md xl:max-w-lg object-contain"
-              />
+              <div className="w-full max-w-xs sm:max-w-sm lg:max-w-md xl:max-w-lg">
+                <OptimizedImage
+                  src={contactIllustration}
+                  alt="İletişim İllüstrasyonu"
+                  aspectRatio="aspect-auto"
+                  className="object-contain"
+                />
+              </div>
             </div>
           </div>
         </div>

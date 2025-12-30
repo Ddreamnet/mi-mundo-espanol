@@ -6,6 +6,7 @@ import lessonsIllustration from "@/assets/lessons-illustration.png";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage, Language } from "@/contexts/LanguageContext";
+import { OptimizedImage } from "@/components/ui/optimized-image";
 
 interface LessonsContent {
   pageTitle: string;
@@ -197,10 +198,11 @@ export default function Lessons() {
               </div>
 
               <div className="w-full max-w-[260px] lg:max-w-[300px]">
-                <img
+                <OptimizedImage
                   src={lessonsIllustration}
                   alt={t("contact.imageAlt")}
-                  className="w-full h-auto"
+                  aspectRatio="aspect-auto"
+                  className="object-contain"
                 />
               </div>
             </div>
