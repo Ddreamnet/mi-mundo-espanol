@@ -104,10 +104,9 @@ export function UploadHomeworkDialog({
 
         if (uploadError) throw uploadError;
 
-        // Get public URL
-        const { data: { publicUrl } } = supabase.storage
-          .from('homework-files')
-          .getPublicUrl(filePath);
+        // Store the file path (not public URL) since bucket is private
+        // We'll generate signed URLs when displaying/downloading
+        const fileUrl = `homework-files/${filePath}`;
 
         submissions.push({
           batch_id: batchId,
@@ -115,7 +114,7 @@ export function UploadHomeworkDialog({
           teacher_id: teacherId,
           title: title.trim(),
           description: description.trim() || null,
-          file_url: publicUrl,
+          file_url: fileUrl,
           file_type: file.type,
           file_name: file.name,
           uploaded_by_user_id: uploaderId,
