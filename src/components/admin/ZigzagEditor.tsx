@@ -61,16 +61,31 @@ interface LocalSectionData {
   is_active: boolean;
 }
 
+function parseJsonValue(val: unknown): unknown {
+  if (typeof val === "string") {
+    try {
+      const parsed = JSON.parse(val);
+      // Recursively parse in case it's double-encoded
+      return parseJsonValue(parsed);
+    } catch {
+      return val;
+    }
+  }
+  return val;
+}
+
 function isMultiLangText(val: unknown): val is MultiLangText {
-  if (!val || typeof val !== "object") return false;
-  const obj = val as Record<string, unknown>;
+  const parsed = parseJsonValue(val);
+  if (!parsed || typeof parsed !== "object") return false;
+  const obj = parsed as Record<string, unknown>;
   return "tr" in obj && "en" in obj && "es" in obj;
 }
 
 function isMultiLangItems(val: unknown): val is MultiLangItems {
-  if (!val || typeof val !== "object") return false;
-  const obj = val as Record<string, unknown>;
-  return "tr" in obj && Array.isArray(obj.tr);
+  const parsed = parseJsonValue(val);
+  if (!parsed || typeof parsed !== "object") return false;
+  const obj = parsed as Record<string, unknown>;
+  return "tr" in obj && Array.isArray((obj as any).tr);
 }
 
 function SortableZigzag({
@@ -276,12 +291,20 @@ export function ZigzagEditor() {
     const newLocalSections: Record<string, LocalSectionData> = {};
     sections.forEach((section) => {
       if (!localSections[section.id]) {
-        const title = isMultiLangText(section.title)
-          ? section.title
-          : { tr: section.title as string, en: "", es: "" };
-        const items = isMultiLangItems(section.items)
-          ? section.items
-          : { tr: Array.isArray(section.items) ? section.items : [], en: [], es: [] };
+        const parsedTitle = parseJsonValue(section.title);
+
+        let title: MultiLangText = isMultiLangText(parsedTitle)
+          ? (parsedTitle as MultiLangText)
+          : { tr: typeof parsedTitle === "string" ? parsedTitle : "", en: "", es: "" };
+
+        // Fix legacy data where title.tr accidentally contains a JSON string of the whole object
+        const nestedTitle = parseJsonValue(title.tr);
+        if (isMultiLangText(nestedTitle)) title = nestedTitle as MultiLangText;
+
+        const parsedItems = parseJsonValue(section.items);
+        const items: MultiLangItems = isMultiLangItems(parsedItems)
+          ? (parsedItems as MultiLangItems)
+          : { tr: Array.isArray(parsedItems) ? parsedItems : [], en: [], es: [] };
 
         newLocalSections[section.id] = {
           id: section.id,
@@ -361,7 +384,8 @@ export function ZigzagEditor() {
     mutationFn: async () => {
       for (const [id, data] of Object.entries(localSections)) {
         const updateData = {
-          title: data.title,
+          // title is TEXT in DB; store as JSON string consistently
+          title: JSON.stringify(data.title),
           items: data.items,
           image_url: data.image_url || null,
           image_on_left: data.image_on_left,
