@@ -30,20 +30,9 @@ function isMultiLangFormat(data: unknown): data is MultiLangHeroContent {
 }
 
 export function HeroSection() {
-  const { t } = useTranslation();
   const { language } = useLanguage();
 
-  const defaultHero: HeroContent = {
-    mainTitle: t("hero.mainTitle"),
-    subtitle: t("hero.subtitle"),
-    imageUrl: defaultImageUrl,
-    primaryButtonText: t("hero.primaryButton"),
-    primaryButtonLink: "/iletisim",
-    secondaryButtonText: t("hero.secondaryButton"),
-    secondaryButtonLink: "/dersler",
-  };
-
-  const { data: rawContent } = useQuery({
+  const { data: rawContent, isLoading } = useQuery({
     queryKey: ["page-content", "hero"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -58,14 +47,29 @@ export function HeroSection() {
   });
 
   // Get content for current language
-  let hero: HeroContent = defaultHero;
-  if (rawContent) {
+  const getHero = (): HeroContent | null => {
+    if (!rawContent) return null;
+    
     if (isMultiLangFormat(rawContent)) {
-      const langContent = rawContent[language];
-      hero = { ...defaultHero, ...langContent };
-    } else {
-      hero = { ...defaultHero, ...(rawContent as HeroContent) };
+      return rawContent[language] || rawContent.tr;
     }
+    
+    return null;
+  };
+
+  const hero = getHero();
+
+  // Show loading state
+  if (isLoading || !hero) {
+    return (
+      <section id="hero" className="pt-20 lg:pt-24">
+        <div className="container mx-auto px-4 lg:px-8 py-16 lg:py-24">
+          <div className="flex items-center justify-center min-h-[300px]">
+            <div className="animate-pulse text-foreground/50">Yükleniyor...</div>
+          </div>
+        </div>
+      </section>
+    );
   }
 
   const imageUrl = hero.imageUrl && hero.imageUrl.trim() !== '' ? hero.imageUrl : defaultImageUrl;
