@@ -13,6 +13,8 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useLanguage, Language } from "@/contexts/LanguageContext";
+import { OptimizedImage } from "@/components/ui/optimized-image";
+
 interface BlogPost {
   id: string;
   title: string;
@@ -140,9 +142,19 @@ export default function Blog() {
             const localized = getLocalizedContent(post, language);
             return <Card key={post.id} className="group overflow-hidden cursor-pointer transition-all duration-300 hover:shadow-xl hover:-translate-y-1 border-border/50 bg-card" onClick={() => navigate(`/blog/${post.slug}`)}>
                     <div className="relative overflow-hidden h-48">
-                      {post.cover_image_url ? <img src={post.cover_image_url} alt={localized.title} className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" /> : <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
+                      {post.cover_image_url ? (
+                        <OptimizedImage
+                          src={post.cover_image_url}
+                          alt={localized.title}
+                          aspectRatio="aspect-auto"
+                          containerClassName="h-full"
+                          className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 to-secondary/20 flex items-center justify-center">
                           <span className="text-4xl">📚</span>
-                        </div>}
+                        </div>
+                      )}
                     </div>
                     <CardContent className="p-6 bg-card">
                       <div className="flex items-center gap-4 text-sm text-muted-foreground mb-3">
