@@ -1,9 +1,9 @@
 import { Button } from "@/components/ui/button";
-import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { Link } from "react-router-dom";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useState, useEffect } from "react";
 
 interface HeroContent {
   mainTitle: string;
@@ -31,6 +31,7 @@ function isMultiLangFormat(data: unknown): data is MultiLangHeroContent {
 
 export function HeroSection() {
   const { language } = useLanguage();
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   const { data: rawContent, isLoading } = useQuery({
     queryKey: ["page-content", "hero"],
@@ -58,32 +59,63 @@ export function HeroSection() {
   };
 
   const hero = getHero();
+  const imageUrl = hero?.imageUrl && hero.imageUrl.trim() !== '' ? hero.imageUrl : defaultImageUrl;
+
+  // Preload image
+  useEffect(() => {
+    const img = new Image();
+    img.onload = () => setImageLoaded(true);
+    img.src = imageUrl;
+    
+    // Check if already cached
+    if (img.complete) {
+      setImageLoaded(true);
+    }
+  }, [imageUrl]);
 
   // Show loading state
   if (isLoading || !hero) {
     return (
       <section id="hero" className="pt-20 lg:pt-24">
         <div className="container mx-auto px-4 lg:px-8 py-16 lg:py-24">
-          <div className="flex items-center justify-center min-h-[300px]">
-            <div className="animate-pulse text-foreground/50">Yükleniyor...</div>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
+            <div className="order-2 lg:order-1">
+              <div className="w-full aspect-[4/3] bg-muted/20 animate-pulse rounded-lg" />
+            </div>
+            <div className="order-1 lg:order-2 text-center lg:text-left">
+              <div className="h-12 bg-muted/20 animate-pulse rounded mb-6 w-3/4 mx-auto lg:mx-0" />
+              <div className="h-8 bg-muted/20 animate-pulse rounded mb-8 w-1/2 mx-auto lg:mx-0" />
+              <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                <div className="h-12 w-32 bg-muted/20 animate-pulse rounded" />
+                <div className="h-12 w-32 bg-muted/20 animate-pulse rounded" />
+              </div>
+            </div>
           </div>
         </div>
       </section>
     );
   }
 
-  const imageUrl = hero.imageUrl && hero.imageUrl.trim() !== '' ? hero.imageUrl : defaultImageUrl;
-
   return (
     <section id="hero" className="pt-20 lg:pt-24">
       <div className="container mx-auto px-4 lg:px-8 py-16 lg:py-24">
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
           <div className="order-2 lg:order-1">
-            <img
-              alt={hero.mainTitle}
-              src={imageUrl}
-              className="w-full aspect-[4/3] object-contain"
-            />
+            <div className="relative w-full aspect-[4/3]">
+              {!imageLoaded && (
+                <div className="absolute inset-0 bg-muted/20 animate-pulse rounded-lg" />
+              )}
+              <img
+                alt={hero.mainTitle}
+                src={imageUrl}
+                loading="eager"
+                fetchPriority="high"
+                className={`w-full h-full object-contain transition-opacity duration-300 ${
+                  imageLoaded ? 'opacity-100' : 'opacity-0'
+                }`}
+                onLoad={() => setImageLoaded(true)}
+              />
+            </div>
           </div>
 
           <div className="order-1 lg:order-2 text-center lg:text-left">
