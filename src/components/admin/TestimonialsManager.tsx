@@ -359,15 +359,7 @@ export function TestimonialsManager() {
       </div>
 
       {/* Language Tabs - Single selector at top */}
-      <div className="flex items-center justify-between">
-        <LanguageTabs selectedLang={selectedLang} onLanguageChange={setSelectedLang} />
-        {selectedLang !== "tr" && (
-          <Button variant="outline" size="sm" onClick={copyFromTurkish}>
-            <Copy className="h-4 w-4 mr-2" />
-            {t("common.copyFromTurkish")}
-          </Button>
-        )}
-      </div>
+      <LanguageTabs selectedLang={selectedLang} onLanguageChange={setSelectedLang} />
 
       {testimonials.length === 0 ? (
         <div className="flex flex-col items-center justify-center h-64 text-muted-foreground">
