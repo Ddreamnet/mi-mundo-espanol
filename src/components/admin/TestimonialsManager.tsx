@@ -51,9 +51,22 @@ interface LocalTestimonialData {
   is_active: boolean;
 }
 
+function parseJsonValue(val: unknown): unknown {
+  if (typeof val === "string") {
+    try {
+      const parsed = JSON.parse(val);
+      return parseJsonValue(parsed);
+    } catch {
+      return val;
+    }
+  }
+  return val;
+}
+
 function isMultiLangText(val: unknown): val is MultiLangText {
-  if (!val || typeof val !== "object") return false;
-  const obj = val as Record<string, unknown>;
+  const parsed = parseJsonValue(val);
+  if (!parsed || typeof parsed !== "object") return false;
+  const obj = parsed as Record<string, unknown>;
   return "tr" in obj && "en" in obj && "es" in obj;
 }
 
@@ -179,9 +192,15 @@ export function TestimonialsManager() {
     const newLocalTestimonials: Record<string, LocalTestimonialData> = {};
     testimonials.forEach((testimonial) => {
       if (!localTestimonials[testimonial.id]) {
-        const quote = isMultiLangText(testimonial.quote)
-          ? testimonial.quote
-          : { tr: testimonial.quote as string, en: "", es: "" };
+        const parsedQuote = parseJsonValue(testimonial.quote);
+
+        let quote: MultiLangText = isMultiLangText(parsedQuote)
+          ? (parsedQuote as MultiLangText)
+          : { tr: typeof parsedQuote === "string" ? parsedQuote : "", en: "", es: "" };
+
+        // Fix legacy data where quote.tr accidentally contains a JSON string of the whole object
+        const nestedQuote = parseJsonValue(quote.tr);
+        if (isMultiLangText(nestedQuote)) quote = nestedQuote as MultiLangText;
 
         newLocalTestimonials[testimonial.id] = {
           id: testimonial.id,
