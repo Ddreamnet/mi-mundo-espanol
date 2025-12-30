@@ -1,11 +1,10 @@
 import { Phone, Mail, MessageCircle, Instagram, Facebook } from "lucide-react";
-import { useTranslation } from "react-i18next";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import contactIllustration from "@/assets/contact-illustration.png";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { useLanguage, Language } from "@/contexts/LanguageContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ContactItem {
   icon: string;
@@ -43,50 +42,10 @@ const getIcon = (iconName: string) => {
   }
 };
 
-const defaultContact: MultiLangContent = {
-  tr: {
-    pageTitle: "İletişim",
-    supportText: "Size nasıl yardımcı olabiliriz?",
-    contactItems: [
-      { icon: "phone", label: "Telefon", value: "+90 530 472 1875", href: "tel:+905304721875" },
-      { icon: "mail", label: "E-posta", value: "mimundoespanol@outlook.com", href: "mailto:mimundoespanol@outlook.com" },
-      { icon: "mail", label: "E-posta - 2", value: "mertaydin245@hotmail.com", href: "mailto:mertaydin245@hotmail.com" },
-      { icon: "whatsapp", label: "WhatsApp", value: "Mesaj gönder", href: "https://wa.me/message/2ESUR45URXTFJ1" },
-      { icon: "instagram", label: "Instagram", value: "@mi.mundo_espanol", href: "https://instagram.com/mi.mundo_espanol" },
-      { icon: "facebook", label: "Facebook", value: "Mi Mundo Espanol", href: "https://facebook.com/MiMundoEspanol" },
-    ],
-  },
-  en: {
-    pageTitle: "Contact",
-    supportText: "How can we help you?",
-    contactItems: [
-      { icon: "phone", label: "Phone", value: "+90 530 472 1875", href: "tel:+905304721875" },
-      { icon: "mail", label: "Email", value: "mimundoespanol@outlook.com", href: "mailto:mimundoespanol@outlook.com" },
-      { icon: "mail", label: "Email - 2", value: "mertaydin245@hotmail.com", href: "mailto:mertaydin245@hotmail.com" },
-      { icon: "whatsapp", label: "WhatsApp", value: "Send message", href: "https://wa.me/message/2ESUR45URXTFJ1" },
-      { icon: "instagram", label: "Instagram", value: "@mi.mundo_espanol", href: "https://instagram.com/mi.mundo_espanol" },
-      { icon: "facebook", label: "Facebook", value: "Mi Mundo Espanol", href: "https://facebook.com/MiMundoEspanol" },
-    ],
-  },
-  es: {
-    pageTitle: "Contacto",
-    supportText: "¿Cómo podemos ayudarte?",
-    contactItems: [
-      { icon: "phone", label: "Teléfono", value: "+90 530 472 1875", href: "tel:+905304721875" },
-      { icon: "mail", label: "Correo electrónico", value: "mimundoespanol@outlook.com", href: "mailto:mimundoespanol@outlook.com" },
-      { icon: "mail", label: "Correo electrónico - 2", value: "mertaydin245@hotmail.com", href: "mailto:mertaydin245@hotmail.com" },
-      { icon: "whatsapp", label: "WhatsApp", value: "Enviar mensaje", href: "https://wa.me/message/2ESUR45URXTFJ1" },
-      { icon: "instagram", label: "Instagram", value: "@mi.mundo_espanol", href: "https://instagram.com/mi.mundo_espanol" },
-      { icon: "facebook", label: "Facebook", value: "Mi Mundo Espanol", href: "https://facebook.com/MiMundoEspanol" },
-    ],
-  },
-};
-
 export default function Contact() {
-  const { t } = useTranslation();
   const { language } = useLanguage();
 
-  const { data: pageContent } = useQuery({
+  const { data: pageContent, isLoading } = useQuery({
     queryKey: ["page-content", "contact"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -95,30 +54,37 @@ export default function Contact() {
         .eq("page_key", "contact")
         .maybeSingle();
       if (error) throw error;
-      return data?.content as unknown as MultiLangContent | ContactContent | null;
+      return data?.content as unknown as MultiLangContent | null;
     },
     staleTime: 1000 * 60 * 5,
   });
 
-  // Handle both multi-lang and legacy single-lang content
-  const getContent = (): ContactContent => {
-    if (!pageContent) return defaultContact[language];
+  // Get content for current language
+  const getContent = (): ContactContent | null => {
+    if (!pageContent) return null;
 
     // Check if it's multi-lang format
     if ('tr' in pageContent && 'en' in pageContent && 'es' in pageContent) {
-      const multiLang = pageContent as MultiLangContent;
-      return multiLang[language] || multiLang.tr;
+      return pageContent[language] || pageContent.tr;
     }
 
-    // Legacy single-lang format - use as Turkish
-    if (language === 'tr') {
-      return { ...defaultContact.tr, ...(pageContent as ContactContent) };
-    }
-
-    return defaultContact[language];
+    return null;
   };
 
   const content = getContent();
+
+  // Show loading or no content state
+  if (isLoading || !content) {
+    return (
+      <div className="min-h-screen min-w-[100vw] flex flex-col bg-page-contact">
+        <LandingHeader />
+        <main className="flex-1 pt-20 lg:pt-24 flex items-center justify-center">
+          <div className="animate-pulse text-foreground/50">Yükleniyor...</div>
+        </main>
+        <LandingFooter />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen min-w-[100vw] flex flex-col bg-page-contact">
@@ -192,7 +158,7 @@ export default function Contact() {
             <div className="flex items-center justify-center order-first lg:order-last lg:justify-center lg:pr-8">
               <img
                 src={contactIllustration}
-                alt={t("contact.imageAlt")}
+                alt="İletişim İllüstrasyonu"
                 className="w-full max-w-xs sm:max-w-sm lg:max-w-md xl:max-w-lg object-contain"
               />
             </div>
