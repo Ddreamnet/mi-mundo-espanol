@@ -236,7 +236,7 @@ export default function BlogPost() {
 
           <div className="container mx-auto px-4 lg:px-8 max-w-4xl mt-16 pt-8 border-t border-border">
             <div className="flex items-center justify-between">
-              <Button variant="outline" onClick={() => navigate("/blog")}>
+              <Button variant="secondary" onClick={() => navigate("/blog")} className="bg-secondary text-secondary-foreground hover:bg-secondary/80">
                 <ArrowLeft className="w-4 h-4 mr-2" />
                 {getOtherPostsText()}
               </Button>
