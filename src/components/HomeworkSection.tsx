@@ -163,11 +163,19 @@ export function HomeworkSection({
 
   const handleDownload = async (fileUrl: string, fileName: string) => {
     try {
-      const urlParts = fileUrl.split('/homework-files/');
-      if (urlParts.length < 2) {
-        throw new Error("Invalid file URL");
+      // Extract file path - handle both old format (full URL) and new format (path only)
+      let filePath: string;
+      if (fileUrl.includes('/homework-files/')) {
+        const urlParts = fileUrl.split('/homework-files/');
+        if (urlParts.length < 2) {
+          throw new Error("Invalid file URL");
+        }
+        filePath = decodeURIComponent(urlParts[1]);
+      } else if (fileUrl.startsWith('homework-files/')) {
+        filePath = fileUrl.replace('homework-files/', '');
+      } else {
+        throw new Error("Invalid file URL format");
       }
-      const filePath = decodeURIComponent(urlParts[1]);
 
       const { data, error } = await supabase.storage
         .from('homework-files')
@@ -184,6 +192,7 @@ export function HomeworkSection({
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
     } catch (error: any) {
+      console.error("Download error:", error);
       toast({
         title: t("common.error"),
         description: t("common.fileDownloadError"),
@@ -196,10 +205,18 @@ export function HomeworkSection({
     try {
       const batchHomeworks = homeworks.filter(h => h.batch_id === batchId);
       
+      // Handle both old format (full URL) and new format (path only)
       const filePaths = batchHomeworks
-        .map(h => h.file_url.split('/homework-files/')[1])
+        .map(h => {
+          if (h.file_url.includes('/homework-files/')) {
+            return h.file_url.split('/homework-files/')[1];
+          } else if (h.file_url.startsWith('homework-files/')) {
+            return h.file_url.replace('homework-files/', '');
+          }
+          return null;
+        })
         .filter(Boolean)
-        .map(decodeURIComponent);
+        .map(path => decodeURIComponent(path as string));
       
       if (filePaths.length > 0) {
         await supabase.storage.from('homework-files').remove(filePaths);
