@@ -32,29 +32,32 @@ interface ZigzagData {
   order_index: number;
 }
 
-function isMultiLangText(val: unknown): val is MultiLangText {
-  if (!val || typeof val !== "object") return false;
-  const obj = val as Record<string, unknown>;
-  return "tr" in obj && "en" in obj && "es" in obj;
-}
-
-function isMultiLangItems(val: unknown): val is MultiLangItems {
-  if (!val || typeof val !== "object") return false;
-  const obj = val as Record<string, unknown>;
-  return "tr" in obj && Array.isArray(obj.tr);
-}
-
-// Parse potentially nested JSON string (handles double-encoded JSON)
-function parseNestedJson(val: unknown): unknown {
+// Parse potentially nested JSON string (handles double-encoded JSON or JSON stored as string)
+function parseJsonValue(val: unknown): unknown {
   if (typeof val === "string") {
     try {
       const parsed = JSON.parse(val);
-      return parseNestedJson(parsed); // Recursively parse if still a string
+      // Recursively parse in case it's double-encoded
+      return parseJsonValue(parsed);
     } catch {
       return val; // Return as-is if not valid JSON
     }
   }
   return val;
+}
+
+function isMultiLangText(val: unknown): val is MultiLangText {
+  const parsed = parseJsonValue(val);
+  if (!parsed || typeof parsed !== "object") return false;
+  const obj = parsed as Record<string, unknown>;
+  return "tr" in obj || "en" in obj || "es" in obj;
+}
+
+function isMultiLangItems(val: unknown): val is MultiLangItems {
+  const parsed = parseJsonValue(val);
+  if (!parsed || typeof parsed !== "object") return false;
+  const obj = parsed as Record<string, unknown>;
+  return "tr" in obj && Array.isArray(obj.tr);
 }
 
 const defaultZigzags = [
@@ -109,21 +112,23 @@ export function LandingPage() {
 
   // Helper to get title for current language
   const getTitle = (section: ZigzagData): string => {
-    // Parse in case of nested JSON
-    const parsedTitle = parseNestedJson(section.title);
+    const parsedTitle = parseJsonValue(section.title);
     
-    if (isMultiLangText(parsedTitle)) {
-      return parsedTitle[language] || parsedTitle.tr || "";
+    if (parsedTitle && typeof parsedTitle === "object") {
+      const titleObj = parsedTitle as MultiLangText;
+      return titleObj[language] || titleObj.tr || "";
     }
-    return typeof parsedTitle === "string" ? parsedTitle : String(section.title);
+    return typeof section.title === "string" ? section.title : "";
   };
 
   // Helper to get items for current language
   const getItems = (section: ZigzagData): string[] => {
-    if (isMultiLangItems(section.items)) {
-      const items = section.items[language];
-      // If current language has no items, fall back to Turkish
-      return items && items.length > 0 ? items : section.items.tr || [];
+    const parsedItems = parseJsonValue(section.items);
+    
+    if (parsedItems && typeof parsedItems === "object" && !Array.isArray(parsedItems)) {
+      const itemsObj = parsedItems as MultiLangItems;
+      const items = itemsObj[language];
+      return items && items.length > 0 ? items : itemsObj.tr || [];
     }
     return Array.isArray(section.items) ? section.items : [];
   };
