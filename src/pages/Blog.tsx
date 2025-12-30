@@ -45,15 +45,21 @@ const getLocalizedContent = (post: BlogPost, language: Language) => {
     const parsed = JSON.parse(post.content) as MultiLangContent;
     if (parsed.tr && parsed.en && parsed.es) {
       const langContent = parsed[language] || parsed.tr;
+      // Get first 15 characters of content (strip HTML tags)
+      const plainContent = langContent.content.replace(/<[^>]*>/g, '');
+      const shortExcerpt = plainContent.substring(0, 15) + (plainContent.length > 15 ? '...' : '');
       return {
         title: langContent.title || post.title,
-        excerpt: langContent.excerpt || post.excerpt,
+        excerpt: shortExcerpt,
       };
     }
   } catch {
     // Not JSON, legacy format
   }
-  return { title: post.title, excerpt: post.excerpt };
+  // Fallback: use content field
+  const plainContent = post.content.replace(/<[^>]*>/g, '');
+  const shortExcerpt = plainContent.substring(0, 15) + (plainContent.length > 15 ? '...' : '');
+  return { title: post.title, excerpt: shortExcerpt };
 };
 
 export default function Blog() {
@@ -102,17 +108,17 @@ export default function Blog() {
       <section className="pt-24 pb-12 lg:pt-32 lg:pb-16 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
         <div className="container mx-auto px-4 lg:px-8">
           <div className="max-w-3xl mx-auto text-center">
-            <Badge variant="secondary" className="mb-4">{t("blog.pageTitle")}</Badge>
-            <h1 className="text-3xl lg:text-5xl font-montserrat font-bold text-[hsl(42_42%_94%)] mb-4">
-              {t("blog.pageTitle")}
+            <Badge variant="secondary" className="mb-4">{t("blog.pageTitle", "Blog")}</Badge>
+            <h1 className="text-3xl lg:text-5xl font-montserrat font-bold text-foreground mb-4">
+              {t("blog.pageTitle", "Blog")}
             </h1>
-            <p className="text-muted-foreground text-lg mb-8">{t("blog.pageSubtitle")}</p>
+            <p className="text-muted-foreground text-lg mb-8">{t("blog.pageSubtitle", "İspanyolca öğrenme yolculuğunuzda size yardımcı olacak içerikler")}</p>
             
             <div className="relative max-w-md mx-auto">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
               <Input
                 type="text"
-                placeholder={t("blog.pageSubtitle")}
+                placeholder={language === "en" ? "Search posts..." : language === "es" ? "Buscar artículos..." : "Yazı ara..."}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-12 h-12 text-base bg-card border-border/50 focus:border-primary"
@@ -170,7 +176,7 @@ export default function Blog() {
                       <h2 className="font-bold text-card-foreground mb-2 group-hover:text-primary transition-colors text-lg">{localized.title}</h2>
                       {localized.excerpt && <p className="text-muted-foreground text-sm line-clamp-2 mb-4">{localized.excerpt}</p>}
                       <div className="flex items-center gap-2 text-primary font-medium text-sm group-hover:gap-3 transition-all">
-                        <span>{t("blog.readMore")}</span>
+                        <span>{t("blog.readMore", "Devamını Oku")}</span>
                         <ArrowRight className="w-4 h-4" />
                       </div>
                     </CardContent>
@@ -181,7 +187,7 @@ export default function Blog() {
           ) : (
             <div className="text-center py-16">
               <div className="text-6xl mb-4">📝</div>
-              <h3 className="text-xl font-semibold text-foreground mb-2">{t("blog.noPosts")}</h3>
+              <h3 className="text-xl font-semibold text-foreground mb-2">{t("blog.noPosts", "Henüz blog yazısı yok.")}</h3>
             </div>
           )}
         </div>
