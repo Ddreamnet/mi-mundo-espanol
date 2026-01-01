@@ -3,6 +3,7 @@ import { useTranslation } from "react-i18next";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Link } from "react-router-dom";
 
 interface CTAContent {
   title: string;
@@ -73,9 +74,9 @@ export function CTASection() {
             {cta.description}
           </p>
           <Button variant="landing-header" size="lg" asChild>
-            <a href={ctaLink}>
+            <Link to={ctaLink}>
               {cta.buttonText}
-            </a>
+            </Link>
           </Button>
         </div>
       </div>
