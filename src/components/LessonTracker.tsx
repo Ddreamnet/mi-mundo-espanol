@@ -452,7 +452,7 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
                               ? "bg-muted opacity-50 border-border cursor-not-allowed"
                               : isCompleted
                                 ? "bg-secondary text-secondary-foreground border-secondary scale-95 shadow-md"
-                                : "bg-background border-primary/30 hover:bg-primary/10 hover:scale-105 hover:shadow-md cursor-pointer hover:border-primary"
+                                : "bg-muted/50 border-border/50 hover:bg-primary/10 hover:scale-105 hover:shadow-md cursor-pointer hover:border-primary"
                           }
                         `}
                         title={isCancelled ? t("lessonTracker.lessonCancelled", { number: displayPosition }) : t("lessonTracker.lesson", { number: displayPosition })}
