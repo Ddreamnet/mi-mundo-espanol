@@ -31,7 +31,7 @@ export function CTASection() {
     title: t("cta.title"),
     description: t("cta.description"),
     buttonText: t("cta.button"),
-    buttonLink: "https://wa.me/+905304721875",
+    buttonLink: "/iletisim",
   };
 
   const { data: rawContent } = useQuery({
