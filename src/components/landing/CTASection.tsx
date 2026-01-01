@@ -59,6 +59,9 @@ export function CTASection() {
     }
   }
 
+  // Always use /iletisim for CTA button regardless of database value
+  const ctaLink = "/iletisim";
+
   return (
     <section id="iletisim" className="py-16 lg:py-24">
       <div className="container mx-auto px-4 lg:px-8">
@@ -70,11 +73,7 @@ export function CTASection() {
             {cta.description}
           </p>
           <Button variant="landing-header" size="lg" asChild>
-            <a
-              href={cta.buttonLink}
-              target={cta.buttonLink.startsWith("http") ? "_blank" : undefined}
-              rel={cta.buttonLink.startsWith("http") ? "noopener noreferrer" : undefined}
-            >
+            <a href={ctaLink}>
               {cta.buttonText}
             </a>
           </Button>
