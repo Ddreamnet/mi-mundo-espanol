@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
-import { Language } from "@/contexts/LanguageContext";
+
+export type Language = "tr" | "en" | "es";
 
 export type MultiLangContent<T> = {
   tr: T;
@@ -9,9 +10,15 @@ export type MultiLangContent<T> = {
 
 export function useMultiLangContent<T>(
   initialDefault: T,
-  savedContent: MultiLangContent<T> | T | null | undefined
+  savedContent: MultiLangContent<T> | T | null | undefined,
+  externalEditingLang?: Language
 ) {
-  const [editingLang, setEditingLang] = useState<Language>("tr");
+  const [internalEditingLang, setInternalEditingLang] = useState<Language>("tr");
+  
+  // Use external lang if provided, otherwise use internal state
+  const editingLang = externalEditingLang ?? internalEditingLang;
+  const setEditingLang = setInternalEditingLang;
+
   const [content, setContent] = useState<MultiLangContent<T>>({
     tr: initialDefault,
     en: initialDefault,

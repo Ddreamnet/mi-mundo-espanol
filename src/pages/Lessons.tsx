@@ -58,6 +58,44 @@ export default function Lessons() {
 
   const content = getContent();
 
+  // Render contact title with colored keyword
+  // Format: "Ücretlendirme için [iletişim]" where [iletişim] is highlighted
+  // User types: "For pricing info : contact us" -> highlight "contact us"
+  const renderContactTitle = (title: string) => {
+    // Define highlight keywords for each language
+    const highlightKeywords = [
+      // Turkish
+      "iletişim",
+      // English - check longer phrases first
+      "contact us",
+      "contact",
+      // Spanish - check longer phrases first
+      "contáctanos",
+      "Contacto",
+      "contacto",
+    ];
+
+    for (const keyword of highlightKeywords) {
+      const lowerTitle = title.toLowerCase();
+      const lowerKeyword = keyword.toLowerCase();
+      const index = lowerTitle.indexOf(lowerKeyword);
+      
+      if (index !== -1) {
+        const before = title.slice(0, index);
+        const matched = title.slice(index, index + keyword.length);
+        const after = title.slice(index + keyword.length);
+        
+        return (
+          <>
+            {before}<span className="text-primary">{matched}</span>{after}
+          </>
+        );
+      }
+    }
+
+    return title;
+  };
+
   // Show loading or no content state
   if (isLoading || !content) {
     return (
@@ -159,21 +197,7 @@ export default function Lessons() {
           {/* Contact Section */}
           <div className="text-center">
             <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-10">
-              {content.contactTitle.includes("iletişim") ? (
-                <>
-                  {content.contactTitle.replace("iletişim", "")}<span className="text-primary">iletişim</span>
-                </>
-              ) : content.contactTitle.includes("contact") ? (
-                <>
-                  {content.contactTitle.replace("contact", "")}<span className="text-primary">contact</span>
-                </>
-              ) : content.contactTitle.includes("Contacto") ? (
-                <>
-                  <span className="text-primary">Contacto</span>{content.contactTitle.replace("Contacto", "")}
-                </>
-              ) : (
-                content.contactTitle
-              )}
+              {renderContactTitle(content.contactTitle)}
             </h3>
             <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-20">
               <div className="flex flex-col gap-6">

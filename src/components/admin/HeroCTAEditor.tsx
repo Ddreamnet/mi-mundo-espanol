@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -74,27 +74,21 @@ export function HeroCTAEditor() {
     return found?.content as unknown as MultiLangContent<CTAContent> | CTAContent | null;
   }, [pageContents]);
 
+  const [editingLang, setEditingLang] = useState<"tr" | "en" | "es">("tr");
+
   const {
-    editingLang,
-    setEditingLang,
     content: heroContent,
     currentContent: hero,
     updateField: updateHeroField,
     copyFromTurkish: copyHeroFromTurkish,
-  } = useMultiLangContent(defaultHero, heroData);
+  } = useMultiLangContent(defaultHero, heroData, editingLang);
 
   const {
     content: ctaContent,
     currentContent: cta,
     updateField: updateCTAField,
     copyFromTurkish: copyCTAFromTurkish,
-  } = useMultiLangContent(defaultCTA, ctaData);
-
-  // Sync editing lang between hero and cta
-  const [syncedEditingLang, setSyncedEditingLang] = useState(editingLang);
-  useEffect(() => {
-    setEditingLang(syncedEditingLang);
-  }, [syncedEditingLang, setEditingLang]);
+  } = useMultiLangContent(defaultCTA, ctaData, editingLang);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -143,7 +137,7 @@ export function HeroCTAEditor() {
   return (
     <div className="space-y-6">
       {/* Language Tabs */}
-      <LanguageTabs selectedLang={syncedEditingLang} onLanguageChange={setSyncedEditingLang} />
+      <LanguageTabs selectedLang={editingLang} onLanguageChange={setEditingLang} />
 
       {/* Hero Section Editor */}
       <Card>
