@@ -138,7 +138,8 @@
     "teacherNoLink": "Tu profesor aún no ha agregado un enlace de clase.",
     "processedLessons": "Clases Procesadas",
     "byStudent": "Estudiante",
-    "byTeacher": "Profesor"
+    "byTeacher": "Profesor",
+    "openLink": "Abrir Enlace"
   },
   "auth": {
     "signUp": "Registrarse",
@@ -281,9 +282,9 @@
     },
     "uploadHomework": {
       "title": "Subir Tarea",
-      "description": "Sube tu tarea con título, descripción y archivos",
+      "description": "Sube tu tarea con título, descripción y enlace o archivos",
       "titleLabel": "Título de la Tarea",
-      "titlePlaceholder": "Ej.: Ensayo de Inglés",
+      "titlePlaceholder": "Ej.: Ensayo de Español",
       "descriptionLabel": "Descripción",
       "descriptionPlaceholder": "Información adicional sobre la tarea...",
       "filesLabel": "Archivos",
@@ -292,7 +293,15 @@
       "selectFile": "Por favor selecciona al menos un archivo",
       "fileTooLarge": "el tamaño máximo es de 10MB",
       "filesUploaded": "archivos subidos exitosamente",
-      "uploadError": "Error al subir tarea"
+      "uploadError": "Error al subir tarea",
+      "linkTab": "Enlace",
+      "fileTab": "Archivo",
+      "linkLabel": "Enlace de la Tarea",
+      "linkPlaceholder": "https://docs.google.com/...",
+      "linkDescription": "Ingresa un enlace de Google Docs, Google Drive, Dropbox u otro servicio de compartir",
+      "linkRequired": "Por favor ingresa un enlace",
+      "invalidLink": "Ingresa una URL válida",
+      "linkUploaded": "Enlace agregado exitosamente"
     },
     "editHomework": {
       "title": "Editar Tarea",

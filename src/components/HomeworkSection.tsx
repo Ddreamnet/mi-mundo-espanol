@@ -11,7 +11,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { FileText, Calendar, Download, FileImage, File, Edit2, Trash2, Upload, FolderOpen } from "lucide-react";
+import { FileText, Calendar, Download, FileImage, File, Edit2, Trash2, Upload, FolderOpen, Link as LinkIcon, ExternalLink } from "lucide-react";
 import { format } from "date-fns";
 import { tr, enUS, es } from "date-fns/locale";
 import { EditHomeworkDialog } from "./EditHomeworkDialog";
@@ -151,8 +151,12 @@ export function HomeworkSection({
   // YARDIMCI FONKSİYONLAR
   // ============================================================================
 
+  const isLink = (fileType: string) => fileType === "link";
+
   const getFileIcon = (fileType: string) => {
-    if (fileType.startsWith('image/')) {
+    if (isLink(fileType)) {
+      return <LinkIcon className="h-5 w-5" />;
+    } else if (fileType.startsWith('image/')) {
       return <FileImage className="h-5 w-5" />;
     } else if (fileType === 'application/pdf') {
       return <FileText className="h-5 w-5" />;
@@ -373,9 +377,11 @@ export function HomeworkSection({
                   {/* Files list */}
                   <div className="space-y-2">
                     {group.files.map((file) => {
-                      const truncatedName = file.file_name.length > 40 
-                        ? file.file_name.substring(0, 40) + "..." 
-                        : file.file_name;
+                      const fileIsLink = isLink(file.file_type);
+                      const displayName = fileIsLink 
+                        ? (file.file_name.length > 50 ? file.file_name.substring(0, 50) + "..." : file.file_name)
+                        : (file.file_name.length > 40 ? file.file_name.substring(0, 40) + "..." : file.file_name);
+                      
                       return (
                         <div
                           key={file.id}
@@ -383,17 +389,29 @@ export function HomeworkSection({
                         >
                           <div className="shrink-0">{getFileIcon(file.file_type)}</div>
                           <span className="text-sm flex-1 truncate min-w-0" title={file.file_name}>
-                            {truncatedName}
+                            {displayName}
                           </span>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleDownload(file.file_url, file.file_name)}
-                            title={t("common.download")}
-                            className="shrink-0"
-                          >
-                            <Download className="h-4 w-4" />
-                          </Button>
+                          {fileIsLink ? (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => window.open(file.file_url, '_blank', 'noopener,noreferrer')}
+                              title={t("common.openLink")}
+                              className="shrink-0"
+                            >
+                              <ExternalLink className="h-4 w-4" />
+                            </Button>
+                          ) : (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleDownload(file.file_url, file.file_name)}
+                              title={t("common.download")}
+                              className="shrink-0"
+                            >
+                              <Download className="h-4 w-4" />
+                            </Button>
+                          )}
                         </div>
                       );
                     })}
