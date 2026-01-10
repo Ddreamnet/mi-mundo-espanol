@@ -24,7 +24,7 @@ export default {
         background: "hsl(var(--background))",
         foreground: "hsl(var(--foreground))",
         overlay: "hsl(var(--overlay))",
-        
+
         // Primary palette
         primary: {
           DEFAULT: "hsl(var(--primary))",
@@ -34,7 +34,7 @@ export default {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
         },
-        
+
         // Status colors
         destructive: {
           DEFAULT: "hsl(var(--destructive))",
@@ -48,7 +48,7 @@ export default {
           DEFAULT: "hsl(var(--warning))",
           foreground: "hsl(var(--warning-foreground))",
         },
-        
+
         // UI elements
         muted: {
           DEFAULT: "hsl(var(--muted))",
@@ -67,7 +67,7 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        
+
         // Sidebar
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
@@ -79,7 +79,7 @@ export default {
           border: "hsl(var(--sidebar-border))",
           ring: "hsl(var(--sidebar-ring))",
         },
-        
+
         // Button tokens
         btn: {
           primary: {
@@ -123,7 +123,7 @@ export default {
             hover: "hsl(var(--btn-landing-header-hover))",
           },
         },
-        
+
         // Icon tokens
         icon: {
           DEFAULT: "hsl(var(--icon-default))",
@@ -132,7 +132,7 @@ export default {
           "on-card": "hsl(var(--icon-on-card))",
           "on-card-muted": "hsl(var(--icon-on-card-muted))",
         },
-        
+
         // Role accent (changes based on data-dashboard attribute)
         role: {
           accent: {
@@ -142,7 +142,7 @@ export default {
             muted: "hsl(var(--role-accent-muted))",
           },
         },
-        
+
         // Dashboard-specific tokens (active within data-area="dashboard")
         dash: {
           bg: "hsl(var(--dash-bg))",
@@ -196,13 +196,13 @@ export default {
             hover: "hsl(var(--dash-destructive-hover))",
           },
         },
-        
+
         // Page-specific backgrounds
         page: {
           lessons: "hsl(var(--page-lessons))",
           contact: "hsl(var(--page-contact))",
         },
-        
+
         // Schedule colors for student identification
         schedule: {
           1: {
@@ -302,5 +302,5 @@ export default {
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [require("tailwindcss-animate"), require("@tailwindcss/typography")],
 } satisfies Config;
