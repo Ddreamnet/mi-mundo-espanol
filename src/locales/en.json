@@ -136,7 +136,8 @@
     "processedLessons": "Processed Lessons",
     "byStudent": "Student",
     "byTeacher": "Teacher",
-    "noContentForLanguage": "No content entered for this language yet"
+    "noContentForLanguage": "No content entered for this language yet",
+    "openLink": "Open Link"
   },
   "auth": {
     "signUp": "Sign Up",
@@ -279,7 +280,7 @@
     },
     "uploadHomework": {
       "title": "Upload Homework",
-      "description": "Upload your homework with title, description and files",
+      "description": "Upload your homework with title, description and link or files",
       "titleLabel": "Homework Title",
       "titlePlaceholder": "E.g.: Spanish Essay",
       "descriptionLabel": "Description",
@@ -290,7 +291,15 @@
       "selectFile": "Please select at least one file",
       "fileTooLarge": "size can be at most 10MB",
       "filesUploaded": "files uploaded successfully",
-      "uploadError": "Failed to upload homework"
+      "uploadError": "Failed to upload homework",
+      "linkTab": "Link",
+      "fileTab": "File",
+      "linkLabel": "Homework Link",
+      "linkPlaceholder": "https://docs.google.com/...",
+      "linkDescription": "Enter a Google Docs, Google Drive, Dropbox or other sharing link",
+      "linkRequired": "Please enter a link",
+      "invalidLink": "Enter a valid URL",
+      "linkUploaded": "Link added successfully"
     },
     "editHomework": {
       "title": "Edit Homework",

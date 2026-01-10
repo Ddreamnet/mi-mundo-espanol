@@ -138,7 +138,8 @@
     "teacherNoLink": "Öğretmeniniz henüz bir ders linki eklememiş.",
     "processedLessons": "İşlenen Dersler",
     "byStudent": "Öğrenci",
-    "byTeacher": "Öğretmen"
+    "byTeacher": "Öğretmen",
+    "openLink": "Linki Aç"
   },
   "auth": {
     "signUp": "Kayıt Ol",
@@ -281,9 +282,9 @@
     },
     "uploadHomework": {
       "title": "Ödev Yükle",
-      "description": "Ödevinizi başlık, açıklama ve dosya ile yükleyin",
+      "description": "Ödevinizi başlık, açıklama ve link veya dosya ile yükleyin",
       "titleLabel": "Ödev Başlığı",
-      "titlePlaceholder": "Örn: İngilizce Kompozisyon",
+      "titlePlaceholder": "Örn: İspanyolca Kompozisyon",
       "descriptionLabel": "Açıklama",
       "descriptionPlaceholder": "Ödev hakkında ek bilgiler...",
       "filesLabel": "Dosyalar",
@@ -292,7 +293,15 @@
       "selectFile": "Lütfen en az bir dosya seçin",
       "fileTooLarge": "boyutu en fazla 10MB olabilir",
       "filesUploaded": "dosya başarıyla yüklendi",
-      "uploadError": "Ödev yüklenemedi"
+      "uploadError": "Ödev yüklenemedi",
+      "linkTab": "Link",
+      "fileTab": "Dosya",
+      "linkLabel": "Ödev Linki",
+      "linkPlaceholder": "https://docs.google.com/...",
+      "linkDescription": "Google Docs, Google Drive, Dropbox veya başka bir paylaşım linki girin",
+      "linkRequired": "Lütfen bir link girin",
+      "invalidLink": "Geçerli bir URL girin",
+      "linkUploaded": "Link başarıyla eklendi"
     },
     "editHomework": {
       "title": "Ödevi Düzenle",
