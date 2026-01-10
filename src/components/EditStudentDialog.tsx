@@ -886,8 +886,8 @@ export function EditStudentDialog({
                         lesson.isCancelled 
                           ? "text-muted-foreground line-through" 
                           : completedLessons.includes(lesson.lessonNumber) 
-                            ? "text-foreground" 
-                            : "text-muted-foreground"
+                            ? "text-primary-foreground" 
+                            : "text-foreground"
                       }`}>
                         {t("dialogs.editStudent.lesson")} {displayIndex + 1}
                         {lesson.isCancelled && ` (${t("dialogs.editStudent.cancelled")})`}
