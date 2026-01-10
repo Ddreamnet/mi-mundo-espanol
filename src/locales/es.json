@@ -465,7 +465,28 @@
       "globalTopicsDesc": "Temas y recursos globales",
       "globalTopicsDescAdmin": "Administra temas globales que se pueden asignar a cualquier estudiante",
       "sessionNotFound": "Sesión no encontrada. Por favor inicia sesión nuevamente.",
-      "fetchError": "Error al obtener temas globales"
+      "fetchError": "Error al obtener temas globales",
+      "topics": "temas"
+    },
+    "categories": {
+      "title": "Gestión de Categorías",
+      "manage": "Categorías",
+      "addCategory": "Agregar Categoría",
+      "titleLabel": "Nombre de Categoría",
+      "titlePlaceholder": "ej. A1, B2",
+      "descriptionLabel": "Descripción",
+      "descriptionPlaceholder": "Descripción de la categoría",
+      "noCategories": "No hay categorías todavía",
+      "fetchError": "Error al cargar categorías",
+      "orderError": "Error al actualizar orden de categorías",
+      "addSuccess": "Categoría agregada",
+      "updateSuccess": "Categoría actualizada",
+      "deleteSuccess": "Categoría eliminada",
+      "topicMoved": "Tema movido exitosamente",
+      "dropTopicsHere": "Arrastra y suelta temas aquí",
+      "uncategorized": "Sin Categoría",
+      "uncategorizedDesc": "Temas no asignados a ninguna categoría",
+      "noUncategorizedTopics": "No hay temas sin categoría"
     },
     "weeklySchedule": {
       "title": "Horario Semanal",

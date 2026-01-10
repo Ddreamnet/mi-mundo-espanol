@@ -471,7 +471,28 @@
       "globalTopicsDesc": "Global topics and resources",
       "globalTopicsDescAdmin": "Manage global topics that can be assigned to any student",
       "sessionNotFound": "Session not found. Please log in again.",
-      "fetchError": "Failed to fetch global topics"
+      "fetchError": "Failed to fetch global topics",
+      "topics": "topics"
+    },
+    "categories": {
+      "title": "Category Management",
+      "manage": "Categories",
+      "addCategory": "Add Category",
+      "titleLabel": "Category Title",
+      "titlePlaceholder": "e.g. A1, B2",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Category description",
+      "noCategories": "No categories added yet",
+      "fetchError": "Failed to load categories",
+      "orderError": "Failed to update category order",
+      "addSuccess": "Category added",
+      "updateSuccess": "Category updated",
+      "deleteSuccess": "Category deleted",
+      "topicMoved": "Topic moved successfully",
+      "dropTopicsHere": "Drag and drop topics here",
+      "uncategorized": "Uncategorized",
+      "uncategorizedDesc": "Topics not assigned to any category",
+      "noUncategorizedTopics": "No uncategorized topics"
     },
     "weeklySchedule": {
       "title": "Weekly Schedule",
