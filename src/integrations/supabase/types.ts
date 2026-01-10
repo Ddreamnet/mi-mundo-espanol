@@ -86,6 +86,36 @@ export type Database = {
         }
         Relationships: []
       }
+      global_topic_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean | null
+          order_index: number
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          order_index?: number
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          order_index?: number
+          title?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       global_topic_resources: {
         Row: {
           completed_at: string | null
@@ -138,6 +168,7 @@ export type Database = {
       }
       global_topics: {
         Row: {
+          category_id: string | null
           created_at: string
           description: string | null
           id: string
@@ -147,6 +178,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -156,6 +188,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -164,7 +197,15 @@ export type Database = {
           title?: string
           updated_at?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "global_topics_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "global_topic_categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       homework_submissions: {
         Row: {
@@ -831,12 +872,20 @@ export type Database = {
         Args: { _student_id: string; _teacher_id: string }
         Returns: boolean
       }
+      update_global_categories_order: {
+        Args: { category_orders: Json }
+        Returns: undefined
+      }
       update_global_resources_order: {
         Args: { resource_orders: Json }
         Returns: undefined
       }
       update_global_topics_order: {
         Args: { topic_orders: Json }
+        Returns: undefined
+      }
+      update_topic_category: {
+        Args: { new_category_id: string; topic_id: string }
         Returns: undefined
       }
     }

@@ -473,7 +473,28 @@
       "globalTopicsDesc": "Global konular ve kaynaklar",
       "globalTopicsDescAdmin": "Herhangi bir öğrenciye atanabilecek global konuları yönetin",
       "sessionNotFound": "Oturum bilgisi bulunamadı. Lütfen tekrar giriş yapın.",
-      "fetchError": "Global konular getirilemedi"
+      "fetchError": "Global konular getirilemedi",
+      "topics": "konu"
+    },
+    "categories": {
+      "title": "Kategori Yönetimi",
+      "manage": "Kategoriler",
+      "addCategory": "Kategori Ekle",
+      "titleLabel": "Kategori Adı",
+      "titlePlaceholder": "örn. A1, B2",
+      "descriptionLabel": "Açıklama",
+      "descriptionPlaceholder": "Kategori açıklaması",
+      "noCategories": "Henüz kategori eklenmemiş",
+      "fetchError": "Kategoriler yüklenemedi",
+      "orderError": "Kategori sırası güncellenemedi",
+      "addSuccess": "Kategori eklendi",
+      "updateSuccess": "Kategori güncellendi",
+      "deleteSuccess": "Kategori silindi",
+      "topicMoved": "Konu başarıyla taşındı",
+      "dropTopicsHere": "Konuları buraya sürükleyip bırakın",
+      "uncategorized": "Kategorisiz",
+      "uncategorizedDesc": "Herhangi bir kategoriye atanmamış konular",
+      "noUncategorizedTopics": "Kategorisiz konu yok"
     },
     "weeklySchedule": {
       "title": "Haftalık Ders Programı",
