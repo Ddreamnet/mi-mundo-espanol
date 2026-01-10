@@ -44,18 +44,32 @@ const localeMap = { tr, en: enUS, es };
 const getLocalizedContent = (post: BlogPostData, language: Language) => {
   try {
     const parsed = JSON.parse(post.content) as MultiLangContent;
-    if (parsed.tr && parsed.en && parsed.es) {
-      const langContent = parsed[language] || parsed.tr;
+    if (parsed.tr || parsed.en || parsed.es) {
+      const langContent = parsed[language] || parsed.tr || parsed.en || parsed.es;
       return {
-        title: langContent.title || post.title,
-        excerpt: langContent.excerpt || post.excerpt,
-        content: langContent.content || post.content,
+        title: langContent?.title || post.title,
+        excerpt: langContent?.excerpt || post.excerpt || "",
+        content: langContent?.content || "",
       };
     }
   } catch {
-    // Not JSON, legacy format
+    // Not JSON, legacy format - return content as-is
   }
-  return { title: post.title, excerpt: post.excerpt, content: post.content };
+  // For legacy format, check if content looks like raw JSON and extract if possible
+  if (post.content.startsWith('{"tr":') || post.content.startsWith('{"en":')) {
+    try {
+      const parsed = JSON.parse(post.content) as MultiLangContent;
+      const langContent = parsed[language] || parsed.tr || parsed.en || parsed.es;
+      return {
+        title: langContent?.title || post.title,
+        excerpt: langContent?.excerpt || post.excerpt || "",
+        content: langContent?.content || "",
+      };
+    } catch {
+      // Still not valid JSON
+    }
+  }
+  return { title: post.title, excerpt: post.excerpt || "", content: post.content };
 };
 
 export default function BlogPost() {
