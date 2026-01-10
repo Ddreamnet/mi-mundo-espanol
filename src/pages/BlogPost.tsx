@@ -236,7 +236,7 @@ export default function BlogPost() {
 
           <div className="container mx-auto px-4 lg:px-8 max-w-4xl">
             <div 
-              className="prose prose-lg max-w-none prose-headings:text-foreground prose-headings:font-bold prose-p:text-foreground/90 prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:text-foreground prose-ul:text-foreground/90 prose-ol:text-foreground/90 prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground prose-img:rounded-xl prose-img:shadow-lg dark:prose-invert"
+              className="prose prose-lg max-w-none prose-headings:text-foreground prose-headings:font-bold prose-p:text-foreground/90 prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:text-foreground prose-ul:text-foreground/90 prose-ol:text-foreground/90 prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground prose-img:rounded-xl prose-img:shadow-lg dark:prose-invert [&_p:empty]:min-h-[1.5em] [&_p:empty]:block"
               dangerouslySetInnerHTML={{ __html: localized.content }}
             />
           </div>
