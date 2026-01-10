@@ -87,11 +87,7 @@ export function EditStudentDialog({
     if (open) {
       setName(currentName);
       setLessonsPerWeek(currentLessons.length || 1);
-      setLessons(
-        currentLessons.length > 0
-          ? currentLessons
-          : [{ dayOfWeek: 1, startTime: "", endTime: "", note: "" }]
-      );
+      setLessons(currentLessons.length > 0 ? currentLessons : [{ dayOfWeek: 1, startTime: "", endTime: "", note: "" }]);
       fetchLessonTracking();
       fetchLessonOverrides();
     }
@@ -185,51 +181,49 @@ export function EditStudentDialog({
     const newDates = { ...lessonDates };
     const lessonDays = lessons.map((l) => l.dayOfWeek).sort((a, b) => a - b);
     const totalLessons = lessonsPerWeek * 4;
-    
+
     // Set the changed lesson's date
     newDates[fromLessonNumber.toString()] = startDate;
-    
+
     // Recalculate PREVIOUS lessons (going backwards)
     let currentDate = parse(startDate, "yyyy-MM-dd", new Date());
     currentDate.setHours(0, 0, 0, 0);
-    
+
     for (let i = fromLessonNumber - 1; i >= 1; i--) {
       let daysToSubtract = 1;
       let prevDate = addDays(currentDate, -daysToSubtract);
-      
+
       while (!lessonDays.includes(prevDate.getDay())) {
         daysToSubtract++;
         prevDate = addDays(currentDate, -daysToSubtract);
       }
-      
+
       currentDate = prevDate;
       newDates[i.toString()] = format(currentDate, "yyyy-MM-dd");
     }
-    
+
     // Recalculate FUTURE lessons (going forwards)
     currentDate = parse(startDate, "yyyy-MM-dd", new Date());
     currentDate.setHours(0, 0, 0, 0);
-    
+
     for (let i = fromLessonNumber + 1; i <= totalLessons; i++) {
       let daysToAdd = 1;
       let nextDate = addDays(currentDate, daysToAdd);
-      
+
       while (!lessonDays.includes(nextDate.getDay())) {
         daysToAdd++;
         nextDate = addDays(currentDate, daysToAdd);
       }
-      
+
       currentDate = nextDate;
       newDates[i.toString()] = format(currentDate, "yyyy-MM-dd");
     }
-    
+
     return newDates;
   };
 
   const handleDateSubmit = () => {
-    const hasChanges = Object.keys(lessonDates).some(
-      (key) => lessonDates[key] !== originalLessonDates[key]
-    );
+    const hasChanges = Object.keys(lessonDates).some((key) => lessonDates[key] !== originalLessonDates[key]);
 
     if (hasChanges) {
       setShowConfirm(true);
@@ -305,7 +299,7 @@ export function EditStudentDialog({
       if (studentError) throw studentError;
 
       const lastLesson = Math.max(...completedLessons);
-      const newCompletedLessons = completedLessons.filter(l => l !== lastLesson);
+      const newCompletedLessons = completedLessons.filter((l) => l !== lastLesson);
 
       const { data: existingRecords } = await supabase
         .from("student_lesson_tracking")
@@ -449,9 +443,9 @@ export function EditStudentDialog({
 
       const { error } = await supabase
         .from("student_lesson_tracking")
-        .update({ 
+        .update({
           completed_lessons: [],
-          lesson_dates: {}
+          lesson_dates: {},
         })
         .eq("id", existingRecords[0].id);
 
@@ -461,7 +455,7 @@ export function EditStudentDialog({
       setLessonDates({});
       setOriginalLessonDates({});
       setShowResetConfirm(false);
-      
+
       toast({
         title: t("common.success"),
         description: t("dialogs.editStudent.resetSuccess"),
@@ -488,9 +482,7 @@ export function EditStudentDialog({
       let finalDates = lessonDates;
 
       if (updateRemainingDays) {
-        const changedKeys = Object.keys(lessonDates).filter(
-          (key) => lessonDates[key] !== originalLessonDates[key]
-        );
+        const changedKeys = Object.keys(lessonDates).filter((key) => lessonDates[key] !== originalLessonDates[key]);
 
         if (changedKeys.length > 0) {
           const firstChangedLesson = Math.min(...changedKeys.map(Number));
@@ -637,10 +629,7 @@ export function EditStudentDialog({
         await supabase.from("topics").delete().in("id", topicIds);
       }
 
-      await supabase
-        .from("student_resource_completion")
-        .delete()
-        .eq("student_id", studentData.student_id);
+      await supabase.from("student_resource_completion").delete().eq("student_id", studentData.student_id);
 
       await supabase
         .from("student_lesson_tracking")
@@ -704,10 +693,7 @@ export function EditStudentDialog({
 
           <div className="space-y-2">
             <Label htmlFor="lessonsPerWeek">{t("dialogs.editStudent.lessonsPerWeekLabel")}</Label>
-            <Select
-              value={lessonsPerWeek.toString()}
-              onValueChange={(value) => setLessonsPerWeek(Number(value))}
-            >
+            <Select value={lessonsPerWeek.toString()} onValueChange={(value) => setLessonsPerWeek(Number(value))}>
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
@@ -784,31 +770,17 @@ export function EditStudentDialog({
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-base font-medium">{t("dialogs.editStudent.completedLessonsTitle")}</Label>
-                <p className="text-sm text-muted-foreground">
-                  {t("dialogs.editStudent.completedLessonsDescription")}
-                </p>
+                <p className="text-sm text-muted-foreground">{t("dialogs.editStudent.completedLessonsDescription")}</p>
               </div>
               <div className="flex gap-2">
                 {completedLessons.length < lessonsPerWeek * 4 && (
-                  <Button
-                    type="button"
-                    variant="default"
-                    size="sm"
-                    onClick={handleMarkLastLesson}
-                    disabled={loading}
-                  >
+                  <Button type="button" variant="default" size="sm" onClick={handleMarkLastLesson} disabled={loading}>
                     {t("dialogs.editStudent.markLastLesson")}
                   </Button>
                 )}
                 {completedLessons.length > 0 && (
                   <>
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={handleUndoLastLesson}
-                      disabled={loading}
-                    >
+                    <Button type="button" variant="outline" size="sm" onClick={handleUndoLastLesson} disabled={loading}>
                       {t("dialogs.editStudent.undoLastLesson")}
                     </Button>
                     <Button
@@ -827,9 +799,15 @@ export function EditStudentDialog({
             <div className="space-y-2">
               {(() => {
                 const totalLessons = lessonsPerWeek * 4;
-                
-                const lessonsWithDates: { lessonNumber: number; originalDate: string; effectiveDate: string; isCancelled: boolean; isOverridden: boolean }[] = [];
-                
+
+                const lessonsWithDates: {
+                  lessonNumber: number;
+                  originalDate: string;
+                  effectiveDate: string;
+                  isCancelled: boolean;
+                  isOverridden: boolean;
+                }[] = [];
+
                 for (let i = 1; i <= totalLessons; i++) {
                   const originalDate = lessonDates[i.toString()];
                   if (!originalDate) {
@@ -842,13 +820,12 @@ export function EditStudentDialog({
                     });
                     continue;
                   }
-                  
+
                   const override = lessonOverrides.find((o) => o.original_date === originalDate);
                   const isCancelled = override?.is_cancelled || false;
-                  const effectiveDate = override && override.new_date && !isCancelled 
-                    ? override.new_date 
-                    : originalDate;
-                  
+                  const effectiveDate =
+                    override && override.new_date && !isCancelled ? override.new_date : originalDate;
+
                   lessonsWithDates.push({
                     lessonNumber: i,
                     originalDate,
@@ -857,44 +834,53 @@ export function EditStudentDialog({
                     isOverridden: effectiveDate !== originalDate,
                   });
                 }
-                
-                const sortedLessons = [...lessonsWithDates].filter(l => l.originalDate).sort((a, b) => {
-                  if (a.isCancelled && b.isCancelled) return a.originalDate.localeCompare(b.originalDate);
-                  if (a.isCancelled) return a.originalDate.localeCompare(b.effectiveDate);
-                  if (b.isCancelled) return a.effectiveDate.localeCompare(b.originalDate);
-                  return a.effectiveDate.localeCompare(b.effectiveDate);
-                });
-                
-                const lessonsWithoutDates = lessonsWithDates.filter(l => !l.originalDate);
+
+                const sortedLessons = [...lessonsWithDates]
+                  .filter((l) => l.originalDate)
+                  .sort((a, b) => {
+                    if (a.isCancelled && b.isCancelled) return a.originalDate.localeCompare(b.originalDate);
+                    if (a.isCancelled) return a.originalDate.localeCompare(b.effectiveDate);
+                    if (b.isCancelled) return a.effectiveDate.localeCompare(b.originalDate);
+                    return a.effectiveDate.localeCompare(b.effectiveDate);
+                  });
+
+                const lessonsWithoutDates = lessonsWithDates.filter((l) => !l.originalDate);
                 const allLessons = [...sortedLessons, ...lessonsWithoutDates];
-                
+
                 return allLessons.map((lesson, displayIndex) => (
-                  <div key={lesson.lessonNumber} className={`flex items-center gap-3 p-3 border rounded-lg ${
-                    lesson.isCancelled ? "opacity-50 bg-muted" : ""
-                  } ${lesson.isOverridden ? "border-warning" : ""}`}>
+                  <div
+                    key={lesson.lessonNumber}
+                    className={`flex items-center gap-3 p-3 border rounded-lg ${
+                      lesson.isCancelled ? "opacity-50 bg-muted" : ""
+                    } ${lesson.isOverridden ? "border-warning" : ""}`}
+                  >
                     <div className="flex items-center gap-2 flex-1">
-                      <div 
+                      <div
                         className={`h-4 w-4 rounded-full ${
-                          lesson.isCancelled 
-                            ? "bg-muted-foreground" 
-                            : completedLessons.includes(lesson.lessonNumber) 
-                              ? "bg-primary" 
+                          lesson.isCancelled
+                            ? "bg-muted-foreground"
+                            : completedLessons.includes(lesson.lessonNumber)
+                              ? "bg-primary"
                               : "bg-muted"
-                        }`} 
+                        }`}
                       />
-                      <span className={`font-medium ${
-                        lesson.isCancelled 
-                          ? "text-muted-foreground line-through" 
-                          : completedLessons.includes(lesson.lessonNumber) 
-                            ? "text-primary-foreground" 
-                            : "text-gray-800 dark:text-gray-200"
-                      }`}>
+                      <span
+                        className={`font-medium ${
+                          lesson.isCancelled
+                            ? "text-muted-foreground line-through"
+                            : completedLessons.includes(lesson.lessonNumber)
+                              ? "text-primary-foreground"
+                              : "text-rose-950 dark:text-rose-900"
+                        }`}
+                      >
                         {t("dialogs.editStudent.lesson")} {displayIndex + 1}
                         {lesson.isCancelled && ` (${t("dialogs.editStudent.cancelled")})`}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Label className={`text-sm ${lesson.isOverridden ? "text-warning font-medium" : "text-muted-foreground"}`}>
+                      <Label
+                        className={`text-sm ${lesson.isOverridden ? "text-warning font-medium" : "text-muted-foreground"}`}
+                      >
                         {lesson.isOverridden ? t("dialogs.editStudent.newDate") : t("dialogs.editStudent.dateLabel")}
                       </Label>
                       <Input
@@ -912,9 +898,9 @@ export function EditStudentDialog({
                 type="button"
                 variant="default"
                 onClick={handleDateSubmit}
-                disabled={loading || Object.keys(lessonDates).every(
-                  (key) => lessonDates[key] === originalLessonDates[key]
-                )}
+                disabled={
+                  loading || Object.keys(lessonDates).every((key) => lessonDates[key] === originalLessonDates[key])
+                }
                 className="w-full"
               >
                 {t("dialogs.editStudent.confirmDates")}
@@ -929,9 +915,7 @@ export function EditStudentDialog({
             <div className="flex items-center justify-between">
               <div>
                 <Label className="text-base font-medium text-destructive">{t("dialogs.editStudent.dangerZone")}</Label>
-                <p className="text-sm text-muted-foreground">
-                  {t("dialogs.editStudent.dangerZoneDescription")}
-                </p>
+                <p className="text-sm text-muted-foreground">{t("dialogs.editStudent.dangerZoneDescription")}</p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-2">
@@ -939,9 +923,7 @@ export function EditStudentDialog({
                 type="button"
                 variant="outline"
                 onClick={async () => {
-                  const confirmed = window.confirm(
-                    t("dialogs.editStudent.archiveConfirmation", { name: currentName })
-                  );
+                  const confirmed = window.confirm(t("dialogs.editStudent.archiveConfirmation", { name: currentName }));
                   if (confirmed) {
                     setLoading(true);
                     try {
@@ -980,9 +962,7 @@ export function EditStudentDialog({
                 type="button"
                 variant="destructive"
                 onClick={() => {
-                  const confirmed = window.confirm(
-                    t("dialogs.editStudent.deleteConfirmation", { name: currentName })
-                  );
+                  const confirmed = window.confirm(t("dialogs.editStudent.deleteConfirmation", { name: currentName }));
                   if (confirmed) {
                     handleDeleteStudent();
                   }
@@ -1013,9 +993,7 @@ export function EditStudentDialog({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("dialogs.editStudent.updateDatesTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("dialogs.editStudent.updateDatesDescription")}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{t("dialogs.editStudent.updateDatesDescription")}</AlertDialogDescription>
           </AlertDialogHeader>
 
           <div className="flex items-center space-x-2 py-4">
@@ -1041,13 +1019,14 @@ export function EditStudentDialog({
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>{t("dialogs.editStudent.resetAllTitle")}</AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("dialogs.editStudent.resetAllDescription")}
-            </AlertDialogDescription>
+            <AlertDialogDescription>{t("dialogs.editStudent.resetAllDescription")}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={handleResetAllLessons} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+            <AlertDialogAction
+              onClick={handleResetAllLessons}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
               {t("dialogs.editStudent.reset")}
             </AlertDialogAction>
           </AlertDialogFooter>
