@@ -485,7 +485,7 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setPendingLesson(null)}>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => setPendingLesson(null)} className="border-2 border-muted-foreground/30 bg-transparent text-card-foreground hover:bg-muted hover:border-muted-foreground/40">{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmLessonComplete}>{t("common.confirm")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
