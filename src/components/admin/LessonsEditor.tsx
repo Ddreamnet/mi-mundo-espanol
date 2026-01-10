@@ -198,6 +198,22 @@ export function LessonsEditor() {
               />
             </div>
           </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div className="space-y-2">
+              <Label>Bireysel Ders Kartı Başlığı</Label>
+              <Input
+                value={currentContent.individualTitle}
+                onChange={(e) => updateContent({ ...currentContent, individualTitle: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label>Grup Ders Kartı Başlığı</Label>
+              <Input
+                value={currentContent.groupTitle}
+                onChange={(e) => updateContent({ ...currentContent, groupTitle: e.target.value })}
+              />
+            </div>
+          </div>
         </CardContent>
       </Card>
 

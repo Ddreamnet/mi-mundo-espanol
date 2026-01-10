@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -93,21 +93,21 @@ export function ContactFooterEditor() {
     return found?.content as unknown as MultiLangContent<FooterContent> | FooterContent | null;
   }, [pageContents]);
 
+  const [editingLang, setEditingLang] = useState<"tr" | "en" | "es">("tr");
+
   const {
-    editingLang,
-    setEditingLang,
     content: contactContent,
     currentContent: contact,
     updateContent: updateContact,
     copyFromTurkish: copyContactFromTurkish,
-  } = useMultiLangContent(defaultContact, contactData);
+  } = useMultiLangContent(defaultContact, contactData, editingLang);
 
   const {
     content: footerContent,
     currentContent: footer,
     updateContent: updateFooter,
     copyFromTurkish: copyFooterFromTurkish,
-  } = useMultiLangContent(defaultFooter, footerData);
+  } = useMultiLangContent(defaultFooter, footerData, editingLang);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
