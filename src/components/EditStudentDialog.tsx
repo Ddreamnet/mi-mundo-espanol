@@ -882,11 +882,11 @@ export function EditStudentDialog({
                               : "bg-muted"
                         }`} 
                       />
-                      <span className={`font-medium ${
+                      <span className={`font-semibold ${
                         lesson.isCancelled 
                           ? "text-muted-foreground line-through" 
                           : completedLessons.includes(lesson.lessonNumber) 
-                            ? "text-primary-foreground" 
+                            ? "text-primary" 
                             : "text-foreground"
                       }`}>
                         {t("dialogs.editStudent.lesson")} {displayIndex + 1}
