@@ -868,5 +868,8 @@
     "homeworkLoadError": "Error al cargar tareas",
     "studentUpdated": "Estudiante actualizado",
     "studentUpdateError": "Error al actualizar estudiante"
+  },
+  "globalTopics": {
+    "uncategorized": "Sin Categoría"
   }
 }
