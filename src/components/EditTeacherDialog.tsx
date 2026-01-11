@@ -247,8 +247,18 @@ export function EditTeacherDialog({
       // 4. Delete payment history
       await supabase.from("payment_history").delete().eq("teacher_id", teacherId);
 
-      // 5. Delete profile (user account)
-      await supabase.from("profiles").delete().eq("user_id", teacherId);
+      // 5. Delete user from auth and profiles via edge function
+      const { data: sessionData } = await supabase.auth.getSession();
+      const response = await supabase.functions.invoke('delete-user', {
+        body: { userId: teacherId },
+        headers: {
+          Authorization: `Bearer ${sessionData.session?.access_token}`
+        }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to delete user account');
+      }
 
       toast({
         title: t("common.success"),
