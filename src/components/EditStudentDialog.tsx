@@ -651,7 +651,18 @@ export function EditStudentDialog({
 
       await supabase.from("students").delete().eq("id", studentId);
 
-      await supabase.from("profiles").delete().eq("user_id", studentData.student_id);
+      // Delete user from auth and profiles via edge function
+      const { data: sessionData } = await supabase.auth.getSession();
+      const response = await supabase.functions.invoke('delete-user', {
+        body: { userId: studentData.student_id },
+        headers: {
+          Authorization: `Bearer ${sessionData.session?.access_token}`
+        }
+      });
+
+      if (response.error) {
+        throw new Error(response.error.message || 'Failed to delete user account');
+      }
 
       toast({
         title: t("common.success"),
