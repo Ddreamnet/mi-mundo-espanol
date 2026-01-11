@@ -107,12 +107,27 @@ serve(async (req) => {
       console.error('Role insert error:', roleInsertError)
     }
 
-    // Create student-teacher relationship
+    // Get the teacher's existing lesson link from another student (if any)
+    let existingLessonLink: string | null = null;
+    const { data: existingStudent } = await supabaseAdmin
+      .from('students')
+      .select('lesson_link')
+      .eq('teacher_id', teacherId)
+      .not('lesson_link', 'is', null)
+      .limit(1)
+      .maybeSingle();
+
+    if (existingStudent?.lesson_link) {
+      existingLessonLink = existingStudent.lesson_link;
+    }
+
+    // Create student-teacher relationship with the teacher's existing lesson link
     const { error: studentError } = await supabaseAdmin
       .from('students')
       .insert({
         student_id: authData.user.id,
-        teacher_id: teacherId
+        teacher_id: teacherId,
+        lesson_link: existingLessonLink
       })
 
     if (studentError) {
