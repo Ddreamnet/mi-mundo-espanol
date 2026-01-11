@@ -38,6 +38,15 @@ interface Topic {
   order_index: number;
   resources: Resource[];
   isGlobal?: boolean;
+  category_id?: string | null;
+}
+
+interface Category {
+  id: string;
+  title: string;
+  description: string | null;
+  order_index: number;
+  is_active: boolean;
 }
 
 interface Resource {
@@ -72,8 +81,10 @@ interface StudentTopicsContentProps {
 export function StudentTopicsContent({ student, teacherId }: StudentTopicsContentProps) {
   const { t } = useTranslation();
   const [topics, setTopics] = useState<Topic[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedTopics, setExpandedTopics] = useState<Set<string>>(new Set());
+  const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set());
   const { toast } = useToast();
 
   // ============================================================================
@@ -90,7 +101,7 @@ export function StudentTopicsContent({ student, teacherId }: StudentTopicsConten
 
   const fetchTopics = async () => {
     try {
-      const [studentTopicsResponse, globalTopicsResponse, completionResponse] = await Promise.all([
+      const [studentTopicsResponse, globalTopicsResponse, completionResponse, categoriesResponse] = await Promise.all([
         supabase
           .from("topics")
           .select("*, resources (*)")
@@ -105,16 +116,26 @@ export function StudentTopicsContent({ student, teacherId }: StudentTopicsConten
         supabase
           .from("student_resource_completion")
           .select("*")
-          .eq("student_id", student.student_id)
+          .eq("student_id", student.student_id),
+        
+        supabase
+          .from("global_topic_categories")
+          .select("*")
+          .eq("is_active", true)
+          .order("order_index")
       ]);
 
       if (studentTopicsResponse.error) throw studentTopicsResponse.error;
       if (globalTopicsResponse.error) throw globalTopicsResponse.error;
       if (completionResponse.error) throw completionResponse.error;
+      if (categoriesResponse.error) throw categoriesResponse.error;
 
       const studentTopics = studentTopicsResponse.data || [];
       const globalTopics = globalTopicsResponse.data || [];
       const completionData = completionResponse.data || [];
+      const categoriesData = categoriesResponse.data || [];
+
+      setCategories(categoriesData);
 
       const completionMap = new Map();
       completionData.forEach((completion) => {
@@ -166,9 +187,10 @@ export function StudentTopicsContent({ student, teacherId }: StudentTopicsConten
             description: topic.description,
             is_completed: allResourcesCompleted,
             completed_at: allResourcesCompleted ? new Date().toISOString() : null,
-            order_index: topic.order_index + 1000,
+            order_index: topic.order_index,
             resources: globalResources,
             isGlobal: true,
+            category_id: topic.category_id,
           };
         });
 
@@ -196,6 +218,16 @@ export function StudentTopicsContent({ student, teacherId }: StudentTopicsConten
       newExpanded.add(topicId);
     }
     setExpandedTopics(newExpanded);
+  };
+
+  const toggleCategory = (categoryId: string) => {
+    const newExpanded = new Set(expandedCategories);
+    if (newExpanded.has(categoryId)) {
+      newExpanded.delete(categoryId);
+    } else {
+      newExpanded.add(categoryId);
+    }
+    setExpandedCategories(newExpanded);
   };
 
   // ============================================================================
@@ -409,6 +441,69 @@ export function StudentTopicsContent({ student, teacherId }: StudentTopicsConten
   };
 
   // ============================================================================
+  // HELPER - KATEGORİ BAZLI GRUPLAMA
+  // ============================================================================
+
+  const studentTopics = topics.filter(t => !t.isGlobal);
+  const globalTopics = topics.filter(t => t.isGlobal);
+  
+  const getTopicsForCategory = (categoryId: string) => {
+    return globalTopics.filter(t => t.category_id === categoryId);
+  };
+
+  const uncategorizedGlobalTopics = globalTopics.filter(t => !t.category_id);
+
+  // ============================================================================
+  // SUB-COMPONENT - CATEGORY SECTION
+  // ============================================================================
+
+  const CategorySection = ({ category }: { category: Category }) => {
+    const categoryTopics = getTopicsForCategory(category.id);
+    const completedCount = categoryTopics.filter(t => t.is_completed).length;
+    const isExpanded = expandedCategories.has(category.id);
+
+    if (categoryTopics.length === 0) return null;
+
+    return (
+      <Card className="border-l-4 border-l-primary">
+        <Collapsible open={isExpanded} onOpenChange={() => toggleCategory(category.id)}>
+          <CollapsibleTrigger className="w-full">
+            <CardHeader className="cursor-pointer hover:bg-accent/30 transition-colors">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  {isExpanded ? (
+                    <ChevronDown className="h-5 w-5" />
+                  ) : (
+                    <ChevronRight className="h-5 w-5" />
+                  )}
+                  <div className="text-left">
+                    <CardTitle className="text-lg">{category.title}</CardTitle>
+                    {category.description && (
+                      <CardDescription>{category.description}</CardDescription>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline">
+                    {completedCount} / {categoryTopics.length} {t("studentTopics.topicsCompleted")}
+                  </Badge>
+                </div>
+              </div>
+            </CardHeader>
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <CardContent className="pt-0 space-y-3">
+              {categoryTopics.map((topic) => (
+                <TopicCard key={topic.id} topic={topic} />
+              ))}
+            </CardContent>
+          </CollapsibleContent>
+        </Collapsible>
+      </Card>
+    );
+  };
+
+  // ============================================================================
   // RENDER - ANA İÇERİK
   // ============================================================================
 
@@ -438,12 +533,73 @@ export function StudentTopicsContent({ student, teacherId }: StudentTopicsConten
           </div>
         </CardHeader>
         <CardContent className="space-y-4">
-          {topics.length === 0 ? (
+          {/* Öğrenciye Özel Konular */}
+          {studentTopics.length > 0 && (
+            <div className="space-y-3">
+              <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                {t("studentTopics.studentSpecificTopics")}
+              </h3>
+              {studentTopics.map((topic) => (
+                <TopicCard key={topic.id} topic={topic} />
+              ))}
+            </div>
+          )}
+
+          {/* Global Konular - Kategorilere Göre */}
+          {(categories.length > 0 || uncategorizedGlobalTopics.length > 0) && (
+            <div className="space-y-4">
+              <h3 className="font-semibold text-sm text-muted-foreground uppercase tracking-wide">
+                {t("studentTopics.globalTopics")}
+              </h3>
+              
+              {/* Kategorili Konular */}
+              {categories.map((category) => (
+                <CategorySection key={category.id} category={category} />
+              ))}
+
+              {/* Kategorisiz Global Konular */}
+              {uncategorizedGlobalTopics.length > 0 && (
+                <Card className="border-l-4 border-l-muted-foreground/30">
+                  <Collapsible 
+                    open={expandedCategories.has("uncategorized")} 
+                    onOpenChange={() => toggleCategory("uncategorized")}
+                  >
+                    <CollapsibleTrigger className="w-full">
+                      <CardHeader className="cursor-pointer hover:bg-accent/30 transition-colors">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-3">
+                            {expandedCategories.has("uncategorized") ? (
+                              <ChevronDown className="h-5 w-5" />
+                            ) : (
+                              <ChevronRight className="h-5 w-5" />
+                            )}
+                            <div className="text-left">
+                              <CardTitle className="text-lg">{t("globalTopics.uncategorized")}</CardTitle>
+                            </div>
+                          </div>
+                          <Badge variant="outline">
+                            {uncategorizedGlobalTopics.filter(t => t.is_completed).length} / {uncategorizedGlobalTopics.length} {t("studentTopics.topicsCompleted")}
+                          </Badge>
+                        </div>
+                      </CardHeader>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent>
+                      <CardContent className="pt-0 space-y-3">
+                        {uncategorizedGlobalTopics.map((topic) => (
+                          <TopicCard key={topic.id} topic={topic} />
+                        ))}
+                      </CardContent>
+                    </CollapsibleContent>
+                  </Collapsible>
+                </Card>
+              )}
+            </div>
+          )}
+
+          {topics.length === 0 && (
             <div className="text-center py-8">
               <p className="opacity-70">{t("studentTopics.noTopics")}</p>
             </div>
-          ) : (
-            topics.map((topic) => <TopicCard key={topic.id} topic={topic} />)
           )}
         </CardContent>
       </Card>

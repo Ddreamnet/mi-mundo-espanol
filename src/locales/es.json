@@ -809,6 +809,8 @@
     "uploadedHomework": "Subió una nueva tarea"
   },
   "studentTopics": {
+    "studentSpecificTopics": "Temas del Estudiante",
+    "globalTopics": "Temas Globales",
     "topicsFor": "Temas para {{name}}",
     "topicsCompleted": "temas completados",
     "completed": "Completado",

@@ -817,6 +817,8 @@
     "uploadedHomework": "Yeni bir ödev yükledi"
   },
   "studentTopics": {
+    "studentSpecificTopics": "Öğrenciye Özel Konular",
+    "globalTopics": "Global Konular",
     "topicsFor": "{{name}} için konular",
     "topicsCompleted": "konu tamamlandı",
     "completed": "Tamamlandı",
