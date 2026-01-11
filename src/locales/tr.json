@@ -876,5 +876,8 @@
     "homeworkLoadError": "Ödevler yüklenemedi",
     "studentUpdated": "Öğrenci güncellendi",
     "studentUpdateError": "Öğrenci güncellenemedi"
+  },
+  "globalTopics": {
+    "uncategorized": "Kategorisiz"
   }
 }

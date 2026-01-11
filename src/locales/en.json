@@ -874,5 +874,8 @@
     "homeworkLoadError": "Failed to load homework",
     "studentUpdated": "Student updated",
     "studentUpdateError": "Failed to update student"
+  },
+  "globalTopics": {
+    "uncategorized": "Uncategorized"
   }
 }
