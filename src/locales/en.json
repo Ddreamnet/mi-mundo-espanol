@@ -815,6 +815,8 @@
     "uploadedHomework": "Uploaded new homework"
   },
   "studentTopics": {
+    "studentSpecificTopics": "Student-Specific Topics",
+    "globalTopics": "Global Topics",
     "topicsFor": "Topics for {{name}}",
     "topicsCompleted": "topics completed",
     "completed": "Completed",
