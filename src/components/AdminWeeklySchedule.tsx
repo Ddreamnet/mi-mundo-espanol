@@ -707,7 +707,7 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
                 }}
               >
                 <Undo2 className="h-5 w-5 text-warning" />
-                {t("dialogs.trialLessonActions.undoComplete")}
+                {t("trialLessonActions.undoComplete")}
               </Button>
             ) : (
               <Button
@@ -719,7 +719,7 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
                 }}
               >
                 <CheckCircle className="h-5 w-5 text-success" />
-                {t("dialogs.trialLessonActions.markComplete")}
+                {t("trialLessonActions.markComplete")}
               </Button>
             )}
             <Button
@@ -731,7 +731,7 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
               }}
             >
               <Trash2 className="h-5 w-5" />
-              {t("dialogs.trialLessonActions.deleteTrialLesson")}
+              {t("trialLessonActions.deleteTrialLesson")}
             </Button>
           </div>
         </DialogContent>
@@ -740,9 +740,9 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
       <AlertDialog open={showMarkAlert} onOpenChange={setShowMarkAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("dialogs.trialLessonActions.markConfirmTitle")}</AlertDialogTitle>
+            <AlertDialogTitle>{t("trialLessonActions.markConfirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("dialogs.trialLessonActions.markConfirmDesc")}
+              {t("trialLessonActions.markConfirmDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -755,9 +755,9 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
       <AlertDialog open={showUnmarkAlert} onOpenChange={setShowUnmarkAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("dialogs.trialLessonActions.unmarkConfirmTitle")}</AlertDialogTitle>
+            <AlertDialogTitle>{t("trialLessonActions.unmarkConfirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("dialogs.trialLessonActions.unmarkConfirmDesc")}
+              {t("trialLessonActions.unmarkConfirmDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -770,9 +770,9 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
       <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("dialogs.trialLessonActions.deleteConfirmTitle")}</AlertDialogTitle>
+            <AlertDialogTitle>{t("trialLessonActions.deleteConfirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("dialogs.trialLessonActions.deleteConfirmDesc")}
+              {t("trialLessonActions.deleteConfirmDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
