@@ -451,6 +451,7 @@ export function LessonOverrideDialog({
                     onSelect={setNewDate}
                     locale={getDateLocale()}
                     initialFocus
+                    className="p-3 pointer-events-auto"
                   />
                 </PopoverContent>
               </Popover>
