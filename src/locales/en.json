@@ -312,14 +312,6 @@
       "updateSuccess": "Homework updated",
       "updateError": "Failed to update homework"
     },
-    "editHomework": {
-      "title": "Edit Homework",
-      "description": "Update homework title and description",
-      "titleLabel": "Homework Title",
-      "titlePlaceholder": "E.g.: Spanish Essay",
-      "descriptionLabel": "Description",
-      "descriptionPlaceholder": "Additional information about the homework..."
-    },
     "homeworkList": {
       "title": "Homework",
       "description": "View all homework",
@@ -422,9 +414,6 @@
       "endTimeLabel": "End",
       "maxLessonsInfo": "You can add up to 6 lessons per week.",
       "submit": "Add Student"
-    },
-    "lessonLink": {
-      "linkNote": "This link will be shown to all your students."
     },
     "lessonOverride": {
       "title": "Edit Lesson",
