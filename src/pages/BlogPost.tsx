@@ -4,7 +4,8 @@ import { useTranslation } from "react-i18next";
 import { format } from "date-fns";
 import { tr, enUS, es } from "date-fns/locale";
 import { Calendar, Clock, ArrowLeft, Share2, Copy, Check } from "lucide-react";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import DOMPurify from "dompurify";
 import { supabase } from "@/integrations/supabase/client";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { LandingFooter } from "@/components/landing/LandingFooter";
@@ -106,6 +107,18 @@ export default function BlogPost() {
     enabled: !!slug
   });
   const localized = post ? getLocalizedContent(post, language) : null;
+
+  // Sanitize HTML content to prevent XSS attacks
+  const sanitizedContent = useMemo(() => {
+    if (!localized?.content) return "";
+    return DOMPurify.sanitize(localized.content, {
+      ALLOWED_TAGS: ['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'ul', 'ol', 'li', 'a', 'strong', 'em', 'b', 'i', 'u', 'br', 'span', 'div', 'img', 'blockquote', 'code', 'pre'],
+      ALLOWED_ATTR: ['href', 'target', 'rel', 'class', 'src', 'alt', 'title', 'style'],
+      ALLOW_DATA_ATTR: false,
+      FORBID_TAGS: ['script', 'style', 'iframe', 'form', 'input', 'button'],
+      FORBID_ATTR: ['onerror', 'onclick', 'onload', 'onmouseover', 'onfocus', 'onblur']
+    });
+  }, [localized?.content]);
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), "d MMMM yyyy", {
       locale: localeMap[language] || tr
@@ -232,7 +245,7 @@ export default function BlogPost() {
 
           <div className="container mx-auto px-4 lg:px-8 max-w-4xl">
             <div className="prose prose-lg max-w-none prose-headings:text-foreground prose-headings:font-bold prose-p:text-foreground/90 prose-p:leading-relaxed prose-a:text-primary prose-a:no-underline hover:prose-a:underline prose-strong:text-foreground prose-ul:text-foreground/90 prose-ol:text-foreground/90 prose-blockquote:border-l-primary prose-blockquote:text-muted-foreground prose-img:rounded-xl prose-img:shadow-lg dark:prose-invert [&_p:empty]:min-h-[1.5em] [&_p:empty]:block" dangerouslySetInnerHTML={{
-          __html: localized.content
+          __html: sanitizedContent
         }} />
           </div>
 
