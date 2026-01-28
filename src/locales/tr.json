@@ -314,14 +314,6 @@
       "updateSuccess": "Ödev güncellendi",
       "updateError": "Ödev güncellenemedi"
     },
-    "editHomework": {
-      "title": "Ödevi Düzenle",
-      "description": "Ödev başlığını ve açıklamasını güncelleyin",
-      "titleLabel": "Ödev Başlığı",
-      "titlePlaceholder": "Örn: İngilizce Kompozisyon",
-      "descriptionLabel": "Açıklama",
-      "descriptionPlaceholder": "Ödev hakkında ek bilgiler..."
-    },
     "homeworkList": {
       "title": "Ödevler",
       "description": "Tüm ödevleri görüntüleyin",
@@ -424,9 +416,6 @@
       "endTimeLabel": "Bitiş",
       "maxLessonsInfo": "Haftada en fazla 6 ders ekleyebilirsiniz.",
       "submit": "Öğrenci Ekle"
-    },
-    "lessonLink": {
-      "linkNote": "Bu link tüm öğrencilerinize gösterilecektir."
     },
     "lessonOverride": {
       "title": "Ders Düzenle",

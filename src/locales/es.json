@@ -417,9 +417,6 @@
       "maxLessonsInfo": "Puede agregar hasta 6 clases por semana.",
       "submit": "Agregar Estudiante"
     },
-    "lessonLink": {
-      "linkNote": "Este enlace se mostrará a todos tus estudiantes."
-    },
     "lessonOverride": {
       "title": "Editar Clase",
       "dateLabel": "Fecha",
