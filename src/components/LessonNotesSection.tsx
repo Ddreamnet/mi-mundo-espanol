@@ -79,6 +79,11 @@ export function LessonNotesSection({
   // ============================================================================
 
   useEffect(() => {
+    // Boş ID'ler varsa fetch yapma (çıkış sırasında veya geçersiz durumda)
+    if (!studentId || !teacherId) {
+      setLoading(false);
+      return;
+    }
     fetchNotes();
   }, [studentId, teacherId]);
 
@@ -87,6 +92,19 @@ export function LessonNotesSection({
   // ============================================================================
 
   const fetchNotes = async () => {
+    // Önce session kontrolü - çıkış yapılmışsa sessizce çık
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      setLoading(false);
+      return;
+    }
+
+    // ID'ler boşsa sessizce çık
+    if (!studentId || !teacherId) {
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -128,11 +146,15 @@ export function LessonNotesSection({
 
       setGroupedNotes(sortedGroups);
     } catch (error: any) {
-      toast({
-        title: t("common.error"),
-        description: t("lessonNotes.loadError"),
-        variant: "destructive",
-      });
+      // Sadece aktif session varsa hata göster (çıkış kaynaklı değilse)
+      const { data: currentSession } = await supabase.auth.getSession();
+      if (currentSession.session) {
+        toast({
+          title: t("common.error"),
+          description: t("lessonNotes.loadError"),
+          variant: "destructive",
+        });
+      }
     } finally {
       setLoading(false);
     }
