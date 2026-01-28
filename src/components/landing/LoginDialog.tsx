@@ -55,12 +55,10 @@ export function LoginDialog({ open, onOpenChange }: LoginDialogProps) {
         description: t("login.successMessage"),
       });
 
-      onOpenChange(false);
+      // Dialog'u kapat ve formu temizle - onAuthStateChange otomatik olarak dashboard'a yönlendirecek
       setEmail("");
       setPassword("");
-      
-      // Redirect to home page after login to trigger role-based routing
-      window.location.href = "/";
+      onOpenChange(false);
     } catch (error: any) {
       console.error("Login error:", error);
       let errorMessage = t("login.genericError");

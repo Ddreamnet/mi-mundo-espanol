@@ -25,6 +25,7 @@ export function useAuth() {
   // Refs to track signing out state and prevent race conditions
   const isSigningOutRef = useRef(false);
   const profileFetchAbortRef = useRef<AbortController | null>(null);
+  const lastFetchedUserIdRef = useRef<string | null>(null);
 
   const fetchProfile = useCallback(async (userId: string) => {
     // Don't fetch profile if we're signing out
@@ -122,14 +123,14 @@ export function useAuth() {
       setUser(session?.user ?? null);
 
       if (session?.user && !isSigningOutRef.current) {
-        // Defer profile fetch to avoid Supabase deadlock
-        setTimeout(() => {
-          if (!isSigningOutRef.current) {
-            fetchProfile(session.user.id);
-          }
-        }, 100);
+        // Aynı kullanıcı için tekrar fetch yapma (duplicate event'leri önle)
+        if (lastFetchedUserIdRef.current !== session.user.id) {
+          lastFetchedUserIdRef.current = session.user.id;
+          fetchProfile(session.user.id);
+        }
       } else {
         console.log("No user session or signing out, clearing profile");
+        lastFetchedUserIdRef.current = null;
         setProfile(null);
         setLoading(false);
       }
