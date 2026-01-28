@@ -877,5 +877,54 @@
   },
   "globalTopics": {
     "uncategorized": "Uncategorized"
+  },
+  "lessonNotes": {
+    "title": "Lesson Notes",
+    "tabTitle": "Lesson Notes",
+    "count": "notes uploaded",
+    "noNotes": "No lesson notes yet",
+    "uploadFirst": "Upload First Note",
+    "deleted": "Lesson note deleted",
+    "deleteError": "Failed to delete lesson note",
+    "deleteTitle": "Delete Lesson Note",
+    "deleteConfirm": "Are you sure you want to delete this lesson note and all its files? This action cannot be undone.",
+    "uploaded": "Lesson note uploaded successfully",
+    "loadError": "Failed to load lesson notes"
+  },
+  "dialogs": {
+    "uploadLessonNote": {
+      "title": "Upload Lesson Note",
+      "description": "Upload a lesson note to share with your student",
+      "titleLabel": "Note Title",
+      "titlePlaceholder": "E.g., Past Tense Notes",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Additional information about the lesson note...",
+      "filesLabel": "Files",
+      "supportedFormats": "Supported formats: JPG, PNG, WEBP, PDF, DOCX (Max. 10MB)",
+      "titleRequired": "Note title is required",
+      "selectFile": "Please select at least one file",
+      "fileTooLarge": "size must be at most 10MB",
+      "filesUploaded": "files uploaded successfully",
+      "uploadError": "Failed to upload lesson note",
+      "linkTab": "Link",
+      "fileTab": "File",
+      "linkLabel": "Note Link",
+      "linkPlaceholder": "https://docs.google.com/...",
+      "linkDescription": "Enter a Google Docs, Google Drive, Dropbox or other sharing link",
+      "linkRequired": "Please enter a link",
+      "invalidLink": "Enter a valid URL",
+      "linkUploaded": "Link added successfully"
+    },
+    "editLessonNote": {
+      "title": "Edit Lesson Note",
+      "description": "Update the lesson note title and description",
+      "titleLabel": "Note Title",
+      "titlePlaceholder": "E.g., Past Tense Notes",
+      "descriptionLabel": "Description",
+      "descriptionPlaceholder": "Additional information about the lesson note...",
+      "titleRequired": "Note title is required",
+      "updateSuccess": "Lesson note updated",
+      "updateError": "Failed to update lesson note"
+    }
   }
 }

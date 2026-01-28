@@ -28,6 +28,7 @@ import {
 import { Header } from "./Header";
 import { StudentLessonTracker } from "./StudentLessonTracker";
 import { HomeworkSection } from "./HomeworkSection";
+import { LessonNotesSection } from "./LessonNotesSection";
 import { JoinLessonCard } from "./JoinLessonCard";
 import { NotificationBell } from "./NotificationBell";
 
@@ -323,25 +324,36 @@ export function StudentDashboard() {
           <JoinLessonCard studentId={profile?.user_id || ""} />
         </div>
 
-        {/* Tabs: Konular ve Ödevler */}
+        {/* Tabs: Konular, Ödevler ve Ders Notları */}
         <Card className="mb-6">
           <CardContent className="p-4">
-            <div className="flex gap-2 border-b border-card-foreground/10 mb-4">
+            <div className="flex gap-2 border-b border-card-foreground/10 mb-4 overflow-x-auto pb-px">
               <Button
                 variant={activeTab === "topics" ? "tab-active" : "tab-inactive"}
-                className="rounded-b-none flex items-center gap-2"
+                className="rounded-b-none flex items-center gap-2 shrink-0"
                 onClick={() => setActiveTab("topics")}
               >
                 <BookOpen className="h-4 w-4" />
-                {t("dashboard.student.topics")}
+                <span className="hidden sm:inline">{t("dashboard.student.topics")}</span>
+                <span className="sm:hidden">Konular</span>
               </Button>
               <Button
                 variant={activeTab === "homework" ? "tab-active" : "tab-inactive"}
-                className="rounded-b-none flex items-center gap-2"
+                className="rounded-b-none flex items-center gap-2 shrink-0"
                 onClick={() => setActiveTab("homework")}
               >
                 <ClipboardList className="h-4 w-4" />
-                {t("dashboard.student.homework")}
+                <span className="hidden sm:inline">{t("dashboard.student.homework")}</span>
+                <span className="sm:hidden">Ödevler</span>
+              </Button>
+              <Button
+                variant={activeTab === "notes" ? "tab-active" : "tab-inactive"}
+                className="rounded-b-none flex items-center gap-2 shrink-0"
+                onClick={() => setActiveTab("notes")}
+              >
+                <FileText className="h-4 w-4" />
+                <span className="hidden sm:inline">{t("lessonNotes.tabTitle")}</span>
+                <span className="sm:hidden">Notlar</span>
               </Button>
             </div>
 
@@ -452,6 +464,15 @@ export function StudentDashboard() {
                 teacherId={teacherId}
                 currentUserId={profile?.user_id || ""}
                 uploadedByUserId={profile?.user_id || ""}
+              />
+            )}
+
+            {/* Ders Notları Tab */}
+            {activeTab === "notes" && (
+              <LessonNotesSection 
+                studentId={profile?.user_id || ""} 
+                teacherId={teacherId}
+                isTeacher={false}
               />
             )}
           </CardContent>

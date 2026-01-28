@@ -879,5 +879,54 @@
   },
   "globalTopics": {
     "uncategorized": "Kategorisiz"
+  },
+  "lessonNotes": {
+    "title": "Ders Notları",
+    "tabTitle": "Ders Notları",
+    "count": "not yüklendi",
+    "noNotes": "Henüz ders notu yok",
+    "uploadFirst": "İlk Notu Yükle",
+    "deleted": "Ders notu silindi",
+    "deleteError": "Ders notu silinemedi",
+    "deleteTitle": "Ders Notunu Sil",
+    "deleteConfirm": "Bu ders notunu ve tüm dosyalarını silmek istediğinizden emin misiniz? Bu işlem geri alınamaz.",
+    "uploaded": "Ders notu başarıyla yüklendi",
+    "loadError": "Ders notları yüklenemedi"
+  },
+  "dialogs": {
+    "uploadLessonNote": {
+      "title": "Ders Notu Yükle",
+      "description": "Öğrencinizle paylaşmak için ders notu yükleyin",
+      "titleLabel": "Not Başlığı",
+      "titlePlaceholder": "Örn: Geçmiş Zaman Notları",
+      "descriptionLabel": "Açıklama",
+      "descriptionPlaceholder": "Ders notu hakkında ek bilgiler...",
+      "filesLabel": "Dosyalar",
+      "supportedFormats": "Desteklenen formatlar: JPG, PNG, WEBP, PDF, DOCX (Maks. 10MB)",
+      "titleRequired": "Not başlığı zorunludur",
+      "selectFile": "Lütfen en az bir dosya seçin",
+      "fileTooLarge": "boyutu en fazla 10MB olabilir",
+      "filesUploaded": "dosya başarıyla yüklendi",
+      "uploadError": "Ders notu yüklenemedi",
+      "linkTab": "Link",
+      "fileTab": "Dosya",
+      "linkLabel": "Not Linki",
+      "linkPlaceholder": "https://docs.google.com/...",
+      "linkDescription": "Google Docs, Google Drive, Dropbox veya başka bir paylaşım linki girin",
+      "linkRequired": "Lütfen bir link girin",
+      "invalidLink": "Geçerli bir URL girin",
+      "linkUploaded": "Link başarıyla eklendi"
+    },
+    "editLessonNote": {
+      "title": "Ders Notunu Düzenle",
+      "description": "Ders notu başlığını ve açıklamasını güncelleyin",
+      "titleLabel": "Not Başlığı",
+      "titlePlaceholder": "Örn: Geçmiş Zaman Notları",
+      "descriptionLabel": "Açıklama",
+      "descriptionPlaceholder": "Ders notu hakkında ek bilgiler...",
+      "titleRequired": "Not başlığı zorunludur",
+      "updateSuccess": "Ders notu güncellendi",
+      "updateError": "Ders notu güncellenemedi"
+    }
   }
 }
