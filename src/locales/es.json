@@ -605,6 +605,40 @@
       "saved": "Enlace de clase guardado",
       "saveError": "Error al guardar enlace"
     },
+    "uploadLessonNote": {
+      "title": "Subir Nota de Clase",
+      "description": "Sube una nota de clase para compartir con tu estudiante",
+      "titleLabel": "Título de la Nota",
+      "titlePlaceholder": "Ej: Notas del Tiempo Pasado",
+      "descriptionLabel": "Descripción",
+      "descriptionPlaceholder": "Información adicional sobre la nota de clase...",
+      "filesLabel": "Archivos",
+      "supportedFormats": "Formatos soportados: JPG, PNG, WEBP, PDF, DOCX (Máx. 10MB)",
+      "titleRequired": "El título de la nota es obligatorio",
+      "selectFile": "Por favor selecciona al menos un archivo",
+      "fileTooLarge": "el tamaño debe ser como máximo 10MB",
+      "filesUploaded": "archivos subidos exitosamente",
+      "uploadError": "Error al subir la nota de clase",
+      "linkTab": "Enlace",
+      "fileTab": "Archivo",
+      "linkLabel": "Enlace de la Nota",
+      "linkPlaceholder": "https://docs.google.com/...",
+      "linkDescription": "Ingresa un enlace de Google Docs, Google Drive, Dropbox u otro enlace para compartir",
+      "linkRequired": "Por favor ingresa un enlace",
+      "invalidLink": "Ingresa una URL válida",
+      "linkUploaded": "Enlace agregado exitosamente"
+    },
+    "editLessonNote": {
+      "title": "Editar Nota de Clase",
+      "description": "Actualiza el título y la descripción de la nota de clase",
+      "titleLabel": "Título de la Nota",
+      "titlePlaceholder": "Ej: Notas del Tiempo Pasado",
+      "descriptionLabel": "Descripción",
+      "descriptionPlaceholder": "Información adicional sobre la nota de clase...",
+      "titleRequired": "El título de la nota es obligatorio",
+      "updateSuccess": "Nota de clase actualizada",
+      "updateError": "Error al actualizar la nota de clase"
+    },
     "pageSettings": "Configuración de Página"
   },
 "blog": {
@@ -881,41 +915,5 @@
     "deleteConfirm": "¿Estás seguro de que deseas eliminar esta nota de clase y todos sus archivos? Esta acción no se puede deshacer.",
     "uploaded": "Nota de clase subida exitosamente",
     "loadError": "Error al cargar las notas de clase"
-  },
-  "dialogs": {
-    "uploadLessonNote": {
-      "title": "Subir Nota de Clase",
-      "description": "Sube una nota de clase para compartir con tu estudiante",
-      "titleLabel": "Título de la Nota",
-      "titlePlaceholder": "Ej: Notas del Tiempo Pasado",
-      "descriptionLabel": "Descripción",
-      "descriptionPlaceholder": "Información adicional sobre la nota de clase...",
-      "filesLabel": "Archivos",
-      "supportedFormats": "Formatos soportados: JPG, PNG, WEBP, PDF, DOCX (Máx. 10MB)",
-      "titleRequired": "El título de la nota es obligatorio",
-      "selectFile": "Por favor selecciona al menos un archivo",
-      "fileTooLarge": "el tamaño debe ser como máximo 10MB",
-      "filesUploaded": "archivos subidos exitosamente",
-      "uploadError": "Error al subir la nota de clase",
-      "linkTab": "Enlace",
-      "fileTab": "Archivo",
-      "linkLabel": "Enlace de la Nota",
-      "linkPlaceholder": "https://docs.google.com/...",
-      "linkDescription": "Ingresa un enlace de Google Docs, Google Drive, Dropbox u otro enlace para compartir",
-      "linkRequired": "Por favor ingresa un enlace",
-      "invalidLink": "Ingresa una URL válida",
-      "linkUploaded": "Enlace agregado exitosamente"
-    },
-    "editLessonNote": {
-      "title": "Editar Nota de Clase",
-      "description": "Actualiza el título y la descripción de la nota de clase",
-      "titleLabel": "Título de la Nota",
-      "titlePlaceholder": "Ej: Notas del Tiempo Pasado",
-      "descriptionLabel": "Descripción",
-      "descriptionPlaceholder": "Información adicional sobre la nota de clase...",
-      "titleRequired": "El título de la nota es obligatorio",
-      "updateSuccess": "Nota de clase actualizada",
-      "updateError": "Error al actualizar la nota de clase"
-    }
   }
 }
