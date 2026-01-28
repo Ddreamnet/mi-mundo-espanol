@@ -141,8 +141,8 @@ export function useAuth() {
       .getSession()
       .then(({ data: { session } }) => {
         console.log("Initial session check:", session?.user?.id);
-        // Only set initial session state if no auth state change event has fired yet
-        if (!user && !session) {
+        // Only set initial loading to false if no session found
+        if (!session) {
           console.log("No initial session found");
           setLoading(false);
         }
