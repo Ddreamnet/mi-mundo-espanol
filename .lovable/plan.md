@@ -1,109 +1,125 @@
 
-# Giriş Ekranı Beyaz Ekran ve Gecikme Sorunu Düzeltme Planı
+# Refactoring Plan: Lesson Tracking, Schedule, and Override Flows
 
-## Sorun Analizi
+## Existing Functionality Summary
 
-Giriş yaparken yaşanan beyaz ekran ve gecikmenin 3 temel nedeni var:
+### Files in Scope
 
-| Sorun | Konum | Etki |
-|-------|-------|------|
-| `window.location.href` kullanımı | LoginDialog.tsx:63 | Tam sayfa yenilemesi - React state sıfırlanıyor, tüm app yeniden yükleniyor |
-| 100ms setTimeout | useAuth.ts:126-130 | Profile fetch için gereksiz gecikme |
-| Çift auth event | useAuth.ts | `SIGNED_IN` ve `INITIAL_SESSION` birden fazla kez tetikleniyor |
+| File | Lines | Role |
+|------|-------|------|
+| `src/components/LessonTracker.tsx` | 495 | Teacher view: mark lessons complete, show dates with overrides |
+| `src/components/StudentLessonTracker.tsx` | 274 | Student view: read-only lesson progress with realtime updates |
+| `src/components/LessonOverrideDialog.tsx` | 585 | Dialog for postpone/reschedule/revert lesson dates |
+| `src/components/WeeklyScheduleDialog.tsx` | ~486 | Teacher weekly schedule (dialog) with override display |
+| `src/components/AdminWeeklySchedule.tsx` | 808 | Admin weekly schedule (inline card) with override + trial lesson management |
+| `src/hooks/useLessonOverrides.ts` | ~120 | Hook for fetching/querying overrides |
+| `src/components/EditStudentLessonsDialog.tsx` | 308 | Edit student lesson schedule (drag-and-drop) |
+| `src/components/EditStudentScheduleDialog.tsx` | 183 | Legacy single-lesson schedule editor |
 
-## Akış Karşılaştırması
+### Key Duplication Identified
 
-```text
-Mevcut Durum (Yavaş):
-┌─────────────────────────────────────────────────────────────────┐
-│ 1. Giriş başarılı                                               │
-│ 2. window.location.href = "/" (TAM SAYFA YENİLEME)              │
-│ 3. React app sıfırdan yüklenir                                  │
-│ 4. useAuth hook başlar, loading=true (BEYAZ EKRAN/SPINNER)      │
-│ 5. getSession() + onAuthStateChange()                           │
-│ 6. 100ms setTimeout bekle                                       │
-│ 7. Profile fetch (2 ayrı query: profiles + user_roles)          │
-│ 8. Dashboard render                                             │
-└─────────────────────────────────────────────────────────────────┘
-Tahmini süre: 1-2 saniye
+**1. Shared Types (duplicated 4x)**
+`LessonDates`, `LessonOverride`, `StudentLesson`, `TrialLesson` interfaces are redefined in every file.
 
-Düzeltilmiş Durum (Hızlı):
-┌─────────────────────────────────────────────────────────────────┐
-│ 1. Giriş başarılı                                               │
-│ 2. onAuthStateChange tetiklenir (SAYFA YENİLEME YOK)            │
-│ 3. Profile fetch hemen başlar (setTimeout yok)                  │
-│ 4. Dashboard render                                             │
-└─────────────────────────────────────────────────────────────────┘
-Tahmini süre: 200-400ms
-```
+**2. `getSortedLessons` + `getDisplayLessonData` (duplicated 2x)**
+Identical ~60 lines in both `LessonTracker` and `StudentLessonTracker`.
 
-## Çözüm Planı
+**3. `getRowConfig` (duplicated 2x)**
+Same row/column layout logic in both tracker components.
 
-### 1. LoginDialog.tsx - Sayfa Yenilemesini Kaldır
+**4. Teacher Balance Update/Subtract (duplicated 3x)**
+`updateTeacherBalance` and `subtractFromTeacherBalance` are copy-pasted across `LessonTracker`, `WeeklyScheduleDialog`, and `AdminWeeklySchedule` (~40 lines each).
 
-**Mevcut kod (satır 62-63):**
-```typescript
-// Redirect to home page after login to trigger role-based routing
-window.location.href = "/";
-```
+**5. Schedule Grid Logic (duplicated 2x)**
+`getAllTimeSlots`, `getLessonForDayAndTime`, `getTrialLessonForDayAndTime`, `getDateForDayIndex` are near-identical between `WeeklyScheduleDialog` and `AdminWeeklySchedule`.
 
-**Yeni kod:**
-```typescript
-// Dialog kapatılınca onAuthStateChange otomatik olarak routing yapar
-// Sayfa yenilemesine gerek yok
-```
+**6. Schedule Fetching (duplicated 2x)**
+`fetchSchedule` with active student filtering, profile joining, and color assignment -- same logic in both schedule components.
 
-Dialog kapandığında `onAuthStateChange` zaten SIGNED_IN event'i tetikliyor ve App.tsx bunu algılayıp dashboard'a yönlendiriyor.
+**7. Inline Override Fetching (duplicated 2x)**
+`LessonTracker` and `StudentLessonTracker` both fetch overrides inline instead of using the existing `useLessonOverrides` hook.
 
-### 2. useAuth.ts - setTimeout Gecikmesini Kaldır
+---
 
-**Mevcut kod (satır 124-130):**
-```typescript
-if (session?.user && !isSigningOutRef.current) {
-  // Defer profile fetch to avoid Supabase deadlock
-  setTimeout(() => {
-    if (!isSigningOutRef.current) {
-      fetchProfile(session.user.id);
-    }
-  }, 100);
-}
-```
+## Refactoring Plan
 
-**Yeni kod:**
-```typescript
-if (session?.user && !isSigningOutRef.current) {
-  fetchProfile(session.user.id);
-}
-```
+### Phase 1: Extract Shared Types and Utilities
 
-100ms gecikme artık gerekli değil - modern Supabase client'ta deadlock sorunu çözülmüş durumda.
+**New file: `src/types/lessons.ts`**
+- Move all shared interfaces: `LessonDates`, `LessonOverride`, `StudentLesson`, `TrialLesson`, `StudentSchedule`
+- Single source of truth; all components import from here
 
-### 3. useAuth.ts - Çift Event Tetiklemesini Önle
+**New file: `src/utils/lessonDateUtils.ts`**
+- Extract `getSortedLessons(lessonDates, overrides, totalLessons)` 
+- Extract `getDisplayLessonData(sortedLessons, lessonDates, displayPosition)`
+- Extract `getRowConfig(lessonsPerWeek)`
+- Extract `calculateLessonDates(markedLesson, markedDate, studentLessonDays)`
+- Extract `formatTime(time, locale)`
 
-Profile fetch'in tekrar tetiklenmesini önlemek için bir ref eklenecek:
+### Phase 2: Extract Teacher Balance Service
 
-```typescript
-const lastFetchedUserIdRef = useRef<string | null>(null);
+**New file: `src/services/teacherBalanceService.ts`**
+- `updateTeacherBalance(teacherId, lesson)` -- handles both regular and trial lessons
+- `subtractFromTeacherBalance(teacherId, lesson)`
+- `calculateLessonDuration(startTime, endTime)` helper
+- Removes ~80 lines of duplication across 3 files
 
-// onAuthStateChange içinde:
-if (session?.user && !isSigningOutRef.current) {
-  // Aynı kullanıcı için tekrar fetch yapma
-  if (lastFetchedUserIdRef.current !== session.user.id) {
-    lastFetchedUserIdRef.current = session.user.id;
-    fetchProfile(session.user.id);
-  }
-}
-```
+### Phase 3: Extract Schedule Grid Logic
 
-## Değiştirilecek Dosyalar
+**New file: `src/hooks/useScheduleGrid.ts`**
+- Custom hook combining: `fetchSchedule`, `getAllTimeSlots`, `getLessonForDayAndTime`, `getTrialLessonForDayAndTime`, `getDateForDayIndex`
+- Accepts `teacherId` and optional config (e.g., `showCancelledLessons` for admin)
+- Returns `{ lessons, trialLessons, studentColors, timeSlots, getLessonForDayAndTime, getTrialLessonForDayAndTime, loading, refetch }`
+- `WeeklyScheduleDialog` and `AdminWeeklySchedule` both consume this hook
 
-| Dosya | Değişiklik |
-|-------|------------|
-| `src/components/landing/LoginDialog.tsx` | `window.location.href = "/"` satırını kaldır |
-| `src/hooks/useAuth.ts` | setTimeout kaldır, duplicate fetch önleme ref'i ekle |
+### Phase 4: Unify LessonTracker Components
 
-## Beklenen İyileştirme
+**Refactor `LessonTracker.tsx` and `StudentLessonTracker.tsx`:**
+- `LessonTracker` becomes the single component with a `readOnly` prop
+- When `readOnly=true`: no click handlers, no confirmation dialog, shows progress stats (student view)
+- When `readOnly=false`: click to mark complete, confirmation dialog (teacher view)
+- Uses `useLessonOverrides` hook instead of inline fetching
+- Imports all date/display logic from `lessonDateUtils.ts`
+- `StudentLessonTracker` becomes a thin wrapper: `<LessonTracker readOnly studentId={...} />`
 
-- **Giriş süresi:** ~1-2 saniye → ~200-400ms
-- **Beyaz ekran:** Tamamen ortadan kalkacak
-- **Kullanıcı deneyimi:** Giriş butonuna tıklayınca anında dashboard'a geçiş
+### Phase 5: Refactor Override Fetching
+
+- `LessonTracker` and `StudentLessonTracker` currently fetch overrides independently
+- Replace with `useLessonOverrides` hook (already exists but unused in these components)
+- Remove duplicate `fetchLessonOverrides` functions
+
+---
+
+## Files Changed (Summary)
+
+| Action | File | Why |
+|--------|------|-----|
+| Create | `src/types/lessons.ts` | Centralize shared interfaces |
+| Create | `src/utils/lessonDateUtils.ts` | Extract duplicated date/display logic |
+| Create | `src/services/teacherBalanceService.ts` | Extract duplicated balance logic |
+| Create | `src/hooks/useScheduleGrid.ts` | Extract duplicated schedule grid logic |
+| Modify | `src/components/LessonTracker.tsx` | Add `readOnly` prop, use shared utils/hooks |
+| Modify | `src/components/StudentLessonTracker.tsx` | Thin wrapper around unified LessonTracker |
+| Modify | `src/components/WeeklyScheduleDialog.tsx` | Use `useScheduleGrid` hook and shared utils |
+| Modify | `src/components/AdminWeeklySchedule.tsx` | Use `useScheduleGrid` hook and shared utils |
+| Modify | `src/components/LessonOverrideDialog.tsx` | Import types from shared module |
+| Modify | `src/hooks/useLessonOverrides.ts` | Import types from shared module |
+| No change | `src/components/EditStudentLessonsDialog.tsx` | Already clean, no duplication |
+| No change | `src/components/EditStudentScheduleDialog.tsx` | Separate concern, no overlap |
+
+---
+
+## Estimated Impact
+
+- ~300 lines of duplicated code eliminated
+- 4 duplicate interface definitions consolidated to 1
+- 3 duplicate balance update functions consolidated to 1
+- 2 duplicate schedule grid implementations consolidated to 1
+- 2 duplicate lesson display renderers consolidated to 1
+
+## Risk Mitigation
+
+- Each phase is independently deployable; if one breaks, it can be reverted without affecting others
+- No UI or behavior changes -- purely structural
+- Existing `useLessonOverrides` hook is already tested in production
+- Will verify each component renders identically after refactoring by testing in preview
