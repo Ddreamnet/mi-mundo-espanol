@@ -1,5 +1,5 @@
 
-# Refactoring Plan: Lesson Tracking, Schedule, and Override Flows
+# Refactoring Plan: Lesson Tracking, Schedule, and Override Flows (UPDATED)
 
 ## Existing Functionality Summary
 
