@@ -2,34 +2,27 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Plus, Download, Trash2, CheckCircle, Undo2, Calendar, Ban, X } from "lucide-react";
+import { Plus, Download, Trash2, CheckCircle, Undo2, Calendar, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AddTrialLessonDialog } from "./AddTrialLessonDialog";
 import { exportScheduleAsPNG } from "./ScheduleExportCanvas";
 import { LessonOverrideDialog } from "./LessonOverrideDialog";
 import { useLessonOverrides, getLessonDateForCurrentWeek, LessonOverride } from "@/hooks/useLessonOverrides";
-import { format, startOfWeek, addDays } from "date-fns";
-import { tr } from "date-fns/locale";
-import type { TrialLesson } from "@/types/lessons";
+import { format } from "date-fns";
+import type { StudentLesson, TrialLesson } from "@/types/lessons";
+import { formatTime as formatTimeUtil } from "@/utils/lessonDateUtils";
 import { addTrialLessonToBalance, subtractTrialLessonFromBalance } from "@/services/teacherBalanceService";
+import { useScheduleGrid } from "@/hooks/useScheduleGrid";
 
-interface StudentLesson {
-  id: string;
-  student_id: string;
-  student_name: string;
-  day_of_week: number;
-  start_time: string;
-  end_time: string;
-  note?: string;
+// Admin-specific extended StudentLesson with override metadata
+interface AdminStudentLesson extends StudentLesson {
   _originalStartTime?: string;
   _originalEndTime?: string;
   _hasOverride?: boolean;
 }
-
 
 interface AdminWeeklyScheduleProps {
   teacherId: string;
@@ -44,25 +37,9 @@ const getDayLabel = (t: any) => [
   t("days.saturday"),
   t("days.sunday"),
 ];
-const STUDENT_COLORS = [
-  "schedule-color-1",
-  "schedule-color-2",
-  "schedule-color-3",
-  "schedule-color-4",
-  "schedule-color-5",
-  "schedule-color-6",
-  "schedule-color-7",
-  "schedule-color-8",
-  "schedule-color-9",
-  "schedule-color-10",
-];
 
 export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
   const { t } = useTranslation();
-  const [lessons, setLessons] = useState<StudentLesson[]>([]);
-  const [trialLessons, setTrialLessons] = useState<TrialLesson[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [studentColors, setStudentColors] = useState<Map<string, string>>(new Map());
   const [showAddTrial, setShowAddTrial] = useState(false);
   const [selectedTrialLesson, setSelectedTrialLesson] = useState<TrialLesson | null>(null);
   const [showTrialActionDialog, setShowTrialActionDialog] = useState(false);
@@ -71,7 +48,7 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   
   // Lesson override state
-  const [selectedLesson, setSelectedLesson] = useState<StudentLesson | null>(null);
+  const [selectedLesson, setSelectedLesson] = useState<AdminStudentLesson | null>(null);
   const [selectedLessonDate, setSelectedLessonDate] = useState<Date | null>(null);
   const [selectedLessonCurrentDate, setSelectedLessonCurrentDate] = useState<Date | null>(null);
   const [selectedLessonCurrentStartTime, setSelectedLessonCurrentStartTime] = useState<string | null>(null);
@@ -79,133 +56,34 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
   const [showOverrideDialog, setShowOverrideDialog] = useState(false);
   
   const { toast } = useToast();
-  const { overrides, isLessonCancelled, getLessonOverride, getMovedLessonForDate, refetch: refetchOverrides } = useLessonOverrides(teacherId);
-
-  useEffect(() => {
-    fetchSchedule();
-  }, [teacherId]);
-
-  // Real-time listener for trial lesson updates
-  useEffect(() => {
-    if (!teacherId) return;
-
-    const channel = supabase
-      .channel('admin-trial-lessons-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'trial_lessons',
-          filter: `teacher_id=eq.${teacherId}`,
-        },
-        () => {
-          // Refetch schedule when trial lesson is updated
-          fetchSchedule();
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [teacherId]);
-
-  const fetchSchedule = async () => {
-    try {
-      setLoading(true);
-
-      // First, get non-archived students for this teacher
-      const { data: activeStudents, error: studentsError } = await supabase
-        .from("students")
-        .select("student_id")
-        .eq("teacher_id", teacherId)
-        .eq("is_archived", false);
-      
-      if (studentsError) throw studentsError;
-      
-      const activeStudentIds = (activeStudents || []).map(s => s.student_id);
-
-      // Fetch regular lessons only for active students
-      const { data: lessonsData, error: lessonsError } = await supabase
-        .from("student_lessons")
-        .select("id, student_id, day_of_week, start_time, end_time, note")
-        .eq("teacher_id", teacherId)
-        .in("student_id", activeStudentIds.length > 0 ? activeStudentIds : ['no-students']);
-
-      if (lessonsError) throw lessonsError;
-
-      // Fetch student names
-      const studentIds = [...new Set(lessonsData?.map((l) => l.student_id) || [])];
-      const { data: studentsData, error: profilesError } = await supabase
-        .from("profiles")
-        .select("user_id, full_name")
-        .in("user_id", studentIds.length > 0 ? studentIds : ['no-students']);
-
-      if (profilesError) throw profilesError;
-
-      // Create student name map
-      const nameMap = new Map(studentsData?.map((s) => [s.user_id, s.full_name]) || []);
-
-      // Assign colors to students
-      const colorMap = new Map<string, string>();
-      studentIds.forEach((id, index) => {
-        colorMap.set(id, STUDENT_COLORS[index % STUDENT_COLORS.length]);
-      });
-      setStudentColors(colorMap);
-
-      // Format lessons with names
-      const formattedLessons =
-        lessonsData?.map((lesson) => ({
-          ...lesson,
-          student_name: nameMap.get(lesson.student_id) || "Bilinmeyen",
-          note: lesson.note,
-        })) || [];
-
-      setLessons(formattedLessons);
-
-      // Fetch trial lessons
-      const { data: trialData, error: trialError } = await supabase
-        .from("trial_lessons")
-        .select("*")
-        .eq("teacher_id", teacherId)
-        .order("start_time", { ascending: true });
-
-      if (trialError) throw trialError;
-
-      setTrialLessons(trialData || []);
-    } catch (error: any) {
-      toast({
-        title: t("common.error"),
-        description: t("dialogs.weeklySchedule.scheduleLoadError"),
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+  const { overrides, isLessonCancelled, getLessonOverride, refetch: refetchOverrides } = useLessonOverrides(teacherId);
+  
+  const {
+    lessons,
+    trialLessons,
+    studentColors,
+    loading,
+    refetch: refetchSchedule,
+    getDateForDayIndex,
+    getTrialLessonForDayAndTime,
+  } = useScheduleGrid({ teacherId, autoFetch: true, channelSuffix: "admin" });
 
   const formatTime = (time: string) => {
-    return new Date(`2000-01-01T${time}`).toLocaleTimeString([], {
-      hour: "numeric",
-      minute: "2-digit",
-    });
+    return formatTimeUtil(time);
   };
 
+  // Admin-specific: include ALL lesson times (even cancelled ones)
   const getAllTimeSlots = () => {
     const allTimes = new Set<string>();
     
-    // Add regular lesson times (including cancelled ones for admin view)
     lessons.forEach((l) => {
       allTimes.add(l.start_time);
     });
     
-    // Add trial lesson times
     trialLessons.forEach((l) => {
       allTimes.add(l.start_time);
     });
     
-    // Add moved lessons that might have different times
     overrides.forEach((o) => {
       if (!o.is_cancelled && o.new_start_time) {
         allTimes.add(o.new_start_time);
@@ -215,14 +93,7 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
     return Array.from(allTimes).sort();
   };
 
-  // Get the date for a specific day in the current week
-  const getDateForDayIndex = (dayIndex: number): Date => {
-    const today = new Date();
-    const weekStart = startOfWeek(today, { weekStartsOn: 1 }); // Monday
-    return addDays(weekStart, dayIndex);
-  };
-
-  // Check if a lesson has any override (postponed or cancelled)
+  // Admin-specific: find override for a student on a specific date
   const getLessonOverrideForAdmin = (studentId: string, date: Date): LessonOverride | null => {
     const dateStr = format(date, "yyyy-MM-dd");
     return overrides.find((o) => {
@@ -231,13 +102,12 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
     }) || null;
   };
 
+  // Admin-specific: show cancelled/postponed lessons dimmed instead of hiding them
   const getLessonForDayAndTime = (dayIndex: number, timeSlot: string) => {
-    // dayIndex: 0=Pazartesi, 6=Pazar
-    // day_of_week in DB: 1=Pazartesi, 0=Pazar
     const dbDayOfWeek = dayIndex === 6 ? 0 : dayIndex + 1;
     const dateForDay = getDateForDayIndex(dayIndex);
     
-    // First check if there's a moved lesson that should appear here
+    // Check for moved lessons
     const movedLesson = overrides.find((o) => {
       if (o.is_cancelled || !o.new_date) return false;
       const newDate = new Date(o.new_date);
@@ -246,7 +116,6 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
     });
     
     if (movedLesson) {
-      // Find the original lesson
       const originalLesson = lessons.find((l) => l.student_id === movedLesson.student_id);
       if (originalLesson) {
         return {
@@ -260,17 +129,15 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
       }
     }
     
-    // Check for regular lessons on this day
+    // Check for regular lessons
     const lesson = lessons.find((l) => l.day_of_week === dbDayOfWeek && l.start_time === timeSlot);
     
     if (lesson) {
       const lessonDate = getLessonDateForCurrentWeek(lesson.day_of_week);
       
-      // Check if this lesson has any override (cancelled or postponed)
-      // Admin should see ALL lessons including cancelled/postponed ones (but dimmed)
+      // Admin: show overridden lessons dimmed instead of hiding
       const override = getLessonOverrideForAdmin(lesson.student_id, lessonDate);
       if (override) {
-        // Show the lesson as postponed/cancelled with dimmed style
         return { 
           ...lesson, 
           _originalDate: lessonDate,
@@ -285,16 +152,7 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
     return null;
   };
 
-  const getTrialLessonForDayAndTime = (dayIndex: number, timeSlot: string) => {
-    // dayIndex: 0=Pazartesi, 6=Pazar
-    // day_of_week in DB: 1=Pazartesi, 0=Pazar
-    const dbDayOfWeek = dayIndex === 6 ? 0 : dayIndex + 1;
-    return trialLessons.find((l) => l.day_of_week === dbDayOfWeek && l.start_time === timeSlot);
-  };
-
   const handleLessonClick = (lesson: StudentLesson & { _originalDate?: Date; _override?: LessonOverride }) => {
-    // If this lesson has an override, use the ORIGINAL date from the override
-    // This is the date we need to use to identify and update the override record
     const override = lesson._override;
     let originalDateForOverride: Date;
     let currentDisplayDate: Date;
@@ -304,17 +162,13 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
     let originalEndTimeForDialog: string;
     
     if (override) {
-      // This is a moved lesson - use the original_date from the override record
       originalDateForOverride = new Date(override.original_date);
-      // The current display is the NEW date/time from override
       currentDisplayDate = override.new_date ? new Date(override.new_date) : originalDateForOverride;
       currentStartTime = override.new_start_time || override.original_start_time;
       currentEndTime = override.new_end_time || override.original_end_time;
-      // Original times from override record (for dialog title display)
       originalStartTimeForDialog = override.original_start_time;
       originalEndTimeForDialog = override.original_end_time;
     } else {
-      // Normal lesson - calculate from day_of_week
       originalDateForOverride = lesson._originalDate || getLessonDateForCurrentWeek(lesson.day_of_week);
       currentDisplayDate = originalDateForOverride;
       currentStartTime = lesson.start_time;
@@ -323,8 +177,7 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
       originalEndTimeForDialog = lesson.end_time;
     }
     
-    // Store the original times and override status in the lesson object for the dialog
-    const lessonWithOriginalTimes = {
+    const lessonWithOriginalTimes: AdminStudentLesson = {
       ...lesson,
       _originalStartTime: originalStartTimeForDialog,
       _originalEndTime: originalEndTimeForDialog,
@@ -341,7 +194,7 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
 
   const handleOverrideSuccess = () => {
     refetchOverrides();
-    fetchSchedule();
+    refetchSchedule();
   };
 
   const handleTrialLessonClick = (trial: TrialLesson) => {
@@ -351,27 +204,13 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
 
   const handleDeleteTrialLesson = async () => {
     if (!selectedTrialLesson) return;
-
     try {
-      const { error } = await supabase
-        .from("trial_lessons")
-        .delete()
-        .eq("id", selectedTrialLesson.id);
-
+      const { error } = await supabase.from("trial_lessons").delete().eq("id", selectedTrialLesson.id);
       if (error) throw error;
-
-      toast({
-        title: t("common.success"),
-        description: t("dialogs.trialLessonActions.lessonDeleted"),
-      });
-
-      fetchSchedule();
+      toast({ title: t("common.success"), description: t("dialogs.trialLessonActions.lessonDeleted") });
+      refetchSchedule();
     } catch (error: any) {
-      toast({
-        title: t("common.error"),
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     } finally {
       setShowDeleteAlert(false);
       setShowTrialActionDialog(false);
@@ -381,29 +220,14 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
 
   const handleMarkComplete = async () => {
     if (!selectedTrialLesson) return;
-
     try {
-      const { error } = await supabase
-        .from("trial_lessons")
-        .update({ is_completed: true })
-        .eq("id", selectedTrialLesson.id);
-
+      const { error } = await supabase.from("trial_lessons").update({ is_completed: true }).eq("id", selectedTrialLesson.id);
       if (error) throw error;
-
       await addTrialLessonToBalance(teacherId, selectedTrialLesson);
-
-      toast({
-        title: t("common.success"),
-        description: t("dialogs.trialLessonActions.lessonMarked"),
-      });
-
-      fetchSchedule();
+      toast({ title: t("common.success"), description: t("dialogs.trialLessonActions.lessonMarked") });
+      refetchSchedule();
     } catch (error: any) {
-      toast({
-        title: t("common.error"),
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     } finally {
       setShowMarkAlert(false);
       setSelectedTrialLesson(null);
@@ -412,29 +236,14 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
 
   const handleMarkIncomplete = async () => {
     if (!selectedTrialLesson) return;
-
     try {
-      const { error } = await supabase
-        .from("trial_lessons")
-        .update({ is_completed: false })
-        .eq("id", selectedTrialLesson.id);
-
+      const { error } = await supabase.from("trial_lessons").update({ is_completed: false }).eq("id", selectedTrialLesson.id);
       if (error) throw error;
-
       await subtractTrialLessonFromBalance(teacherId, selectedTrialLesson);
-
-      toast({
-        title: t("common.success"),
-        description: t("dialogs.trialLessonActions.lessonUnmarked"),
-      });
-
-      fetchSchedule();
+      toast({ title: t("common.success"), description: t("dialogs.trialLessonActions.lessonUnmarked") });
+      refetchSchedule();
     } catch (error: any) {
-      toast({
-        title: t("common.error"),
-        description: error.message,
-        variant: "destructive",
-      });
+      toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     } finally {
       setShowUnmarkAlert(false);
       setSelectedTrialLesson(null);
@@ -445,30 +254,14 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
 
   const handleExportPNG = async () => {
     try {
-      // Map student colors from Map to Record
-      const colorRecord: Record<string, string> = {};
-      studentColors.forEach((color, studentId) => {
-        colorRecord[studentId] = color;
-      });
-
       await exportScheduleAsPNG({
-        lessons: lessons.map(l => ({
-          ...l,
-          is_completed: false, // Admin panel doesn't track completion
-        })),
+        lessons: lessons.map(l => ({ ...l, is_completed: false })),
         trialLessons,
-        studentColors: colorRecord,
+        studentColors,
       });
-      toast({
-        title: t("common.success"),
-        description: t("dialogs.weeklySchedule.pngDownloaded"),
-      });
+      toast({ title: t("common.success"), description: t("dialogs.weeklySchedule.pngDownloaded") });
     } catch (error) {
-      toast({
-        title: t("common.error"),
-        description: t("dialogs.weeklySchedule.pngError"),
-        variant: "destructive",
-      });
+      toast({ title: t("common.error"), description: t("dialogs.weeklySchedule.pngError"), variant: "destructive" });
     }
   };
 
@@ -509,7 +302,7 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
           open={showAddTrial}
           onOpenChange={setShowAddTrial}
           teacherId={teacherId}
-          onSuccess={fetchSchedule}
+          onSuccess={refetchSchedule}
         />
       </Card>
     );
@@ -558,7 +351,7 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
                               className={`w-full justify-center py-2 cursor-pointer relative ${
                                 (lesson as any)._isPostponed 
                                   ? "opacity-40 bg-muted text-muted-foreground border-border hover:opacity-60" 
-                                  : studentColors.get(lesson.student_id) || "bg-muted text-muted-foreground"
+                                  : studentColors[lesson.student_id] || "bg-muted text-muted-foreground"
                               } ${(lesson as any)._isOverride ? "ring-2 ring-warning ring-offset-1" : ""}`}
                               onClick={() => handleLessonClick(lesson as any)}
                             >
@@ -609,7 +402,7 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
         open={showAddTrial}
         onOpenChange={setShowAddTrial}
         teacherId={teacherId}
-        onSuccess={fetchSchedule}
+        onSuccess={refetchSchedule}
       />
 
       {/* Trial Lesson Action Dialog */}
