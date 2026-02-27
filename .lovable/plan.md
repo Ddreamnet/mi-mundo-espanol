@@ -1,97 +1,177 @@
 
-# AdminDashboard Decomposition: 1083 → ~240 Lines
+# Major Scheduling Upgrade: Implementation Plan
 
-## Overview
+## Summary
 
-The `AdminDashboard.tsx` file contains 1083 lines with 3 major responsibilities mixed together: data fetching/CRUD, topic management logic, and UI rendering for 3 tabs. We will extract these into focused modules while keeping the UI and behavior 100% identical.
+This is a large-scale upgrade introducing a `lesson_instances` table, conflict detection, instance generation, and UI enhancements across the scheduling system. The plan is broken into 8 phases, each independently testable.
 
-## Extraction Plan
+---
 
-### 1. Create `src/hooks/useAdminData.ts` (~150 lines)
+## Phase 1: Database -- Create `lesson_instances` Table
 
-Extract all data-fetching and teacher/student state management:
-- `teachers`, `selectedTeacher`, `loading` state
-- `fetchTeachers()` function (lines 78-151)
-- `toggleStudent()`, `expandedStudents` state (lines 153-165)
-- `openStudentSettings()`, `openTeacherSettings()` helpers
-- `handleRestoreStudent()` (lines 495-517)
+**SQL Migration:**
+- Create `lesson_instances` table with columns: `id`, `student_id`, `teacher_id`, `lesson_number`, `lesson_date`, `start_time`, `end_time`, `status` (planned/completed/cancelled), `original_date`, `original_start_time`, `original_end_time`, `rescheduled_count`, `created_at`, `updated_at`
+- Add UNIQUE constraint on `(student_id, teacher_id, lesson_number)`
+- Create indexes on `(teacher_id, lesson_date, start_time, end_time)` and `(student_id, teacher_id, status)`
+- Add RLS policies mirroring `student_lesson_tracking`: admin ALL, teacher ALL on own, student SELECT on own
 
-This hook returns `{ teachers, selectedTeacher, setSelectedTeacher, loading, fetchTeachers, expandedStudents, toggleStudent, ... }`
+**Data Migration Script:**
+- For each `student_lesson_tracking` record, read `lesson_dates` JSON and `completed_lessons` array
+- For each lesson number in `lesson_dates`, look up the student's template slot from `student_lessons` (matching by `day_of_week` derived from the stored date) to get `start_time`/`end_time`
+- Insert into `lesson_instances` with `status = 'completed'` if lesson_number is in `completed_lessons`, else `'planned'`
+- For each `lesson_overrides` row: find matching instance by `original_date`, update its fields, set `rescheduled_count = 1`. If `is_cancelled`, set `status = 'cancelled'`
 
-### 2. Create `src/hooks/useTopicManagement.ts` (~170 lines)
+---
 
-Extract all topic/resource CRUD operations:
-- `studentTopics`, `studentCompletedTopics` state maps
-- `fetchStudentTopics()` (lines 167-272) -- the complex parallel-fetch + merge logic
-- `handleAddTopic()` (lines 293-326)
-- `handleAddResource()` (lines 328-371)
-- `handleEditTopic()` (lines 374-406)
-- `handleEditResource()` (lines 408-451)
-- `handleDeleteTopic()` (lines 453-472)
-- `handleDeleteResource()` (lines 474-493)
-- All related dialog state (`showAddTopic`, `editingTopic`, `selectedStudentForTopic`, etc.)
+## Phase 2: Conflict Detection Service
 
-This hook accepts `{ selectedTeacher, profileUserId }` and returns all CRUD handlers + dialog state.
+**New file: `src/lib/conflictDetection.ts`**
 
-### 3. Create `src/components/admin/AdminStudentsTab.tsx` (~250 lines)
+- `hasTimeOverlap(startA, endA, startB, endB)`: Pure function, returns `startA < endB && endA > startB` (allows back-to-back where endA === startB)
+- `ConflictInfo` interface: `{ studentName, date, timeRange, type: 'lesson' | 'trial', teacherId }`
+- `checkTeacherConflicts(teacherId, date, startTime, endTime, excludeInstanceId?)`: Queries `lesson_instances` (planned/completed) and `trial_lessons` for that teacher on that date, runs overlap check, returns `ConflictInfo[]`
 
-Extract the entire "Students" tab rendering (currently lines 644-967):
-- Active students list with collapsible topic views
-- "Islenen Konular" (processed topics) section per student
-- Student-specific topics CRUD section per student
-- Archived students section with restore button
-- "Create Student" button
+---
 
-Props: receives all handlers and state from the hooks.
+## Phase 3: Instance Generation
 
-### 4. Create `src/components/admin/AdminTeachersList.tsx` (~80 lines)
+**New file: `src/lib/instanceGeneration.ts`**
 
-Extract the teachers sidebar (lines 553-608):
-- Teachers list rendering with selection highlight
-- "Create Teacher" button
-- Settings button per teacher
+- `generateFutureInstances(templateSlots, existingInstances, totalLessons, startFromDate)`: Generates instance data from template slots for lessons not yet completed
+- `syncTemplateChange(studentId, teacherId, newSlots, existingInstances)`: Keeps completed instances, regenerates planned ones from new template slots, runs conflict checks, returns `{ instances, conflicts }`
 
-### 5. Create `src/components/admin/AdminDialogs.tsx` (~100 lines)
+**New file: `src/types/lessonInstance.ts`**
 
-Extract all dialog instantiations (lines 990-1080):
-- CreateTeacherDialog, EditTeacherDialog
-- CreateStudentDialog, EditStudentDialog
-- AddTopicDialog, AddResourceDialog
-- EditTopicDialog, EditResourceDialog
-- StudentAboutDialog, PagesManagerDialog
+- `LessonInstance` interface matching the DB schema
+- `TemplateSlot` interface: `{ dayOfWeek, startTime, endTime }`
 
-This is a simple wrapper component that receives all the dialog open/close state and handlers as props.
+---
 
-### 6. Refactored `AdminDashboard.tsx` (~240 lines)
+## Phase 4: Balance Service Update
 
-What remains:
-- Import hooks and sub-components
-- Call `useAdminData()` and `useTopicManagement()`
-- Header with action buttons
-- Layout grid: `AdminTeachersList` (left) + tabbed content area (right)
-- Tab buttons (students/schedule/payments)
-- Tab content: `AdminStudentsTab`, `AdminWeeklySchedule`, `AdminBalanceManager`
-- `AdminDialogs` at the bottom
+**Modified file: `src/services/teacherBalanceService.ts`**
 
-### 7. Bonus: Fix TeacherDashboard duplicated `formatTime`
+- Add `addRegularLessonToBalanceFromInstance(teacherId, instanceId)`: Reads `start_time`/`end_time` from `lesson_instances` instead of template
+- Add `subtractRegularLessonFromBalanceByInstance(teacherId, instanceId)`: Same but subtract
+- Keep existing functions for backward compatibility during transition
 
-`TeacherDashboard.tsx` (line 155-162) still has its own inline `formatTime` instead of using the shared `formatTimeUtil` from `lessonDateUtils.ts`. Will update to use the shared utility.
+**Modified file: `src/components/EditStudentDialog.tsx`** (balance functions only)
 
-## File Changes Summary
+- `updateTeacherBalance` and `subtractFromTeacherBalance` (lines 339-420): Replace with calls to `teacherBalanceService` functions, passing instance data when available
 
-| Action | File | Lines |
-|--------|------|-------|
-| Create | `src/hooks/useAdminData.ts` | ~150 |
-| Create | `src/hooks/useTopicManagement.ts` | ~170 |
-| Create | `src/components/admin/AdminStudentsTab.tsx` | ~250 |
-| Create | `src/components/admin/AdminTeachersList.tsx` | ~80 |
-| Create | `src/components/admin/AdminDialogs.tsx` | ~100 |
-| Modify | `src/components/AdminDashboard.tsx` | 1083 → ~240 |
-| Modify | `src/components/TeacherDashboard.tsx` | Fix formatTime |
+---
 
-## Risk Mitigation
+## Phase 5: Lessons List Upgrade (EditStudentDialog)
 
-- No UI or behavioral changes -- purely structural extraction
-- Each extraction preserves exact same props/state flow
-- AdminWeeklySchedule and AdminBalanceManager remain untouched (already separate components)
-- Incremental: hooks first, then UI components, then final assembly
+**Modified file: `src/components/EditStudentDialog.tsx`**
+
+Current: Shows `Ders N | date input` per lesson row, reads from `lesson_dates` JSON
+New: Shows `Ders N | date | start_time - end_time | date input` per lesson row, reads from `lesson_instances`
+
+Changes:
+- Fetch `lesson_instances` instead of (or alongside) `lesson_dates` JSON
+- Sort instances by `(lesson_date, start_time)` for chronological "Ders N" labels
+- Display `start_time - end_time` as read-only text next to each date
+- Date edit with "Kalan gunleri de guncelle" checkbox:
+  - OFF: Only updates `lesson_date` on the instance, preserves times
+  - ON: Regenerates that instance and all subsequent planned instances from template using `syncTemplateChange`
+- Before saving: call `checkTeacherConflicts` for all affected instances, block on conflict
+- Mark/undo lesson: update `lesson_instances.status` AND `completed_lessons` array (kept in sync), call instance-aware balance functions
+
+---
+
+## Phase 6: Override Dialog Enhancements
+
+**Modified file: `src/components/LessonOverrideDialog.tsx`**
+
+- "Sonraki Derse Aktar": Find instance, shift it and all subsequent planned instances forward by one template slot using `instanceGeneration.ts`. Run conflict checks. Update `lesson_instances` in-place (set `original_date`/times if not set)
+- "Baska Tarihe Aktar": Update instance's `lesson_date` in-place. Pre-fill time inputs with current start/end. Run conflict check before save. Set `original_*` fields and increment `rescheduled_count`
+- "Geri Al": Restore from `original_*` fields, clear them, reset `rescheduled_count`
+- All operations also sync `lesson_dates` JSON in `student_lesson_tracking` for backward compatibility with `LessonTracker` grid
+
+---
+
+## Phase 7: Weekly Grid Upgrade
+
+### 7A: Template/Actual Toggle
+
+**Modified files: `src/components/AdminWeeklySchedule.tsx`, `src/components/WeeklyScheduleDialog.tsx`**
+
+- Add `Switch` component near header: "Template | Actual"
+- INACTIVE (default = Actual): Queries `lesson_instances` WHERE `lesson_date` is in current week, plus `trial_lessons`. Shows moved lessons in their actual position
+- ACTIVE (Template): Shows only `student_lessons` template slots. No trials, no overrides
+
+**Modified file: `src/hooks/useScheduleGrid.ts`**
+
+- Add `mode: 'template' | 'actual'` parameter
+- In 'actual' mode: fetch `lesson_instances` for current week instead of `student_lessons`
+- In 'template' mode: existing behavior (fetch `student_lessons`)
+
+### 7B: Back-to-Back Grouping
+
+- Detect consecutive lessons for same student on same day where `end_time` of one === `start_time` of next
+- Render as single combined card with "2 ders" badge
+- Click shows popover/menu to select which instance to modify
+
+---
+
+## Phase 8: Trial Lesson Conflict Validation + Tracker Updates
+
+**Modified file: `src/components/AddTrialLessonDialog.tsx`**
+
+- Before saving: call `checkTeacherConflicts(teacherId, lessonDate, startTime, endTime)`
+- If conflicts found: block save, show conflict summary
+
+**Modified files: `src/components/LessonTracker.tsx`, `src/components/StudentLessonTracker.tsx`**
+
+- Read from `lesson_instances` for per-lesson date + time data
+- Continue using `completed_lessons` array for grid checkmark display (kept in sync)
+- Update `getSortedLessons` in `lessonDateUtils.ts` to accept time data, sort by `(date, startTime)`
+
+**Modified file: `src/utils/lessonDateUtils.ts`**
+
+- Update `getSortedLessons` to support time-aware sorting key
+
+---
+
+## New Files Summary
+
+| File | Purpose | Est. Lines |
+|------|---------|-----------|
+| SQL migration | `lesson_instances` table + RLS + data migration | ~80 |
+| `src/lib/conflictDetection.ts` | Overlap checks + teacher conflict queries | ~80 |
+| `src/lib/instanceGeneration.ts` | Generate/regenerate instances from template | ~100 |
+| `src/types/lessonInstance.ts` | `LessonInstance` + `TemplateSlot` interfaces | ~30 |
+
+## Modified Files Summary
+
+| File | Key Changes |
+|------|------------|
+| `src/services/teacherBalanceService.ts` | Add instance-aware balance functions |
+| `src/components/EditStudentDialog.tsx` | Show times per row, instance-based CRUD, conflict checks |
+| `src/components/LessonOverrideDialog.tsx` | Instance-based postpone/move/revert with conflict checks |
+| `src/components/AdminWeeklySchedule.tsx` | Template/Actual toggle, back-to-back grouping |
+| `src/components/WeeklyScheduleDialog.tsx` | Template/Actual toggle, back-to-back grouping |
+| `src/hooks/useScheduleGrid.ts` | Support template vs actual mode |
+| `src/components/LessonTracker.tsx` | Read from instances, instance-aware balance |
+| `src/components/StudentLessonTracker.tsx` | Read from instances |
+| `src/utils/lessonDateUtils.ts` | Time-aware sorting |
+| `src/components/AddTrialLessonDialog.tsx` | Conflict validation before save |
+
+## Untouched Files
+
+All landing page components, auth, blog, topics, homework, notifications, admin directory restructuring, and i18n remain unchanged.
+
+## Implementation Order
+
+Phases are sequential (each builds on the previous):
+1. DB migration (foundation)
+2. Conflict detection (pure logic, no UI changes)
+3. Instance generation (pure logic, no UI changes)
+4. Balance service update (low risk, backward compat)
+5. EditStudentDialog upgrade (medium complexity)
+6. LessonOverrideDialog upgrade (medium complexity)
+7. Weekly grid upgrade (medium complexity)
+8. Trial lesson validation + tracker updates (low complexity)
+
+Each phase is independently deployable and testable. Phases 1-4 are additive and do not break existing functionality.
