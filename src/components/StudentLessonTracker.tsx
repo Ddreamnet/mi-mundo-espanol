@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { BookCheck, Ban } from "lucide-react";
@@ -23,14 +23,37 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
   const [lessonOverrides, setLessonOverrides] = useState<LessonOverrideBasic[]>([]);
   const [loading, setLoading] = useState(true);
 
+  // Fetch teacher_id once and reuse for both data fetches
+  const getTeacherId = useCallback(async (): Promise<string | null> => {
+    try {
+      const { data, error } = await supabase
+        .from("students")
+        .select("teacher_id")
+        .eq("student_id", studentId)
+        .single();
+      if (error) throw error;
+      return data.teacher_id;
+    } catch (error) {
+      console.error("Failed to fetch teacher_id:", error);
+      return null;
+    }
+  }, [studentId]);
+
   useEffect(() => {
-    fetchTracking();
-    fetchLessonOverrides();
+    const loadData = async () => {
+      const teacherId = await getTeacherId();
+      if (!teacherId) {
+        setLoading(false);
+        return;
+      }
+      await Promise.all([
+        fetchLessonOverrides(teacherId),
+        fetchTracking(teacherId),
+      ]);
+    };
+    loadData();
 
-    const monthStart = new Date();
-    monthStart.setDate(1);
-    monthStart.setHours(0, 0, 0, 0);
-
+    // Set up real-time subscription
     const channel = supabase
       .channel("lesson-tracking-changes")
       .on(
@@ -55,23 +78,15 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, [studentId]);
+  }, [studentId, getTeacherId]);
 
-  const fetchLessonOverrides = async () => {
+  const fetchLessonOverrides = async (teacherId: string) => {
     try {
-      const { data: studentData, error: studentError } = await supabase
-        .from("students")
-        .select("teacher_id")
-        .eq("student_id", studentId)
-        .single();
-
-      if (studentError) throw studentError;
-
       const { data, error } = await supabase
         .from("lesson_overrides")
         .select("id, original_date, new_date, is_cancelled")
         .eq("student_id", studentId)
-        .eq("teacher_id", studentData.teacher_id);
+        .eq("teacher_id", teacherId);
 
       if (error) throw error;
       setLessonOverrides(data || []);
@@ -80,21 +95,13 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
     }
   };
 
-  const fetchTracking = async () => {
+  const fetchTracking = async (teacherId: string) => {
     try {
-      const { data: studentData, error: studentError } = await supabase
-        .from("students")
-        .select("teacher_id")
-        .eq("student_id", studentId)
-        .single();
-
-      if (studentError) throw studentError;
-
       const { data: records, error } = await supabase
         .from("student_lesson_tracking")
         .select("*")
         .eq("student_id", studentId)
-        .eq("teacher_id", studentData.teacher_id)
+        .eq("teacher_id", teacherId)
         .order("updated_at", { ascending: false })
         .limit(1);
 
@@ -116,7 +123,6 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
   const totalLessonsPerMonth = lessonsPerWeek * 4;
   const rowConfig = getRowConfig(lessonsPerWeek);
   const sortedLessons = getSortedLessons(lessonDates, lessonOverrides, totalLessonsPerMonth);
-  const remainingLessons = totalLessonsPerMonth - completedLessons.length;
 
   if (loading) {
     return (
