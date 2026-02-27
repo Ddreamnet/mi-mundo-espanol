@@ -20,10 +20,8 @@ import {
   CheckCircle,
   Clock,
   ExternalLink,
-  FileText,
-  Video,
-  Link as LinkIcon,
   ClipboardList,
+  FileText,
 } from "lucide-react";
 import { Header } from "./Header";
 import { StudentLessonTracker } from "./StudentLessonTracker";
@@ -31,6 +29,8 @@ import { HomeworkSection } from "./HomeworkSection";
 import { LessonNotesSection } from "./LessonNotesSection";
 import { JoinLessonCard } from "./JoinLessonCard";
 import { NotificationBell } from "./NotificationBell";
+import { getResourceIcon } from "@/utils/resourceIcons";
+import { LoadingSpinner } from "./shared/LoadingSpinner";
 
 // ============================================================================
 // TİPLER
@@ -215,20 +215,6 @@ export function StudentDashboard() {
     setExpandedTopics(newExpanded);
   };
 
-  const getResourceIcon = (type: string) => {
-    switch (type) {
-      case "video":
-        return <Video className="h-4 w-4" />;
-      case "pdf":
-      case "document":
-        return <FileText className="h-4 w-4" />;
-      case "link":
-        return <LinkIcon className="h-4 w-4" />;
-      default:
-        return <ExternalLink className="h-4 w-4" />;
-    }
-  };
-
   const getVisibleResources = (topic: Topic) => {
     if (topic.is_completed) {
       return topic.resources;
@@ -249,11 +235,7 @@ export function StudentDashboard() {
   // ============================================================================
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingSpinner fullScreen />;
   }
 
   // ============================================================================

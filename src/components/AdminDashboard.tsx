@@ -8,7 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { Users, LogOut, FolderOpen, ChevronDown, ChevronRight, Settings, Clock, Plus, Trash2, ExternalLink, FileText, Video, Link as LinkIcon, Image, UserPlus, Archive, RotateCcw, FileUser, LayoutDashboard } from "lucide-react";
+import { Users, LogOut, FolderOpen, ChevronDown, ChevronRight, Settings, Clock, Plus, Trash2, UserPlus, Archive, RotateCcw, FileUser, LayoutDashboard } from "lucide-react";
 import { Header } from "./Header";
 import { GlobalTopicsManager } from "./GlobalTopicsManager";
 import { AdminNotificationBell } from "./AdminNotificationBell";
@@ -25,52 +25,10 @@ import { AdminBalanceManager } from "./AdminBalanceManager";
 import { StudentAboutDialog } from "./StudentAboutDialog";
 import { PagesManagerDialog } from "./admin/PagesManagerDialog";
 import { useLanguage } from "@/contexts/LanguageContext";
-interface Teacher {
-  user_id: string;
-  full_name: string;
-  email: string;
-  students: Student[];
-}
-
-interface Student {
-  id: string;
-  student_id: string;
-  lessons: StudentLesson[];
-  is_archived: boolean;
-  about_text: string | null;
-  profiles: {
-    full_name: string;
-    email: string;
-  };
-}
-
-interface StudentLesson {
-  id?: string;
-  dayOfWeek: number;
-  startTime: string;
-  endTime: string;
-  note?: string;
-}
-
-interface Topic {
-  id: string;
-  title: string;
-  description: string | null;
-  is_completed: boolean;
-  order_index: number;
-  resources: Resource[];
-  isGlobal?: boolean;
-}
-
-interface Resource {
-  id: string;
-  title: string;
-  description: string | null;
-  resource_type: string;
-  resource_url: string;
-  order_index: number;
-  is_completed?: boolean;
-}
+import { getResourceIcon } from "@/utils/resourceIcons";
+import { formatTime as formatTimeUtil, getLocale } from "@/utils/lessonDateUtils";
+import { LoadingSpinner } from "./shared/LoadingSpinner";
+import type { AdminStudent, Teacher, Topic, Resource } from "@/types/dashboard";
 
 export function AdminDashboard() {
   const { t } = useTranslation();
@@ -86,7 +44,7 @@ export function AdminDashboard() {
   const [showCreateTeacher, setShowCreateTeacher] = useState(false);
   const [showEditStudent, setShowEditStudent] = useState(false);
   const [showEditTeacher, setShowEditTeacher] = useState(false);
-  const [editingStudent, setEditingStudent] = useState<Student | null>(null);
+  const [editingStudent, setEditingStudent] = useState<AdminStudent | null>(null);
   const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
   const [showAddTopic, setShowAddTopic] = useState(false);
   const [showAddResource, setShowAddResource] = useState(false);
@@ -192,7 +150,7 @@ export function AdminDashboard() {
     }
   };
 
-  const toggleStudent = async (studentId: string, student: Student) => {
+  const toggleStudent = async (studentId: string, student: AdminStudent) => {
     const newExpanded = new Set(expandedStudents);
     if (newExpanded.has(studentId)) {
       newExpanded.delete(studentId);
@@ -319,11 +277,10 @@ export function AdminDashboard() {
 
   const formatTime = (time?: string) => {
     if (!time) return "";
-    const locale = language === "tr" ? "tr-TR" : language === "es" ? "es-ES" : "en-US";
-    return new Date(`2000-01-01T${time}`).toLocaleTimeString(locale, { hour: "numeric", minute: "2-digit" });
+    return formatTimeUtil(time, getLocale(language));
   };
 
-  const openStudentSettings = (student: Student) => {
+  const openStudentSettings = (student: AdminStudent) => {
     setEditingStudent(student);
     setShowEditStudent(true);
   };
@@ -331,22 +288,6 @@ export function AdminDashboard() {
   const openTeacherSettings = (teacher: Teacher) => {
     setEditingTeacher(teacher);
     setShowEditTeacher(true);
-  };
-
-  const getResourceIcon = (type: string) => {
-    switch (type) {
-      case "video":
-        return <Video className="h-4 w-4" />;
-      case "pdf":
-      case "document":
-        return <FileText className="h-4 w-4" />;
-      case "link":
-        return <LinkIcon className="h-4 w-4" />;
-      case "image":
-        return <Image className="h-4 w-4" />;
-      default:
-        return <ExternalLink className="h-4 w-4" />;
-    }
   };
 
   const handleAddTopic = async (title: string, description: string) => {
@@ -440,8 +381,8 @@ export function AdminDashboard() {
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Konu güncellendi",
+        title: t("common.success"),
+        description: t("messages.topicUpdated"),
       });
 
       // Refresh topics
@@ -457,7 +398,7 @@ export function AdminDashboard() {
       }
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -485,8 +426,8 @@ export function AdminDashboard() {
       if (error) throw error;
 
       toast({
-        title: "Başarılı",
-        description: "Kaynak güncellendi",
+        title: t("common.success"),
+        description: t("messages.resourceUpdated"),
       });
 
       // Refresh topics
@@ -502,7 +443,7 @@ export function AdminDashboard() {
       }
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
@@ -576,11 +517,7 @@ export function AdminDashboard() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-      </div>
-    );
+    return <LoadingSpinner fullScreen />;
   }
 
   return (
@@ -686,21 +623,21 @@ export function AdminDashboard() {
                       className="rounded-b-none"
                       onClick={() => setActiveTab("students")}
                     >
-                      Öğrenciler
+                      {t("dashboard.admin.students")}
                     </Button>
                     <Button
                       variant={activeTab === "schedule" ? "tab-active" : "tab-inactive"}
                       className="rounded-b-none"
                       onClick={() => setActiveTab("schedule")}
                     >
-                      Ders programı
+                      {t("dashboard.admin.schedule")}
                     </Button>
                     <Button
                       variant={activeTab === "payments" ? "tab-active" : "tab-inactive"}
                       className="rounded-b-none"
                       onClick={() => setActiveTab("payments")}
                     >
-                      Ödemeler
+                      {t("dashboard.admin.payments")}
                     </Button>
                   </div>
 
@@ -709,7 +646,7 @@ export function AdminDashboard() {
                       <div className="flex justify-end mb-3">
                         <Button onClick={() => setShowCreateStudent(true)} size="sm">
                           <UserPlus className="h-4 w-4 mr-2" />
-                          Öğrenci Oluştur
+                          {t("dashboard.admin.createStudent")}
                         </Button>
                       </div>
                       
@@ -722,7 +659,7 @@ export function AdminDashboard() {
                           <>
                             {activeStudents.length === 0 ? (
                               <p className="text-sm text-muted-foreground text-center py-8">
-                                Bu öğretmenin henüz aktif öğrencisi yok.
+                                {t("dashboard.admin.noActiveStudents")}
                               </p>
                             ) : (
                               activeStudents.map((student) => (
@@ -755,8 +692,8 @@ export function AdminDashboard() {
                                                   </div>
                                                 ))}
                                                 {student.lessons.length > 2 && (
-                                                  <span className="text-xs text-card-foreground/70">
-                                                    +{student.lessons.length - 2} ders daha
+                                                    <span className="text-xs text-card-foreground/70">
+                                                      +{student.lessons.length - 2} {t("dashboard.admin.moreLessons")}
                                                   </span>
                                                 )}
                                               </div>
@@ -778,7 +715,7 @@ export function AdminDashboard() {
                                               });
                                               setShowStudentAbout(true);
                                             }}
-                                            title="Öğrenci hakkında"
+                                            title={t("dashboard.admin.aboutStudent")}
                                           >
                                             <FileUser className="h-4 w-4" />
                                           </Button>
@@ -793,7 +730,7 @@ export function AdminDashboard() {
                                           {/* İşlenen Konular Bölümü - En az bir kaynağı tamamlanmış konular */}
                                           <div className="space-y-3">
                                             <div className="flex justify-between items-center">
-                                              <h5 className="font-medium text-sm">İşlenen Konular</h5>
+                                              <h5 className="font-medium text-sm">{t("dashboard.admin.processedTopics")}</h5>
                                               {(() => {
                                                 const allTopics = studentCompletedTopics.get(student.id) || [];
                                                 const topicsWithCompletedResources = allTopics.filter(t => t.resources.some(r => r.is_completed));
@@ -801,7 +738,7 @@ export function AdminDashboard() {
                                                 const totalCompletedResources = topicsWithCompletedResources.reduce((sum, t) => sum + t.resources.filter(r => r.is_completed).length, 0);
                                                 return (
                                                   <Badge variant="secondary">
-                                                    {totalCompletedResources} kaynak işlendi ({fullyCompletedCount} konu tam)
+                                                    {totalCompletedResources} {t("dashboard.admin.resourcesProcessed")} ({fullyCompletedCount} {t("dashboard.admin.topicsFull")})
                                                   </Badge>
                                                 );
                                               })()}
@@ -815,7 +752,7 @@ export function AdminDashboard() {
                                               if (topicsWithCompletedResources.length === 0) {
                                                 return (
                                                   <p className="text-sm text-muted-foreground py-2">
-                                                    Henüz işlenmiş kaynak yok.
+                                                    {t("dashboard.admin.noProcessedResources")}
                                                   </p>
                                                 );
                                               }
@@ -846,7 +783,7 @@ export function AdminDashboard() {
                                                                 )}
                                                               </div>
                                                               <Badge variant="secondary" className="text-xs">
-                                                                {completedResourcesCount}/{totalResourcesCount} kaynak
+                                                                {completedResourcesCount}/{totalResourcesCount} {t("common.resource")}
                                                               </Badge>
                                                               <ChevronRight className="h-4 w-4" />
                                                             </CollapsibleTrigger>
@@ -877,7 +814,7 @@ export function AdminDashboard() {
                                           {/* Öğrenciye Özel Konular Bölümü (CRUD) */}
                                           <div className="space-y-3 border-t pt-3">
                                             <div className="flex justify-between items-center">
-                                              <h5 className="font-medium text-sm">Öğrenciye Özel Konular</h5>
+                                              <h5 className="font-medium text-sm">{t("dashboard.admin.studentSpecificTopics")}</h5>
                                               <Button
                                                 variant="outline"
                                                 size="sm"
@@ -887,13 +824,13 @@ export function AdminDashboard() {
                                                 }}
                                               >
                                                 <Plus className="h-3 w-3 mr-1" />
-                                                Konu Ekle
+                                                {t("dashboard.admin.addTopic")}
                                               </Button>
                                             </div>
 
                                             {(studentTopics.get(student.id) || []).length === 0 ? (
                                               <p className="text-sm opacity-70 py-2">
-                                                Bu öğrenciye özel konu henüz eklenmemiş.
+                                                {t("dashboard.admin.noStudentTopics")}
                                               </p>
                                             ) : (
                                               <div className="space-y-2">
@@ -908,7 +845,7 @@ export function AdminDashboard() {
                                                           <Checkbox checked={topic.is_completed} className="h-4 w-4" disabled />
                                                           <span className="text-sm flex-1">{topic.title}</span>
                                                           <Badge variant="secondary" className="text-xs">
-                                                            {topic.resources.length} kaynak
+                                                            {topic.resources.length} {t("common.resource")}
                                                           </Badge>
                                                           <Button
                                                             variant="ghost"
@@ -994,7 +931,7 @@ export function AdminDashboard() {
                               <div className="mt-6 pt-4 border-t">
                                 <div className="flex items-center gap-2 mb-3">
                                   <Archive className="h-4 w-4 text-muted-foreground" />
-                                  <h4 className="font-medium text-sm text-muted-foreground">Arşivlenmiş Öğrenciler</h4>
+                                   <h4 className="font-medium text-sm text-muted-foreground">{t("dashboard.admin.archivedStudents")}</h4>
                                   <Badge variant="secondary" className="text-xs">{archivedStudents.length}</Badge>
                                 </div>
                                 <div className="space-y-2">
@@ -1014,8 +951,8 @@ export function AdminDashboard() {
                                             size="sm"
                                             onClick={() => handleRestoreStudent(student.id)}
                                           >
-                                            <RotateCcw className="h-3 w-3 mr-1" />
-                                            Geri Al
+                                             <RotateCcw className="h-3 w-3 mr-1" />
+                                            {t("dashboard.admin.restore")}
                                           </Button>
                                         </div>
                                       </CardContent>
