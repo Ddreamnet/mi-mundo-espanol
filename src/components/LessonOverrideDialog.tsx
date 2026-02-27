@@ -18,6 +18,7 @@ import { tr, enUS, es } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { checkTeacherConflicts } from "@/lib/conflictDetection";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -316,6 +317,30 @@ export function LessonOverrideDialog({
 
     setSaving(true);
     try {
+      // Check for conflicts at the new date/time
+      const conflicts = await checkTeacherConflicts(
+        teacherId,
+        format(newDate, "yyyy-MM-dd"),
+        newStartTime + ":00",
+        newEndTime + ":00"
+      );
+
+      if (conflicts.length > 0) {
+        const conflictDetails = conflicts
+          .map((c) => `${c.studentName} (${c.timeRange})`)
+          .join(", ");
+        toast({
+          title: t("dialogs.lessonOverride.conflictTitle", { defaultValue: "Çakışma Tespit Edildi" }),
+          description: t("dialogs.lessonOverride.conflictDescription", {
+            defaultValue: `Bu saatte başka dersler var: ${conflictDetails}`,
+            details: conflictDetails,
+          }),
+          variant: "destructive",
+        });
+        setSaving(false);
+        return;
+      }
+
       // Check if there's an existing override for this date
       const { data: existingOverride } = await supabase
         .from("lesson_overrides")

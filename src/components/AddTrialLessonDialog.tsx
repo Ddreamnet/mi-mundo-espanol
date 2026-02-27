@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { checkTeacherConflicts } from "@/lib/conflictDetection";
 
 interface AddTrialLessonDialogProps {
   open: boolean;
@@ -33,23 +34,15 @@ export function AddTrialLessonDialog({ open, onOpenChange, teacherId, onSuccess 
     { value: "0", label: t("days.sunday") },
   ];
 
-  // Calculate the next occurrence of a specific day of week
   const getNextDayOfWeek = (targetDay: number): string => {
     const today = new Date();
-    const currentDay = today.getDay(); // 0=Sunday, 1=Monday, etc.
-    
-    // Calculate days until target day
+    const currentDay = today.getDay();
     let daysUntilTarget = targetDay - currentDay;
-    
-    // If target day is today or already passed this week, use this week's day
-    // (if today, use today; if passed, still use this week for immediate display)
     if (daysUntilTarget < 0) {
-      daysUntilTarget += 7; // Move to next week
+      daysUntilTarget += 7;
     }
-    
     const targetDate = new Date(today);
     targetDate.setDate(today.getDate() + daysUntilTarget);
-    
     return targetDate.toISOString().split("T")[0];
   };
 
@@ -65,9 +58,32 @@ export function AddTrialLessonDialog({ open, onOpenChange, teacherId, onSuccess 
 
     setLoading(true);
     try {
-      // Calculate the actual lesson date based on day_of_week
       const lessonDate = getNextDayOfWeek(parseInt(dayOfWeek));
-      
+
+      // Check for conflicts before saving
+      const conflicts = await checkTeacherConflicts(
+        teacherId,
+        lessonDate,
+        startTime + ":00",
+        endTime + ":00"
+      );
+
+      if (conflicts.length > 0) {
+        const conflictDetails = conflicts
+          .map((c) => `${c.studentName} (${c.timeRange})`)
+          .join(", ");
+        toast({
+          title: t("addTrialLesson.conflict", { defaultValue: "Çakışma Tespit Edildi" }),
+          description: t("addTrialLesson.conflictDescription", {
+            defaultValue: `Bu saatte başka dersler var: ${conflictDetails}`,
+            details: conflictDetails,
+          }),
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
+
       const { error } = await supabase.from("trial_lessons").insert({
         teacher_id: teacherId,
         day_of_week: parseInt(dayOfWeek),

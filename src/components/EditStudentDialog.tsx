@@ -21,6 +21,13 @@ import { Loader2, Trash2, Archive } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { format, addDays, parse } from "date-fns";
 import { useTranslation } from "react-i18next";
+import {
+  addRegularLessonToBalanceFromInstance,
+  subtractRegularLessonFromBalanceByInstance,
+  addRegularLessonToBalance,
+} from "@/services/teacherBalanceService";
+import type { LessonInstance } from "@/types/lessonInstance";
+import { checkTeacherConflicts } from "@/lib/conflictDetection";
 
 interface StudentLesson {
   id?: string;
@@ -39,6 +46,15 @@ interface LessonOverride {
   original_date: string;
   new_date: string | null;
   is_cancelled: boolean;
+}
+
+interface InstanceData {
+  id: string;
+  lesson_number: number;
+  lesson_date: string;
+  start_time: string;
+  end_time: string;
+  status: string;
 }
 
 interface EditStudentDialogProps {
@@ -67,6 +83,7 @@ export function EditStudentDialog({
   const [originalLessonDates, setOriginalLessonDates] = useState<LessonDates>({});
   const [lessonOverrides, setLessonOverrides] = useState<LessonOverride[]>([]);
   const [trackingRecordId, setTrackingRecordId] = useState<string | null>(null);
+  const [lessonInstances, setLessonInstances] = useState<InstanceData[]>([]);
   const [loading, setLoading] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
@@ -124,6 +141,17 @@ export function EditStudentDialog({
       } else {
         setTrackingRecordId(null);
       }
+
+      // Fetch lesson instances
+      const { data: instances } = await supabase
+        .from("lesson_instances")
+        .select("id, lesson_number, lesson_date, start_time, end_time, status")
+        .eq("student_id", studentData.student_id)
+        .eq("teacher_id", studentData.teacher_id)
+        .order("lesson_date", { ascending: true })
+        .order("start_time", { ascending: true });
+
+      setLessonInstances(instances || []);
     } catch (error: any) {
       console.error("Failed to fetch lesson tracking:", error);
     }
@@ -270,7 +298,18 @@ export function EditStudentDialog({
 
       if (error) throw error;
 
-      await updateTeacherBalance(studentData.teacher_id, studentData.student_id);
+      // Update lesson_instances status to completed
+      const matchingInstance = lessonInstances.find((i) => i.lesson_number === nextLesson);
+      if (matchingInstance) {
+        await supabase
+          .from("lesson_instances")
+          .update({ status: "completed" })
+          .eq("id", matchingInstance.id);
+        await addRegularLessonToBalanceFromInstance(studentData.teacher_id, matchingInstance.id);
+      } else {
+        // Fallback to template-based balance
+        await addRegularLessonToBalance(studentData.teacher_id, studentData.student_id);
+      }
 
       setCompletedLessons(newCompletedLessons);
       toast({
@@ -320,7 +359,15 @@ export function EditStudentDialog({
 
       if (error) throw error;
 
-      await subtractFromTeacherBalance(studentData.teacher_id, studentData.student_id);
+      // Update lesson_instances status back to planned
+      const matchingInstance = lessonInstances.find((i) => i.lesson_number === lastLesson);
+      if (matchingInstance) {
+        await supabase
+          .from("lesson_instances")
+          .update({ status: "planned" })
+          .eq("id", matchingInstance.id);
+        await subtractRegularLessonFromBalanceByInstance(studentData.teacher_id, matchingInstance.id);
+      }
 
       setCompletedLessons(newCompletedLessons);
       toast({
@@ -333,89 +380,6 @@ export function EditStudentDialog({
         description: error.message || t("dialogs.editStudent.undoError"),
         variant: "destructive",
       });
-    }
-  };
-
-  const updateTeacherBalance = async (teacherId: string, studentId: string) => {
-    try {
-      const { data: lessonData } = await supabase
-        .from("student_lessons")
-        .select("start_time, end_time")
-        .eq("student_id", studentId)
-        .eq("teacher_id", teacherId)
-        .limit(1)
-        .single();
-
-      if (!lessonData) return;
-
-      const startTime = new Date(`2000-01-01T${lessonData.start_time}`);
-      const endTime = new Date(`2000-01-01T${lessonData.end_time}`);
-      const durationMinutes = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
-
-      const { data: existingBalance } = await supabase
-        .from("teacher_balance")
-        .select("*")
-        .eq("teacher_id", teacherId)
-        .maybeSingle();
-
-      if (existingBalance) {
-        await supabase
-          .from("teacher_balance")
-          .update({
-            total_minutes: existingBalance.total_minutes + durationMinutes,
-            completed_regular_lessons: existingBalance.completed_regular_lessons + 1,
-            regular_lessons_minutes: existingBalance.regular_lessons_minutes + durationMinutes,
-          })
-          .eq("teacher_id", teacherId);
-      } else {
-        await supabase.from("teacher_balance").insert({
-          teacher_id: teacherId,
-          total_minutes: durationMinutes,
-          completed_regular_lessons: 1,
-          completed_trial_lessons: 0,
-          regular_lessons_minutes: durationMinutes,
-          trial_lessons_minutes: 0,
-        });
-      }
-    } catch (error) {
-      console.error("Error updating teacher balance:", error);
-    }
-  };
-
-  const subtractFromTeacherBalance = async (teacherId: string, studentId: string) => {
-    try {
-      const { data: lessonData } = await supabase
-        .from("student_lessons")
-        .select("start_time, end_time")
-        .eq("student_id", studentId)
-        .eq("teacher_id", teacherId)
-        .limit(1)
-        .single();
-
-      if (!lessonData) return;
-
-      const startTime = new Date(`2000-01-01T${lessonData.start_time}`);
-      const endTime = new Date(`2000-01-01T${lessonData.end_time}`);
-      const durationMinutes = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
-
-      const { data: existingBalance } = await supabase
-        .from("teacher_balance")
-        .select("*")
-        .eq("teacher_id", teacherId)
-        .maybeSingle();
-
-      if (existingBalance) {
-        await supabase
-          .from("teacher_balance")
-          .update({
-            total_minutes: Math.max(0, existingBalance.total_minutes - durationMinutes),
-            completed_regular_lessons: Math.max(0, existingBalance.completed_regular_lessons - 1),
-            regular_lessons_minutes: Math.max(0, existingBalance.regular_lessons_minutes - durationMinutes),
-          })
-          .eq("teacher_id", teacherId);
-      }
-    } catch (error) {
-      console.error("Error subtracting from teacher balance:", error);
     }
   };
 
@@ -451,9 +415,18 @@ export function EditStudentDialog({
 
       if (error) throw error;
 
+      // Reset lesson_instances statuses to planned (don't delete - preserve for regeneration)
+      await supabase
+        .from("lesson_instances")
+        .update({ status: "planned" })
+        .eq("student_id", studentData.student_id)
+        .eq("teacher_id", studentData.teacher_id)
+        .eq("status", "completed");
+
       setCompletedLessons([]);
       setLessonDates({});
       setOriginalLessonDates({});
+      setLessonInstances(prev => prev.map(i => ({ ...i, status: "planned" })));
       setShowResetConfirm(false);
 
       toast({
@@ -887,6 +860,18 @@ export function EditStudentDialog({
                         {t("dialogs.editStudent.lesson")} {displayIndex + 1}
                         {lesson.isCancelled && ` (${t("dialogs.editStudent.cancelled")})`}
                       </span>
+                      {/* Show time range from lesson_instances */}
+                      {(() => {
+                        const inst = lessonInstances.find((i) => i.lesson_number === lesson.lessonNumber);
+                        if (inst) {
+                          return (
+                            <span className="text-xs text-muted-foreground ml-1">
+                              {inst.start_time.slice(0, 5)} - {inst.end_time.slice(0, 5)}
+                            </span>
+                          );
+                        }
+                        return null;
+                      })()}
                     </div>
                     <div className="flex items-center gap-2">
                       <Label

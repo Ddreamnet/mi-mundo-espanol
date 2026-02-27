@@ -21,7 +21,16 @@ import {
   getRowConfig,
   calculateLessonDates,
 } from "@/utils/lessonDateUtils";
-import { addRegularLessonToBalance } from "@/services/teacherBalanceService";
+import { addRegularLessonToBalance, addRegularLessonToBalanceFromInstance } from "@/services/teacherBalanceService";
+
+interface InstanceData {
+  id: string;
+  lesson_number: number;
+  lesson_date: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+}
 
 interface LessonTrackerProps {
   studentId: string;
@@ -38,6 +47,7 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
   const [loading, setLoading] = useState(true);
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingLesson, setPendingLesson] = useState<number | null>(null);
+  const [lessonInstances, setLessonInstances] = useState<InstanceData[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -50,6 +60,7 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
       await fetchStudentSchedule();
       await fetchLessonOverrides();
       await fetchTracking();
+      await fetchLessonInstances();
     };
     loadData();
   }, [studentId, teacherId]);
@@ -82,6 +93,22 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
       setLessonOverrides(data || []);
     } catch (error: any) {
       console.error("Failed to fetch lesson overrides:", error);
+    }
+  };
+
+  const fetchLessonInstances = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("lesson_instances")
+        .select("id, lesson_number, lesson_date, start_time, end_time, status")
+        .eq("student_id", studentId)
+        .eq("teacher_id", teacherId)
+        .order("lesson_date", { ascending: true });
+
+      if (error) throw error;
+      setLessonInstances(data || []);
+    } catch (error: any) {
+      console.error("Failed to fetch lesson instances:", error);
     }
   };
 
@@ -202,7 +229,17 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
 
       if (error) throw error;
 
-      await addRegularLessonToBalance(teacherId, studentId);
+      // Update lesson_instances and use instance-aware balance
+      const matchingInstance = lessonInstances.find((i) => i.lesson_number === pendingLesson);
+      if (matchingInstance) {
+        await supabase
+          .from("lesson_instances")
+          .update({ status: "completed" })
+          .eq("id", matchingInstance.id);
+        await addRegularLessonToBalanceFromInstance(teacherId, matchingInstance.id);
+      } else {
+        await addRegularLessonToBalance(teacherId, studentId);
+      }
 
       setCompletedLessons(newCompletedLessons);
       setLessonDates(newLessonDates);
