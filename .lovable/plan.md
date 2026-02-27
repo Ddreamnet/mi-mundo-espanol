@@ -1,164 +1,97 @@
 
+# AdminDashboard Decomposition: 1083 → ~240 Lines
 
-# Comprehensive Codebase Architecture Audit
+## Overview
 
-## Executive Summary
+The `AdminDashboard.tsx` file contains 1083 lines with 3 major responsibilities mixed together: data fetching/CRUD, topic management logic, and UI rendering for 3 tabs. We will extract these into focused modules while keeping the UI and behavior 100% identical.
 
-The codebase is a multi-role education platform (admin/teacher/student) with a landing page, built with React + Supabase. The recent refactoring (Phases 1-3) successfully extracted shared types, utilities, and services. However, significant structural issues remain -- primarily around **monolithic dashboard components**, **duplicated helper functions**, **hardcoded Turkish strings**, and **missing feature-based organization**.
+## Extraction Plan
 
----
+### 1. Create `src/hooks/useAdminData.ts` (~150 lines)
 
-## Issue 1: Monolithic Dashboard Components (Critical)
+Extract all data-fetching and teacher/student state management:
+- `teachers`, `selectedTeacher`, `loading` state
+- `fetchTeachers()` function (lines 78-151)
+- `toggleStudent()`, `expandedStudents` state (lines 153-165)
+- `openStudentSettings()`, `openTeacherSettings()` helpers
+- `handleRestoreStudent()` (lines 495-517)
 
-**Problem:** `AdminDashboard.tsx` is **1,146 lines** -- a single component containing 20+ state variables, 10+ data-fetching functions, CRUD operations for topics/resources, and inline rendering logic for multiple tabs (students, schedule, payments). `TeacherDashboard.tsx` (345 lines) and `StudentDashboard.tsx` (483 lines) are smaller but follow the same pattern.
+This hook returns `{ teachers, selectedTeacher, setSelectedTeacher, loading, fetchTeachers, expandedStudents, toggleStudent, ... }`
 
-**Impact:** Extremely hard to maintain, test, or onboard new developers. Changes to one tab risk breaking others.
+### 2. Create `src/hooks/useTopicManagement.ts` (~170 lines)
 
-**Recommended Steps:**
-1. Extract the Admin "Students" tab (lines 707-1030) into `src/components/admin/AdminStudentsTab.tsx`
-2. Move topic/resource CRUD handlers into a custom hook `src/hooks/useTopicManagement.ts`
-3. Extract the Teacher student list + sorting logic into `src/components/teacher/StudentList.tsx`
-4. Extract the Student topics rendering into its own sub-component (it already partially exists as `StudentTopicsContent` for the teacher view but not for the student's own view)
+Extract all topic/resource CRUD operations:
+- `studentTopics`, `studentCompletedTopics` state maps
+- `fetchStudentTopics()` (lines 167-272) -- the complex parallel-fetch + merge logic
+- `handleAddTopic()` (lines 293-326)
+- `handleAddResource()` (lines 328-371)
+- `handleEditTopic()` (lines 374-406)
+- `handleEditResource()` (lines 408-451)
+- `handleDeleteTopic()` (lines 453-472)
+- `handleDeleteResource()` (lines 474-493)
+- All related dialog state (`showAddTopic`, `editingTopic`, `selectedStudentForTopic`, etc.)
 
----
+This hook accepts `{ selectedTeacher, profileUserId }` and returns all CRUD handlers + dialog state.
 
-## Issue 2: Duplicated Helper Functions (High)
+### 3. Create `src/components/admin/AdminStudentsTab.tsx` (~250 lines)
 
-**Problem:** Several utility functions are copy-pasted across 3-7 files:
+Extract the entire "Students" tab rendering (currently lines 644-967):
+- Active students list with collapsible topic views
+- "Islenen Konular" (processed topics) section per student
+- Student-specific topics CRUD section per student
+- Archived students section with restore button
+- "Create Student" button
 
-| Function | Files Where Duplicated |
-|----------|----------------------|
-| `getResourceIcon()` | `AdminDashboard`, `StudentDashboard`, `StudentTopics`, `GlobalTopicsManager` (4x) |
-| `getDayName()` + `daysOfWeek` array | `AdminDashboard`, `TeacherDashboard` (2x, plus 4 more for `daysOfWeek` variants) |
-| `formatTime()` (locale-aware) | `AdminDashboard`, `TeacherDashboard`, `WeeklyScheduleDialog`, `AdminWeeklySchedule`, `ScheduleExportCanvas` (5x) |
-| `getLessonStatus()` | `TeacherDashboard` (inline, not reusable) |
+Props: receives all handlers and state from the hooks.
 
-**Recommended Steps:**
-1. Create `src/utils/resourceIcons.tsx` -- export `getResourceIcon(type: string): ReactNode`
-2. Move `formatTime` into `src/utils/lessonDateUtils.ts` (partially done but not adopted everywhere)
-3. Replace all `daysOfWeek` local arrays with the one from `LanguageContext` (already exists but unused in Admin/Teacher dashboards)
+### 4. Create `src/components/admin/AdminTeachersList.tsx` (~80 lines)
 
----
+Extract the teachers sidebar (lines 553-608):
+- Teachers list rendering with selection highlight
+- "Create Teacher" button
+- Settings button per teacher
 
-## Issue 3: Hardcoded Turkish Strings (High)
+### 5. Create `src/components/admin/AdminDialogs.tsx` (~100 lines)
 
-**Problem:** Despite having i18n set up, many UI strings in `AdminDashboard.tsx` and `AuthForm.tsx` are still hardcoded in Turkish:
+Extract all dialog instantiations (lines 990-1080):
+- CreateTeacherDialog, EditTeacherDialog
+- CreateStudentDialog, EditStudentDialog
+- AddTopicDialog, AddResourceDialog
+- EditTopicDialog, EditResourceDialog
+- StudentAboutDialog, PagesManagerDialog
 
-- Toast messages: `"Hata"`, `"Başarılı"`, `"Konu güncellendi"`, `"Kaynak güncellendi"`
-- Button labels: `"Öğrenci Oluştur"`, `"Geri Al"`, `"Konu Ekle"`
-- Tab labels: `"Öğrenciler"`, `"Ders programı"`, `"Ödemeler"`
-- Status text: `"kaynak işlendi"`, `"Henüz işlenmiş kaynak yok"`
-- Badge text throughout the admin student expansion panel
+This is a simple wrapper component that receives all the dialog open/close state and handlers as props.
 
-**Impact:** The app cannot be used in English or Spanish for admin users despite claiming multi-language support.
+### 6. Refactored `AdminDashboard.tsx` (~240 lines)
 
-**Recommended Steps:**
-1. Audit all `.tsx` files for hardcoded Turkish strings (grep for common words)
-2. Add missing keys to `en.json`, `es.json`, `tr.json`
-3. Replace all hardcoded strings with `t()` calls in `AdminDashboard.tsx` (highest priority -- ~40+ instances)
-4. Do the same for `AuthForm.tsx` (~5 instances)
+What remains:
+- Import hooks and sub-components
+- Call `useAdminData()` and `useTopicManagement()`
+- Header with action buttons
+- Layout grid: `AdminTeachersList` (left) + tabbed content area (right)
+- Tab buttons (students/schedule/payments)
+- Tab content: `AdminStudentsTab`, `AdminWeeklySchedule`, `AdminBalanceManager`
+- `AdminDialogs` at the bottom
 
----
+### 7. Bonus: Fix TeacherDashboard duplicated `formatTime`
 
-## Issue 4: Flat Component Directory (Medium)
+`TeacherDashboard.tsx` (line 155-162) still has its own inline `formatTime` instead of using the shared `formatTimeUtil` from `lessonDateUtils.ts`. Will update to use the shared utility.
 
-**Problem:** `src/components/` contains **49 files** at the top level. The only subdirectories are `admin/`, `landing/`, and `ui/`. Role-specific components are mixed together with no logical grouping.
+## File Changes Summary
 
-**Current state:**
-```text
-src/components/
-  AdminDashboard.tsx       (admin)
-  AdminWeeklySchedule.tsx  (admin)
-  AdminBalanceManager.tsx   (admin)
-  AdminNotificationBell.tsx (admin)
-  TeacherDashboard.tsx     (teacher)
-  TeacherBalanceDialog.tsx  (teacher)
-  StudentDashboard.tsx     (student)
-  StudentLessonTracker.tsx  (student)
-  StudentContentTabs.tsx    (shared/teacher)
-  LessonTracker.tsx        (teacher)
-  LessonOverrideDialog.tsx  (shared)
-  HomeworkSection.tsx       (shared)
-  ... 30+ more files
-```
+| Action | File | Lines |
+|--------|------|-------|
+| Create | `src/hooks/useAdminData.ts` | ~150 |
+| Create | `src/hooks/useTopicManagement.ts` | ~170 |
+| Create | `src/components/admin/AdminStudentsTab.tsx` | ~250 |
+| Create | `src/components/admin/AdminTeachersList.tsx` | ~80 |
+| Create | `src/components/admin/AdminDialogs.tsx` | ~100 |
+| Modify | `src/components/AdminDashboard.tsx` | 1083 → ~240 |
+| Modify | `src/components/TeacherDashboard.tsx` | Fix formatTime |
 
-**Recommended restructure:**
-```text
-src/components/
-  admin/          -- AdminDashboard + admin-only components
-  teacher/        -- TeacherDashboard + teacher-only components
-  student/        -- StudentDashboard + student-only components
-  shared/         -- Components used across roles (LessonTracker, HomeworkSection, etc.)
-  landing/        -- (already exists)
-  ui/             -- (already exists)
-```
+## Risk Mitigation
 
-**Steps:**
-1. Move `AdminDashboard`, `AdminWeeklySchedule`, `AdminBalanceManager`, `AdminNotificationBell` into `admin/`
-2. Move `TeacherDashboard`, `TeacherBalanceDialog`, `LessonLinkDialog` into `teacher/`
-3. Move `StudentDashboard`, `StudentLessonTracker`, `JoinLessonCard` into `student/`
-4. Move shared dialogs (`LessonOverrideDialog`, `HomeworkSection`, `WeeklyScheduleDialog`, etc.) into `shared/`
-5. Update all import paths
-
----
-
-## Issue 5: Interface Duplication Across Dashboards (Medium)
-
-**Problem:** `Student`, `StudentLesson`, `Topic`, `Resource` interfaces are re-declared locally in `AdminDashboard.tsx`, `TeacherDashboard.tsx`, `StudentDashboard.tsx`, and `StudentContentTabs.tsx`. Each has slight variations (e.g., Admin's Student has `is_archived`, Teacher's doesn't).
-
-**Recommended Steps:**
-1. Create `src/types/dashboard.ts` with shared `Student`, `Teacher`, `Topic`, `Resource` interfaces
-2. Use intersection types for role-specific extensions (e.g., `AdminStudent = Student & { is_archived: boolean }`)
-
----
-
-## Issue 6: Topic Fetching Logic Duplicated (Medium)
-
-**Problem:** The logic to fetch topics + global topics + resource completion data is nearly identical between `AdminDashboard.fetchStudentTopics()` (~100 lines) and `StudentDashboard.fetchTopics()` (~100 lines). Both:
-- Fetch student-specific topics
-- Fetch global topics
-- Fetch completion data
-- Build completion maps
-- Merge and process results
-
-**Recommended Steps:**
-1. Create `src/hooks/useStudentTopics.ts` that encapsulates the shared fetching/processing logic
-2. Accept `studentUserId` and return `{ topics, completedTopics, loading, refetch }`
-3. Both dashboards consume the hook
-
----
-
-## Issue 7: Missing Error Boundary and Loading Patterns (Low)
-
-**Problem:** Each dashboard has its own inline loading spinner (copy-pasted `<div className="animate-spin ...">`) and no error boundaries. If any Supabase call throws, the entire dashboard crashes.
-
-**Recommended Steps:**
-1. Create a shared `LoadingSpinner` component
-2. Add an `ErrorBoundary` wrapper at the route level in `App.tsx`
-
----
-
-## Issue 8: `useAuth` Has Excessive Logging (Low)
-
-**Problem:** `useAuth.ts` contains 15+ `console.log` statements that run in production. The sign-out flow has a complex workaround with `localStorage` clearing.
-
-**Recommended Steps:**
-1. Replace `console.log` calls with a debug-only logger or remove them
-2. Consider using Supabase's `signOut({ scope: 'local' })` to simplify the sign-out flow
-
----
-
-## Prioritized Implementation Order
-
-| Priority | Task | Effort | Impact |
-|----------|------|--------|--------|
-| 1 | Fix hardcoded Turkish strings in AdminDashboard and AuthForm | Medium | High -- blocks multi-language |
-| 2 | Extract `getResourceIcon` to shared utility | Small | Medium -- removes 4x duplication |
-| 3 | Adopt existing `formatTime` and `daysOfWeek` from shared modules everywhere | Small | Medium -- removes 5x duplication |
-| 4 | Break up AdminDashboard into sub-components | Large | High -- maintainability |
-| 5 | Extract topic-fetching logic into `useStudentTopics` hook | Medium | Medium -- removes 200 lines duplication |
-| 6 | Create shared interfaces in `src/types/dashboard.ts` | Small | Medium -- single source of truth |
-| 7 | Reorganize component directory structure | Medium | Medium -- developer experience |
-| 8 | Add LoadingSpinner component + ErrorBoundary | Small | Low -- resilience |
-| 9 | Clean up `useAuth` logging | Small | Low -- production hygiene |
-
+- No UI or behavioral changes -- purely structural extraction
+- Each extraction preserves exact same props/state flow
+- AdminWeeklySchedule and AdminBalanceManager remain untouched (already separate components)
+- Incremental: hooks first, then UI components, then final assembly
