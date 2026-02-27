@@ -127,3 +127,91 @@ export async function subtractTrialLessonFromBalance(
     console.error("Error subtracting from teacher balance:", error);
   }
 }
+
+/**
+ * Add a completed regular lesson to balance using lesson_instances data.
+ * Reads start_time/end_time directly from the instance row.
+ */
+export async function addRegularLessonToBalanceFromInstance(
+  teacherId: string,
+  instanceId: string
+): Promise<void> {
+  try {
+    const { data: instance } = await supabase
+      .from("lesson_instances")
+      .select("start_time, end_time")
+      .eq("id", instanceId)
+      .single();
+
+    if (!instance) return;
+
+    const durationMinutes = calculateLessonDuration(instance.start_time, instance.end_time);
+
+    const { data: existingBalance } = await supabase
+      .from("teacher_balance")
+      .select("*")
+      .eq("teacher_id", teacherId)
+      .maybeSingle();
+
+    if (existingBalance) {
+      await supabase
+        .from("teacher_balance")
+        .update({
+          total_minutes: existingBalance.total_minutes + durationMinutes,
+          completed_regular_lessons: existingBalance.completed_regular_lessons + 1,
+          regular_lessons_minutes: existingBalance.regular_lessons_minutes + durationMinutes,
+        })
+        .eq("teacher_id", teacherId);
+    } else {
+      await supabase.from("teacher_balance").insert({
+        teacher_id: teacherId,
+        total_minutes: durationMinutes,
+        completed_regular_lessons: 1,
+        completed_trial_lessons: 0,
+        regular_lessons_minutes: durationMinutes,
+        trial_lessons_minutes: 0,
+      });
+    }
+  } catch (error) {
+    console.error("Error updating teacher balance from instance:", error);
+  }
+}
+
+/**
+ * Subtract a regular lesson from balance using lesson_instances data.
+ */
+export async function subtractRegularLessonFromBalanceByInstance(
+  teacherId: string,
+  instanceId: string
+): Promise<void> {
+  try {
+    const { data: instance } = await supabase
+      .from("lesson_instances")
+      .select("start_time, end_time")
+      .eq("id", instanceId)
+      .single();
+
+    if (!instance) return;
+
+    const durationMinutes = calculateLessonDuration(instance.start_time, instance.end_time);
+
+    const { data: existingBalance } = await supabase
+      .from("teacher_balance")
+      .select("*")
+      .eq("teacher_id", teacherId)
+      .maybeSingle();
+
+    if (existingBalance) {
+      await supabase
+        .from("teacher_balance")
+        .update({
+          total_minutes: Math.max(0, existingBalance.total_minutes - durationMinutes),
+          completed_regular_lessons: Math.max(0, existingBalance.completed_regular_lessons - 1),
+          regular_lessons_minutes: Math.max(0, existingBalance.regular_lessons_minutes - durationMinutes),
+        })
+        .eq("teacher_id", teacherId);
+    }
+  } catch (error) {
+    console.error("Error subtracting from teacher balance by instance:", error);
+  }
+}
