@@ -150,6 +150,18 @@ export function calculateLessonDates(
 }
 
 /**
+ * Get the locale string for time/date formatting based on language code.
+ */
+export function getLocale(language: string): string {
+  switch (language) {
+    case "tr": return "tr-TR";
+    case "es": return "es-ES";
+    case "en": return "en-US";
+    default: return "tr-TR";
+  }
+}
+
+/**
  * Format a time string for display.
  */
 export function formatTime(time: string, locale: string = "tr-TR"): string {

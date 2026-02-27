@@ -28,11 +28,7 @@ export function useAuth() {
   const lastFetchedUserIdRef = useRef<string | null>(null);
 
   const fetchProfile = useCallback(async (userId: string) => {
-    // Don't fetch profile if we're signing out
-    if (isSigningOutRef.current) {
-      console.log("Skipping profile fetch - signing out");
-      return;
-    }
+    if (isSigningOutRef.current) return;
 
     // Cancel any previous fetch
     if (profileFetchAbortRef.current) {
@@ -41,23 +37,16 @@ export function useAuth() {
     profileFetchAbortRef.current = new AbortController();
 
     try {
-      console.log("Fetching profile for user:", userId);
       const { data: profileData, error: profileError } = await supabase
         .from("profiles")
         .select("*")
         .eq("user_id", userId)
         .single();
 
-      // Check again if we're signing out after the async call
-      if (isSigningOutRef.current) {
-        console.log("Aborting profile set - signing out");
-        return;
-      }
+      if (isSigningOutRef.current) return;
 
       if (profileError) {
-        console.log("Profile fetch error:", profileError);
         if (profileError.code === "PGRST116") {
-          console.log("No profile found - user may need to complete signup");
           setProfile(null);
         } else {
           throw profileError;
@@ -69,22 +58,15 @@ export function useAuth() {
           .select("role")
           .eq("user_id", userId);
 
-        // Check again after roles fetch
-        if (isSigningOutRef.current) {
-          console.log("Aborting profile set - signing out after roles fetch");
-          return;
-        }
+        if (isSigningOutRef.current) return;
 
         const roles = rolesData?.map((r) => r.role as "teacher" | "student" | "admin") || [];
-        
-        // Determine primary role (admin > teacher > student)
         const primaryRole = roles.includes("admin")
           ? "admin"
           : roles.includes("teacher")
           ? "teacher"
           : "student";
 
-        console.log("Profile loaded successfully:", profileData, "Roles:", roles);
         setProfile({
           ...profileData,
           roles,
@@ -98,57 +80,38 @@ export function useAuth() {
       }
     } finally {
       if (!isSigningOutRef.current) {
-        console.log("Setting loading to false after profile fetch");
         setLoading(false);
       }
     }
   }, []);
 
   useEffect(() => {
-    console.log("useAuth effect running");
-
-    // Set up auth state listener
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((event, session) => {
-      console.log("Auth state changed:", event, session?.user?.id);
-      
-      // If we're signing out, ignore any auth state changes
-      if (isSigningOutRef.current && event !== 'SIGNED_OUT') {
-        console.log("Ignoring auth state change during sign out");
-        return;
-      }
+      if (isSigningOutRef.current && event !== 'SIGNED_OUT') return;
 
       setSession(session);
       setUser(session?.user ?? null);
 
       if (session?.user && !isSigningOutRef.current) {
-        // Aynı kullanıcı için tekrar fetch yapma (duplicate event'leri önle)
         if (lastFetchedUserIdRef.current !== session.user.id) {
           lastFetchedUserIdRef.current = session.user.id;
           fetchProfile(session.user.id);
         }
       } else {
-        console.log("No user session or signing out, clearing profile");
         lastFetchedUserIdRef.current = null;
         setProfile(null);
         setLoading(false);
       }
     });
 
-    // Get initial session
     supabase.auth
       .getSession()
       .then(({ data: { session } }) => {
-        console.log("Initial session check:", session?.user?.id);
-        // Only set initial loading to false if no session found
-        if (!session) {
-          console.log("No initial session found");
-          setLoading(false);
-        }
+        if (!session) setLoading(false);
       })
-      .catch((error) => {
-        console.error("Error getting initial session:", error);
+      .catch(() => {
         setLoading(false);
       });
 
@@ -204,28 +167,20 @@ export function useAuth() {
   };
 
   const signOut = async () => {
-    console.log("=== SIGNOUT START ===");
-    
-    // Set signing out flag immediately
     isSigningOutRef.current = true;
     setSigningOut(true);
     
-    // Cancel any pending profile fetch
     if (profileFetchAbortRef.current) {
       profileFetchAbortRef.current.abort();
       profileFetchAbortRef.current = null;
     }
     
-    // Clear local React state FIRST - this triggers UI redirect
-    console.log("Step 1: Clearing React state");
     setUser(null);
     setSession(null);
     setProfile(null);
     
-    // Manually clear localStorage to ensure session is gone
-    console.log("Step 2: Clearing localStorage");
+    // Clear Supabase localStorage items
     try {
-      // Clear all Supabase-related items from localStorage
       const keysToRemove: string[] = [];
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
@@ -233,36 +188,19 @@ export function useAuth() {
           keysToRemove.push(key);
         }
       }
-      keysToRemove.forEach(key => {
-        console.log("Removing localStorage key:", key);
-        localStorage.removeItem(key);
-      });
-    } catch (e) {
-      console.warn("localStorage clear error:", e);
+      keysToRemove.forEach(key => localStorage.removeItem(key));
+    } catch {
+      // Ignore localStorage errors
     }
     
-    // Show toast
-    toast({
-      title: "Başarılı",
-      description: "Çıkış yapıldı",
-    });
-    
-    // Try to sign out from Supabase (may fail if session already gone, that's OK)
-    console.log("Step 3: Calling Supabase signOut");
     try {
       await supabase.auth.signOut();
-      console.log("Supabase signOut successful");
-    } catch (error: any) {
-      console.warn("Supabase signOut error (OK if session expired):", error?.message);
+    } catch {
+      // OK if session already expired
     }
     
-    console.log("=== SIGNOUT COMPLETE ===");
     setSigningOut(false);
-    
-    // Reset the ref after a delay
-    setTimeout(() => {
-      isSigningOutRef.current = false;
-    }, 1000);
+    setTimeout(() => { isSigningOutRef.current = false; }, 1000);
   };
 
   return {
