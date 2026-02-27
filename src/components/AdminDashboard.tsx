@@ -1,522 +1,44 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { Users, LogOut, FolderOpen, ChevronDown, ChevronRight, Settings, Clock, Plus, Trash2, UserPlus, Archive, RotateCcw, FileUser, LayoutDashboard } from "lucide-react";
+import { Users, LogOut, FolderOpen, LayoutDashboard } from "lucide-react";
 import { Header } from "./Header";
-import { GlobalTopicsManager } from "./GlobalTopicsManager";
 import { AdminNotificationBell } from "./AdminNotificationBell";
-import { CreateStudentDialog } from "./CreateStudentDialog";
-import { CreateTeacherDialog } from "./CreateTeacherDialog";
-import { EditStudentDialog } from "./EditStudentDialog";
-import { EditTeacherDialog } from "./EditTeacherDialog";
-import { AddTopicDialog } from "./AddTopicDialog";
-import { AddResourceDialog } from "./AddResourceDialog";
-import { EditTopicDialog } from "./EditTopicDialog";
-import { EditResourceDialog } from "./EditResourceDialog";
 import { AdminWeeklySchedule } from "./AdminWeeklySchedule";
 import { AdminBalanceManager } from "./AdminBalanceManager";
-import { StudentAboutDialog } from "./StudentAboutDialog";
-import { PagesManagerDialog } from "./admin/PagesManagerDialog";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { getResourceIcon } from "@/utils/resourceIcons";
-import { formatTime as formatTimeUtil, getLocale } from "@/utils/lessonDateUtils";
+import { AdminTeachersList } from "./admin/AdminTeachersList";
+import { AdminStudentsTab } from "./admin/AdminStudentsTab";
+import { AdminDialogs } from "./admin/AdminDialogs";
+import { useAdminData } from "@/hooks/useAdminData";
+import { useTopicManagement } from "@/hooks/useTopicManagement";
 import { LoadingSpinner } from "./shared/LoadingSpinner";
-import type { AdminStudent, Teacher, Topic, Resource } from "@/types/dashboard";
 
 export function AdminDashboard() {
   const { t } = useTranslation();
-  const { language } = useLanguage();
-  const [teachers, setTeachers] = useState<Teacher[]>([]);
-  const [selectedTeacher, setSelectedTeacher] = useState<Teacher | null>(null);
-  const [expandedStudents, setExpandedStudents] = useState<Set<string>>(new Set());
-  const [studentTopics, setStudentTopics] = useState<Map<string, Topic[]>>(new Map());
-  const [studentCompletedTopics, setStudentCompletedTopics] = useState<Map<string, Topic[]>>(new Map());
-  const [loading, setLoading] = useState(true);
-  const [showGlobalTopics, setShowGlobalTopics] = useState(false);
-  const [showCreateStudent, setShowCreateStudent] = useState(false);
-  const [showCreateTeacher, setShowCreateTeacher] = useState(false);
-  const [showEditStudent, setShowEditStudent] = useState(false);
-  const [showEditTeacher, setShowEditTeacher] = useState(false);
-  const [editingStudent, setEditingStudent] = useState<AdminStudent | null>(null);
-  const [editingTeacher, setEditingTeacher] = useState<Teacher | null>(null);
-  const [showAddTopic, setShowAddTopic] = useState(false);
-  const [showAddResource, setShowAddResource] = useState(false);
-  const [showEditTopic, setShowEditTopic] = useState(false);
-  const [showEditResource, setShowEditResource] = useState(false);
-  const [selectedStudentForTopic, setSelectedStudentForTopic] = useState<string | null>(null);
-  const [selectedTopicForResource, setSelectedTopicForResource] = useState<string | null>(null);
-  const [editingTopic, setEditingTopic] = useState<Topic | null>(null);
-  const [editingResource, setEditingResource] = useState<Resource | null>(null);
-  const [activeTab, setActiveTab] = useState<"students" | "schedule" | "payments">("students");
-  const [showStudentAbout, setShowStudentAbout] = useState(false);
-  const [studentAboutData, setStudentAboutData] = useState<{ studentId: string; studentName: string; aboutText: string | null } | null>(null);
-  const [showPagesManager, setShowPagesManager] = useState(false);
   const { profile, signOut, signingOut } = useAuth();
-  const { toast } = useToast();
+  const [activeTab, setActiveTab] = useState<"students" | "schedule" | "payments">("students");
+  const [showGlobalTopics, setShowGlobalTopics] = useState(false);
+  const [showPagesManager, setShowPagesManager] = useState(false);
 
-  const daysOfWeek = [
-    t("days.sunday"),
-    t("days.monday"),
-    t("days.tuesday"),
-    t("days.wednesday"),
-    t("days.thursday"),
-    t("days.friday"),
-    t("days.saturday")
-  ];
+  const adminData = useAdminData();
+  const topicMgmt = useTopicManagement({
+    selectedTeacher: adminData.selectedTeacher,
+    profileUserId: profile?.user_id,
+  });
 
-  useEffect(() => {
-    fetchTeachers();
-  }, []);
-
-  const fetchTeachers = async () => {
-    try {
-      // Fetch all teachers
-      const { data: teachersData, error: teachersError } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, email")
-        .eq("role", "teacher")
-        .order("full_name");
-
-      if (teachersError) throw teachersError;
-
-      // For each teacher, fetch their students
-      const teachersWithStudents = await Promise.all(
-        (teachersData || []).map(async (teacher) => {
-          const { data: studentsData, error: studentsError } = await supabase
-            .from("students")
-            .select(
-              `
-              id,
-              student_id,
-              is_archived,
-              about_text,
-              profiles!students_student_id_fkey (
-                full_name,
-                email
-              )
-            `
-            )
-            .eq("teacher_id", teacher.user_id);
-
-          if (studentsError) throw studentsError;
-
-          // Fetch lessons for each student
-          const { data: lessonsData, error: lessonsError } = await supabase
-            .from("student_lessons")
-            .select("*")
-            .eq("teacher_id", teacher.user_id);
-
-          if (lessonsError) throw lessonsError;
-
-          // Combine students with their lessons
-          const studentsWithLessons = (studentsData || []).map((student) => ({
-            ...student,
-            is_archived: student.is_archived || false,
-            about_text: student.about_text || null,
-            lessons: (lessonsData || [])
-              .filter((lesson) => lesson.student_id === student.student_id)
-              .map((lesson) => ({
-                id: lesson.id,
-                dayOfWeek: lesson.day_of_week,
-                startTime: lesson.start_time,
-                endTime: lesson.end_time,
-                note: lesson.note,
-              })),
-          }));
-
-          return {
-            ...teacher,
-            students: studentsWithLessons,
-          };
-        })
-      );
-
-      setTeachers(teachersWithStudents);
-    } catch (error: any) {
-      toast({
-        title: t("common.error"),
-        description: t("messages.teachersLoadError"),
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const toggleStudent = async (studentId: string, student: AdminStudent) => {
-    const newExpanded = new Set(expandedStudents);
-    if (newExpanded.has(studentId)) {
-      newExpanded.delete(studentId);
-    } else {
-      newExpanded.add(studentId);
-      // Fetch topics if not already loaded
-      if (!studentTopics.has(studentId)) {
-        await fetchStudentTopics(student.student_id, studentId);
+  // When toggling a student, also fetch topics if needed
+  const handleToggleStudent = async (studentId: string, student: any) => {
+    adminData.toggleStudent(studentId);
+    if (!adminData.expandedStudents.has(studentId)) {
+      if (!topicMgmt.studentTopics.has(studentId)) {
+        await topicMgmt.fetchStudentTopics(student.student_id, studentId);
       }
     }
-    setExpandedStudents(newExpanded);
   };
 
-  const fetchStudentTopics = async (studentUserId: string, studentId: string) => {
-    try {
-      // Fetch all data in parallel
-      const [studentTopicsResponse, globalTopicsResponse, completionResponse] = await Promise.all([
-        // 1) Student-specific topics
-        supabase
-          .from("topics")
-          .select("*, resources (*)")
-          .eq("student_id", studentUserId)
-          .order("order_index"),
-        
-        // 2) Global topics
-        supabase
-          .from("global_topics")
-          .select("*, global_topic_resources(*)")
-          .order("order_index"),
-        
-        // 3) Completion data
-        supabase
-          .from("student_resource_completion")
-          .select("*")
-          .eq("student_id", studentUserId)
-      ]);
-
-      if (studentTopicsResponse.error) throw studentTopicsResponse.error;
-      if (globalTopicsResponse.error) throw globalTopicsResponse.error;
-      if (completionResponse.error) throw completionResponse.error;
-
-      const studentTopicsData = studentTopicsResponse.data || [];
-      const globalTopicsData = globalTopicsResponse.data || [];
-      const completionData = completionResponse.data || [];
-
-      // Create completion map
-      const completionMap = new Map();
-      completionData.forEach((completion: any) => {
-        completionMap.set(completion.resource_id, completion);
-      });
-
-      // Process student-specific topics (for CRUD)
-      const processedStudentTopics = studentTopicsData.map((topic) => ({
-        ...topic,
-        resources: (topic.resources || [])
-          .map((resource: any) => {
-            const completion = completionMap.get(resource.id);
-            return {
-              ...resource,
-              is_completed: completion?.is_completed || false,
-            };
-          })
-          .sort((a: any, b: any) => a.order_index - b.order_index),
-        isGlobal: false,
-      }));
-
-      setStudentTopics((prev) => new Map(prev).set(studentId, processedStudentTopics));
-
-      // Process all topics for "İşlenen Konular" view (global + student-specific with completion)
-      const studentTopicTitles = new Set(processedStudentTopics.map((t) => t.title));
-      
-      const processedGlobalTopics = globalTopicsData
-        .filter((topic) => !studentTopicTitles.has(topic.title))
-        .map((topic) => {
-          const globalResources = (topic.global_topic_resources || [])
-            .map((res: any) => {
-              const completion = completionMap.get(res.id);
-              return {
-                id: res.id,
-                title: res.title,
-                description: res.description,
-                resource_type: res.resource_type,
-                resource_url: res.resource_url,
-                order_index: res.order_index,
-                is_completed: completion?.is_completed || false,
-              };
-            })
-            .sort((a: any, b: any) => a.order_index - b.order_index);
-
-          const allResourcesCompleted =
-            globalResources.length > 0 && globalResources.every((resource: any) => resource.is_completed);
-
-          return {
-            id: topic.id,
-            title: topic.title,
-            description: topic.description,
-            is_completed: allResourcesCompleted,
-            order_index: topic.order_index,
-            resources: globalResources,
-            isGlobal: true,
-          };
-        });
-
-      // Combine all topics for completed topics view
-      const allTopics = [...processedStudentTopics, ...processedGlobalTopics].sort((a, b) => {
-        if (a.isGlobal && !b.isGlobal) return 1;
-        if (!a.isGlobal && b.isGlobal) return -1;
-        return a.order_index - b.order_index;
-      });
-
-      setStudentCompletedTopics((prev) => new Map(prev).set(studentId, allTopics));
-    } catch (error: any) {
-      toast({
-        title: t("common.error"),
-        description: t("messages.topicsLoadError"),
-        variant: "destructive",
-      });
-    }
-  };
-
-  const getDayName = (dayOfWeek?: number) => {
-    return dayOfWeek !== undefined ? daysOfWeek[dayOfWeek] : "";
-  };
-
-  const formatTime = (time?: string) => {
-    if (!time) return "";
-    return formatTimeUtil(time, getLocale(language));
-  };
-
-  const openStudentSettings = (student: AdminStudent) => {
-    setEditingStudent(student);
-    setShowEditStudent(true);
-  };
-
-  const openTeacherSettings = (teacher: Teacher) => {
-    setEditingTeacher(teacher);
-    setShowEditTeacher(true);
-  };
-
-  const handleAddTopic = async (title: string, description: string) => {
-    if (!selectedStudentForTopic) return;
-
-    try {
-      const student = selectedTeacher?.students.find((s) => s.id === selectedStudentForTopic);
-      if (!student) return;
-
-      const topics = studentTopics.get(selectedStudentForTopic) || [];
-      const nextOrderIndex = topics.length > 0 ? Math.max(...topics.map((t) => t.order_index)) + 1 : 0;
-
-      const { error } = await supabase.from("topics").insert({
-        teacher_id: profile?.user_id,
-        student_id: student.student_id,
-        title,
-        description: description || null,
-        order_index: nextOrderIndex,
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: t("common.success"),
-        description: t("messages.topicCreated"),
-      });
-
-      await fetchStudentTopics(student.student_id, selectedStudentForTopic);
-    } catch (error: any) {
-      toast({
-        title: t("common.error"),
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleAddResource = async (title: string, description: string, resourceType: string, resourceUrl: string) => {
-    if (!selectedTopicForResource) return;
-
-    try {
-      const topics = Array.from(studentTopics.values()).flat();
-      const topic = topics.find((t) => t.id === selectedTopicForResource);
-      if (!topic) return;
-
-      const nextOrderIndex = topic.resources.length > 0 ? Math.max(...topic.resources.map((r) => r.order_index)) + 1 : 0;
-
-      const { error } = await supabase.from("resources").insert({
-        topic_id: selectedTopicForResource,
-        title,
-        description: description || null,
-        resource_type: resourceType,
-        resource_url: resourceUrl,
-        order_index: nextOrderIndex,
-      });
-
-      if (error) throw error;
-
-      toast({
-        title: t("common.success"),
-        description: t("messages.resourceAdded"),
-      });
-
-      // Refresh topics for this student
-      const studentId = Array.from(studentTopics.entries()).find(([_, topics]) => 
-        topics.some((t) => t.id === selectedTopicForResource)
-      )?.[0];
-      
-      if (studentId) {
-        const student = selectedTeacher?.students.find((s) => s.id === studentId);
-        if (student) {
-          await fetchStudentTopics(student.student_id, studentId);
-        }
-      }
-    } catch (error: any) {
-      toast({
-        title: t("common.error"),
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleEditTopic = async (id: string, title: string, description: string) => {
-    try {
-      const { error } = await supabase
-        .from("topics")
-        .update({ title, description: description || null })
-        .eq("id", id);
-
-      if (error) throw error;
-
-      toast({
-        title: t("common.success"),
-        description: t("messages.topicUpdated"),
-      });
-
-      // Refresh topics
-      const studentId = Array.from(studentTopics.entries()).find(([_, topics]) => 
-        topics.some((t) => t.id === id)
-      )?.[0];
-      
-      if (studentId) {
-        const student = selectedTeacher?.students.find((s) => s.id === studentId);
-        if (student) {
-          await fetchStudentTopics(student.student_id, studentId);
-        }
-      }
-    } catch (error: any) {
-      toast({
-        title: t("common.error"),
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleEditResource = async (
-    id: string,
-    title: string,
-    description: string,
-    resourceType: string,
-    resourceUrl: string
-  ) => {
-    try {
-      const { error } = await supabase
-        .from("resources")
-        .update({
-          title,
-          description: description || null,
-          resource_type: resourceType,
-          resource_url: resourceUrl,
-        })
-        .eq("id", id);
-
-      if (error) throw error;
-
-      toast({
-        title: t("common.success"),
-        description: t("messages.resourceUpdated"),
-      });
-
-      // Refresh topics
-      const studentId = Array.from(studentTopics.entries()).find(([_, topics]) =>
-        topics.some((t) => t.resources.some((r) => r.id === id))
-      )?.[0];
-
-      if (studentId) {
-        const student = selectedTeacher?.students.find((s) => s.id === studentId);
-        if (student) {
-          await fetchStudentTopics(student.student_id, studentId);
-        }
-      }
-    } catch (error: any) {
-      toast({
-        title: t("common.error"),
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteTopic = async (topicId: string, studentId: string, studentUserId: string) => {
-    try {
-      const { error } = await supabase.from("topics").delete().eq("id", topicId);
-
-      if (error) throw error;
-
-      toast({
-        title: t("common.success"),
-        description: t("messages.topicDeleted"),
-      });
-
-      await fetchStudentTopics(studentUserId, studentId);
-    } catch (error: any) {
-      toast({
-        title: t("common.error"),
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleDeleteResource = async (resourceId: string, studentId: string, studentUserId: string) => {
-    try {
-      const { error } = await supabase.from("resources").delete().eq("id", resourceId);
-
-      if (error) throw error;
-
-      toast({
-        title: t("common.success"),
-        description: t("messages.resourceDeleted"),
-      });
-
-      await fetchStudentTopics(studentUserId, studentId);
-    } catch (error: any) {
-      toast({
-        title: t("common.error"),
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleRestoreStudent = async (studentId: string) => {
-    try {
-      const { error } = await supabase
-        .from("students")
-        .update({ is_archived: false, archived_at: null })
-        .eq("id", studentId);
-
-      if (error) throw error;
-
-      toast({
-        title: t("common.success"),
-        description: t("dashboard.admin.studentRestored"),
-      });
-
-      fetchTeachers();
-    } catch (error: any) {
-      toast({
-        title: t("common.error"),
-        description: error.message,
-        variant: "destructive",
-      });
-    }
-  };
-
-  if (loading) {
+  if (adminData.loading) {
     return <LoadingSpinner fullScreen />;
   }
 
@@ -525,7 +47,7 @@ export function AdminDashboard() {
       <Header
         rightActions={
           <>
-            <AdminNotificationBell adminId={profile?.user_id || ''} />
+            <AdminNotificationBell adminId={profile?.user_id || ""} />
             <Button onClick={() => setShowPagesManager(true)} variant="outline" size="sm">
               <LayoutDashboard className="h-4 w-4" />
               <span className="hidden sm:inline ml-2">{t("dashboard.admin.pages")}</span>
@@ -551,425 +73,77 @@ export function AdminDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Teachers List */}
           <div className="lg:col-span-1">
-            <Card>
-              <CardHeader>
-                <div className="flex justify-between items-center">
-                  <div>
-                    <CardTitle className="flex items-center gap-2 text-card-foreground">
-                      <Users className="h-5 w-5" />
-                      {t("dashboard.admin.teachers")}
-                    </CardTitle>
-                    <CardDescription>{teachers.length} {t("dashboard.admin.teachersRegistered")}</CardDescription>
-                  </div>
-                  <Button onClick={() => setShowCreateTeacher(true)} size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    {t("dashboard.admin.createTeacher")}
-                  </Button>
-                </div>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {teachers.length === 0 ? (
-                  <p className="text-sm text-muted-foreground text-center py-4">{t("dashboard.admin.noTeachers")}</p>
-                ) : (
-                  teachers.map((teacher) => (
-                    <Card
-                      key={teacher.user_id}
-                      className={`cursor-pointer transition-colors hover:bg-accent ${
-                        selectedTeacher?.user_id === teacher.user_id ? "ring-2 ring-primary" : ""
-                      }`}
-                      onClick={() => setSelectedTeacher(teacher)}
-                    >
-                      <CardContent className="p-3">
-                        <div className="flex justify-between items-start">
-                          <div className="flex-1">
-                            <h4 className="font-medium text-card-foreground">{teacher.full_name}</h4>
-                            <p className="text-sm text-card-foreground/70">{teacher.email}</p>
-                          <Badge variant="outline" className="mt-1 text-card-foreground border-card-foreground/30">
-                              {teacher.students.filter(s => !s.is_archived).length} {t("auth.student").toLowerCase()}
-                            </Badge>
-                          </div>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="text-card-foreground hover:text-card-foreground hover:bg-card-foreground/10"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              openTeacherSettings(teacher);
-                            }}
-                          >
-                            <Settings className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
-              </CardContent>
-            </Card>
+            <AdminTeachersList
+              teachers={adminData.teachers}
+              selectedTeacherId={adminData.selectedTeacher?.user_id}
+              onSelectTeacher={adminData.setSelectedTeacher}
+              onCreateTeacher={() => adminData.setShowCreateTeacher(true)}
+              onTeacherSettings={adminData.openTeacherSettings}
+            />
           </div>
 
           {/* Teacher Details */}
           <div className="lg:col-span-2">
-            {selectedTeacher ? (
+            {adminData.selectedTeacher ? (
               <Card>
                 <CardHeader>
-                  <CardTitle>{selectedTeacher.full_name}</CardTitle>
-                  <CardDescription>{selectedTeacher.email}</CardDescription>
+                  <CardTitle>{adminData.selectedTeacher.full_name}</CardTitle>
+                  <CardDescription>{adminData.selectedTeacher.email}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="flex gap-2 border-b mb-4">
-                    <Button
-                      variant={activeTab === "students" ? "tab-active" : "tab-inactive"}
-                      className="rounded-b-none"
-                      onClick={() => setActiveTab("students")}
-                    >
+                    <Button variant={activeTab === "students" ? "tab-active" : "tab-inactive"} className="rounded-b-none" onClick={() => setActiveTab("students")}>
                       {t("dashboard.admin.students")}
                     </Button>
-                    <Button
-                      variant={activeTab === "schedule" ? "tab-active" : "tab-inactive"}
-                      className="rounded-b-none"
-                      onClick={() => setActiveTab("schedule")}
-                    >
+                    <Button variant={activeTab === "schedule" ? "tab-active" : "tab-inactive"} className="rounded-b-none" onClick={() => setActiveTab("schedule")}>
                       {t("dashboard.admin.schedule")}
                     </Button>
-                    <Button
-                      variant={activeTab === "payments" ? "tab-active" : "tab-inactive"}
-                      className="rounded-b-none"
-                      onClick={() => setActiveTab("payments")}
-                    >
+                    <Button variant={activeTab === "payments" ? "tab-active" : "tab-inactive"} className="rounded-b-none" onClick={() => setActiveTab("payments")}>
                       {t("dashboard.admin.payments")}
                     </Button>
                   </div>
 
                   {activeTab === "students" && (
-                    <div className="space-y-3">
-                      <div className="flex justify-end mb-3">
-                        <Button onClick={() => setShowCreateStudent(true)} size="sm">
-                          <UserPlus className="h-4 w-4 mr-2" />
-                          {t("dashboard.admin.createStudent")}
-                        </Button>
-                      </div>
-                      
-                      {/* Active Students */}
-                      {(() => {
-                        const activeStudents = selectedTeacher.students.filter(s => !s.is_archived);
-                        const archivedStudents = selectedTeacher.students.filter(s => s.is_archived);
-                        
-                        return (
-                          <>
-                            {activeStudents.length === 0 ? (
-                              <p className="text-sm text-muted-foreground text-center py-8">
-                                {t("dashboard.admin.noActiveStudents")}
-                              </p>
-                            ) : (
-                              activeStudents.map((student) => (
-                                <Card key={student.id} className="border">
-                                  <Collapsible>
-                                    <CardContent className="p-3">
-                                      <div className="flex justify-between items-start">
-                                        <CollapsibleTrigger
-                                          className="flex items-center gap-2 flex-1 text-left"
-                                          onClick={() => toggleStudent(student.id, student)}
-                                        >
-                                          {expandedStudents.has(student.id) ? (
-                                            <ChevronDown className="h-4 w-4 text-card-foreground" />
-                                          ) : (
-                                            <ChevronRight className="h-4 w-4 text-card-foreground" />
-                                          )}
-                                          <div className="flex-1">
-                                            <h4 className="font-medium text-card-foreground">{student.profiles.full_name}</h4>
-                                            <p className="text-sm text-card-foreground/70">{student.profiles.email}</p>
-
-                                            {student.lessons.length > 0 && (
-                                              <div className="mt-1 space-y-1">
-                                                {student.lessons.slice(0, 2).map((lesson, index) => (
-                                                  <div key={index} className="flex items-center gap-1">
-                                                    <Clock className="h-3 w-3 text-card-foreground/50" />
-                                                    <span className="text-xs text-card-foreground/70">
-                                                      {getDayName(lesson.dayOfWeek)} {formatTime(lesson.startTime)}-
-                                                      {formatTime(lesson.endTime)}
-                                                    </span>
-                                                  </div>
-                                                ))}
-                                                {student.lessons.length > 2 && (
-                                                    <span className="text-xs text-card-foreground/70">
-                                                      +{student.lessons.length - 2} {t("dashboard.admin.moreLessons")}
-                                                  </span>
-                                                )}
-                                              </div>
-                                            )}
-                                          </div>
-                                        </CollapsibleTrigger>
-
-                                        <div className="flex items-center gap-1">
-                                          <Button 
-                                            variant="ghost" 
-                                            size="sm" 
-                                            className="text-card-foreground hover:text-card-foreground hover:bg-card-foreground/10"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              setStudentAboutData({
-                                                studentId: student.student_id,
-                                                studentName: student.profiles.full_name,
-                                                aboutText: student.about_text
-                                              });
-                                              setShowStudentAbout(true);
-                                            }}
-                                            title={t("dashboard.admin.aboutStudent")}
-                                          >
-                                            <FileUser className="h-4 w-4" />
-                                          </Button>
-                                          <Button variant="ghost" size="sm" className="text-card-foreground hover:text-card-foreground hover:bg-card-foreground/10" onClick={() => openStudentSettings(student)}>
-                                            <Settings className="h-4 w-4" />
-                                          </Button>
-                                        </div>
-                                      </div>
-
-                                      <CollapsibleContent className="mt-4">
-                                        <div className="pl-6 border-t pt-3 space-y-6">
-                                          {/* İşlenen Konular Bölümü - En az bir kaynağı tamamlanmış konular */}
-                                          <div className="space-y-3">
-                                            <div className="flex justify-between items-center">
-                                              <h5 className="font-medium text-sm">{t("dashboard.admin.processedTopics")}</h5>
-                                              {(() => {
-                                                const allTopics = studentCompletedTopics.get(student.id) || [];
-                                                const topicsWithCompletedResources = allTopics.filter(t => t.resources.some(r => r.is_completed));
-                                                const fullyCompletedCount = topicsWithCompletedResources.filter(t => t.is_completed).length;
-                                                const totalCompletedResources = topicsWithCompletedResources.reduce((sum, t) => sum + t.resources.filter(r => r.is_completed).length, 0);
-                                                return (
-                                                  <Badge variant="secondary">
-                                                    {totalCompletedResources} {t("dashboard.admin.resourcesProcessed")} ({fullyCompletedCount} {t("dashboard.admin.topicsFull")})
-                                                  </Badge>
-                                                );
-                                              })()}
-                                            </div>
-
-                                            {(() => {
-                                              const topicsWithCompletedResources = studentCompletedTopics.get(student.id)?.filter(t => 
-                                                t.resources.some(r => r.is_completed)
-                                              ) || [];
-                                              
-                                              if (topicsWithCompletedResources.length === 0) {
-                                                return (
-                                                  <p className="text-sm text-muted-foreground py-2">
-                                                    {t("dashboard.admin.noProcessedResources")}
-                                                  </p>
-                                                );
-                                              }
-                                              return (
-                                                <div className="space-y-2 max-h-80 overflow-y-auto">
-                                                  {topicsWithCompletedResources.map((topic) => {
-                                                    const completedResourcesCount = topic.resources.filter(r => r.is_completed).length;
-                                                    const totalResourcesCount = topic.resources.length;
-                                                    const isFullyCompleted = topic.is_completed || completedResourcesCount === totalResourcesCount;
-                                                    
-                                                    return (
-                                                      <Card 
-                                                        key={topic.id} 
-                                                        className={`border-l-4 ${
-                                                          isFullyCompleted 
-                                                            ? "border-l-card-foreground/50" 
-                                                            : "border-l-card-foreground/20"
-                                                        }`}
-                                                      >
-                                                        <Collapsible>
-                                                          <CardContent className="p-3">
-                                                            <CollapsibleTrigger className="flex items-center gap-2 w-full text-left">
-                                                              <Checkbox checked={isFullyCompleted} className="h-4 w-4" disabled />
-                                                              <div className="flex-1">
-                                                                <span className="text-sm font-medium">{topic.title}</span>
-                                                                {topic.isGlobal && (
-                                                                  <Badge variant="outline" className="ml-2 text-xs">Global</Badge>
-                                                                )}
-                                                              </div>
-                                                              <Badge variant="secondary" className="text-xs">
-                                                                {completedResourcesCount}/{totalResourcesCount} {t("common.resource")}
-                                                              </Badge>
-                                                              <ChevronRight className="h-4 w-4" />
-                                                            </CollapsibleTrigger>
-                                                            <CollapsibleContent className="mt-2 pl-6 space-y-1">
-                                                              {topic.resources.filter(r => r.is_completed).map((resource) => (
-                                                                <div key={resource.id} className="flex items-center gap-2 py-1">
-                                                                  <Checkbox checked={true} className="h-3 w-3" disabled />
-                                                                  {getResourceIcon(resource.resource_type)}
-                                                                  <span
-                                                                    className="text-xs flex-1 cursor-pointer hover:text-primary"
-                                                                    onClick={() => window.open(resource.resource_url, "_blank")}
-                                                                  >
-                                                                    {resource.title}
-                                                                  </span>
-                                                                </div>
-                                                              ))}
-                                                            </CollapsibleContent>
-                                                          </CardContent>
-                                                        </Collapsible>
-                                                      </Card>
-                                                    );
-                                                  })}
-                                                </div>
-                                              );
-                                            })()}
-                                          </div>
-
-                                          {/* Öğrenciye Özel Konular Bölümü (CRUD) */}
-                                          <div className="space-y-3 border-t pt-3">
-                                            <div className="flex justify-between items-center">
-                                              <h5 className="font-medium text-sm">{t("dashboard.admin.studentSpecificTopics")}</h5>
-                                              <Button
-                                                variant="outline"
-                                                size="sm"
-                                                onClick={() => {
-                                                  setSelectedStudentForTopic(student.id);
-                                                  setShowAddTopic(true);
-                                                }}
-                                              >
-                                                <Plus className="h-3 w-3 mr-1" />
-                                                {t("dashboard.admin.addTopic")}
-                                              </Button>
-                                            </div>
-
-                                            {(studentTopics.get(student.id) || []).length === 0 ? (
-                                              <p className="text-sm opacity-70 py-2">
-                                                {t("dashboard.admin.noStudentTopics")}
-                                              </p>
-                                            ) : (
-                                              <div className="space-y-2">
-                                                {(studentTopics.get(student.id) || []).map((topic) => (
-                                                  <Card key={topic.id} className="border">
-                                                    <Collapsible>
-                                                      <CardContent className="p-2">
-                                                        <div className="flex items-center gap-2">
-                                                          <CollapsibleTrigger className="flex items-center gap-1">
-                                                            <ChevronRight className="h-3 w-3" />
-                                                          </CollapsibleTrigger>
-                                                          <Checkbox checked={topic.is_completed} className="h-4 w-4" disabled />
-                                                          <span className="text-sm flex-1">{topic.title}</span>
-                                                          <Badge variant="secondary" className="text-xs">
-                                                            {topic.resources.length} {t("common.resource")}
-                                                          </Badge>
-                                                          <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => {
-                                                              setSelectedTopicForResource(topic.id);
-                                                              setShowAddResource(true);
-                                                            }}
-                                                          >
-                                                            <Plus className="h-3 w-3" />
-                                                          </Button>
-                                                          <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() => {
-                                                              setEditingTopic(topic);
-                                                              setShowEditTopic(true);
-                                                            }}
-                                                          >
-                                                            <Settings className="h-3 w-3" />
-                                                          </Button>
-                                                          <Button
-                                                            variant="ghost"
-                                                            size="sm"
-                                                            onClick={() =>
-                                                              handleDeleteTopic(topic.id, student.id, student.student_id)
-                                                            }
-                                                          >
-                                                            <Trash2 className="h-3 w-3 text-destructive" />
-                                                          </Button>
-                                                        </div>
-
-                                                        <CollapsibleContent className="mt-2 space-y-1">
-                                                          {topic.resources.map((resource) => (
-                                                            <div key={resource.id} className="flex items-center gap-2 pl-8">
-                                                              <Checkbox checked={resource.is_completed} className="h-3 w-3" disabled />
-                                                              {getResourceIcon(resource.resource_type)}
-                                                              <span
-                                                                className="text-xs flex-1 cursor-pointer hover:text-primary"
-                                                                onClick={() => window.open(resource.resource_url, "_blank")}
-                                                              >
-                                                                {resource.title}
-                                                              </span>
-                                                              <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={() => {
-                                                                  setEditingResource(resource);
-                                                                  setShowEditResource(true);
-                                                                }}
-                                                              >
-                                                                <Settings className="h-3 w-3" />
-                                                              </Button>
-                                                              <Button
-                                                                variant="ghost"
-                                                                size="sm"
-                                                                onClick={() =>
-                                                                  handleDeleteResource(resource.id, student.id, student.student_id)
-                                                                }
-                                                              >
-                                                                <Trash2 className="h-3 w-3 text-destructive" />
-                                                              </Button>
-                                                            </div>
-                                                          ))}
-                                                        </CollapsibleContent>
-                                                      </CardContent>
-                                                    </Collapsible>
-                                                  </Card>
-                                                ))}
-                                              </div>
-                                            )}
-                                          </div>
-                                        </div>
-                                      </CollapsibleContent>
-                                    </CardContent>
-                                  </Collapsible>
-                                </Card>
-                              ))
-                            )}
-
-                            {/* Arşivlenmiş Öğrenciler */}
-                            {archivedStudents.length > 0 && (
-                              <div className="mt-6 pt-4 border-t">
-                                <div className="flex items-center gap-2 mb-3">
-                                  <Archive className="h-4 w-4 text-muted-foreground" />
-                                   <h4 className="font-medium text-sm text-muted-foreground">{t("dashboard.admin.archivedStudents")}</h4>
-                                  <Badge variant="secondary" className="text-xs">{archivedStudents.length}</Badge>
-                                </div>
-                                <div className="space-y-2">
-                                  {archivedStudents.map((student) => (
-                                    <Card key={student.id} className="border bg-muted/30 opacity-70">
-                                      <CardContent className="p-3">
-                                        <div className="flex justify-between items-center">
-                                          <div className="flex items-center gap-2">
-                                            <Archive className="h-4 w-4 text-muted-foreground" />
-                                            <div>
-                                              <h4 className="font-medium text-sm">{student.profiles.full_name}</h4>
-                                              <p className="text-xs text-muted-foreground">{student.profiles.email}</p>
-                                            </div>
-                                          </div>
-                                          <Button 
-                                            variant="outline" 
-                                            size="sm"
-                                            onClick={() => handleRestoreStudent(student.id)}
-                                          >
-                                             <RotateCcw className="h-3 w-3 mr-1" />
-                                            {t("dashboard.admin.restore")}
-                                          </Button>
-                                        </div>
-                                      </CardContent>
-                                    </Card>
-                                  ))}
-                                </div>
-                              </div>
-                            )}
-                          </>
-                        );
-                      })()}
-                    </div>
+                    <AdminStudentsTab
+                      students={adminData.selectedTeacher.students}
+                      expandedStudents={adminData.expandedStudents}
+                      studentTopics={topicMgmt.studentTopics}
+                      studentCompletedTopics={topicMgmt.studentCompletedTopics}
+                      onToggleStudent={handleToggleStudent}
+                      onOpenStudentSettings={adminData.openStudentSettings}
+                      onShowCreateStudent={() => adminData.setShowCreateStudent(true)}
+                      onShowStudentAbout={(student) => {
+                        adminData.setStudentAboutData({
+                          studentId: student.student_id,
+                          studentName: student.profiles.full_name,
+                          aboutText: student.about_text,
+                        });
+                        adminData.setShowStudentAbout(true);
+                      }}
+                      onRestoreStudent={adminData.handleRestoreStudent}
+                      onAddTopic={(studentId) => {
+                        topicMgmt.setSelectedStudentForTopic(studentId);
+                        topicMgmt.setShowAddTopic(true);
+                      }}
+                      onAddResource={(topicId) => {
+                        topicMgmt.setSelectedTopicForResource(topicId);
+                        topicMgmt.setShowAddResource(true);
+                      }}
+                      onEditTopic={(topic) => {
+                        topicMgmt.setEditingTopic(topic);
+                        topicMgmt.setShowEditTopic(true);
+                      }}
+                      onEditResource={(resource) => {
+                        topicMgmt.setEditingResource(resource);
+                        topicMgmt.setShowEditResource(true);
+                      }}
+                      onDeleteTopic={topicMgmt.handleDeleteTopic}
+                      onDeleteResource={topicMgmt.handleDeleteResource}
+                    />
                   )}
 
-                  {activeTab === "schedule" && <AdminWeeklySchedule teacherId={selectedTeacher.user_id} />}
-
-                  {activeTab === "payments" && <AdminBalanceManager teacherId={selectedTeacher.user_id} />}
+                  {activeTab === "schedule" && <AdminWeeklySchedule teacherId={adminData.selectedTeacher.user_id} />}
+                  {activeTab === "payments" && <AdminBalanceManager teacherId={adminData.selectedTeacher.user_id} />}
                 </CardContent>
               </Card>
             ) : (
@@ -977,9 +151,7 @@ export function AdminDashboard() {
                 <div className="text-center">
                   <Users className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
                   <h3 className="text-lg font-medium mb-2">{t("dashboard.admin.selectTeacher")}</h3>
-                  <p className="text-muted-foreground">
-                    {t("dashboard.admin.selectTeacherDesc")}
-                  </p>
+                  <p className="text-muted-foreground">{t("dashboard.admin.selectTeacherDesc")}</p>
                 </div>
               </Card>
             )}
@@ -987,96 +159,41 @@ export function AdminDashboard() {
         </div>
       </div>
 
-      <GlobalTopicsManager open={showGlobalTopics} onOpenChange={setShowGlobalTopics} isAdmin={true} />
-      
-      <CreateTeacherDialog
-        open={showCreateTeacher}
-        onOpenChange={setShowCreateTeacher}
-        onSuccess={fetchTeachers}
-      />
-
-      {editingTeacher && (
-        <EditTeacherDialog
-          open={showEditTeacher}
-          onOpenChange={setShowEditTeacher}
-          onTeacherUpdated={fetchTeachers}
-          teacherId={editingTeacher.user_id}
-          currentName={editingTeacher.full_name}
-        />
-      )}
-
-      {selectedTeacher && (
-        <>
-          <CreateStudentDialog
-            open={showCreateStudent}
-            onOpenChange={setShowCreateStudent}
-            onStudentCreated={fetchTeachers}
-            teacherId={selectedTeacher.user_id}
-          />
-
-          {editingStudent && (
-            <EditStudentDialog
-              open={showEditStudent}
-              onOpenChange={setShowEditStudent}
-              onStudentUpdated={fetchTeachers}
-              studentId={editingStudent.id}
-              currentName={editingStudent.profiles.full_name}
-              currentLessons={editingStudent.lessons}
-            />
-          )}
-        </>
-      )}
-
-      <AddTopicDialog
-        open={showAddTopic}
-        onOpenChange={setShowAddTopic}
-        onAddTopic={handleAddTopic}
-      />
-
-      <AddResourceDialog
-        open={showAddResource}
-        onOpenChange={setShowAddResource}
-        onAddResource={handleAddResource}
-      />
-
-      <EditTopicDialog
-        open={showEditTopic}
-        onOpenChange={setShowEditTopic}
-        onEditTopic={handleEditTopic}
-        topic={editingTopic}
-      />
-
-      <EditResourceDialog
-        open={showEditResource}
-        onOpenChange={setShowEditResource}
-        onEditResource={handleEditResource}
-        resource={editingResource}
-      />
-
-      {studentAboutData && (
-        <StudentAboutDialog
-          key={studentAboutData.studentId}
-          open={showStudentAbout}
-          onOpenChange={(open) => {
-            setShowStudentAbout(open);
-            if (!open) {
-              setStudentAboutData(null);
-            }
-          }}
-          studentId={studentAboutData.studentId}
-          studentName={studentAboutData.studentName}
-          aboutText={studentAboutData.aboutText}
-          isReadOnly={false}
-          onSaved={async () => {
-            await fetchTeachers();
-            setStudentAboutData(null);
-          }}
-        />
-      )}
-
-      <PagesManagerDialog
-        open={showPagesManager}
-        onOpenChange={setShowPagesManager}
+      <AdminDialogs
+        showGlobalTopics={showGlobalTopics}
+        setShowGlobalTopics={setShowGlobalTopics}
+        showPagesManager={showPagesManager}
+        setShowPagesManager={setShowPagesManager}
+        showCreateTeacher={adminData.showCreateTeacher}
+        setShowCreateTeacher={adminData.setShowCreateTeacher}
+        showEditTeacher={adminData.showEditTeacher}
+        setShowEditTeacher={adminData.setShowEditTeacher}
+        editingTeacher={adminData.editingTeacher}
+        showCreateStudent={adminData.showCreateStudent}
+        setShowCreateStudent={adminData.setShowCreateStudent}
+        showEditStudent={adminData.showEditStudent}
+        setShowEditStudent={adminData.setShowEditStudent}
+        editingStudent={adminData.editingStudent}
+        selectedTeacher={adminData.selectedTeacher}
+        showAddTopic={topicMgmt.showAddTopic}
+        setShowAddTopic={topicMgmt.setShowAddTopic}
+        showAddResource={topicMgmt.showAddResource}
+        setShowAddResource={topicMgmt.setShowAddResource}
+        showEditTopic={topicMgmt.showEditTopic}
+        setShowEditTopic={topicMgmt.setShowEditTopic}
+        showEditResource={topicMgmt.showEditResource}
+        setShowEditResource={topicMgmt.setShowEditResource}
+        editingTopic={topicMgmt.editingTopic}
+        editingResource={topicMgmt.editingResource}
+        showStudentAbout={adminData.showStudentAbout}
+        setShowStudentAbout={adminData.setShowStudentAbout}
+        studentAboutData={adminData.studentAboutData}
+        setStudentAboutData={adminData.setStudentAboutData}
+        onTeachersRefresh={adminData.fetchTeachers}
+        onAddTopic={topicMgmt.handleAddTopic}
+        onAddResource={topicMgmt.handleAddResource}
+        onEditTopic={topicMgmt.handleEditTopic}
+        onEditResource={topicMgmt.handleEditResource}
       />
     </div>
   );
