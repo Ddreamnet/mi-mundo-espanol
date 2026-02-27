@@ -1,6 +1,4 @@
 import { useState, useEffect } from "react";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -13,9 +11,17 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { format, addDays, parseISO, isBefore } from "date-fns";
+import { format } from "date-fns";
 import { Ban } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import type { LessonDates, LessonOverrideBasic } from "@/types/lessons";
+import {
+  getSortedLessons,
+  getDisplayLessonData,
+  getRowConfig,
+  calculateLessonDates,
+} from "@/utils/lessonDateUtils";
+import { addRegularLessonToBalance } from "@/services/teacherBalanceService";
 
 interface LessonTrackerProps {
   studentId: string;
@@ -23,36 +29,23 @@ interface LessonTrackerProps {
   teacherId: string;
 }
 
-interface LessonDates {
-  [key: string]: string;
-}
-
-interface LessonOverride {
-  id: string;
-  original_date: string;
-  new_date: string | null;
-  is_cancelled: boolean;
-}
-
 export function LessonTracker({ studentId, studentName, teacherId }: LessonTrackerProps) {
   const { t } = useTranslation();
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const [lessonDates, setLessonDates] = useState<LessonDates>({});
   const [studentLessonDays, setStudentLessonDays] = useState<number[]>([]);
-  const [lessonOverrides, setLessonOverrides] = useState<LessonOverride[]>([]);
+  const [lessonOverrides, setLessonOverrides] = useState<LessonOverrideBasic[]>([]);
   const [loading, setLoading] = useState(true);
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingLesson, setPendingLesson] = useState<number | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    // Guard: Don't fetch if IDs are missing or empty (e.g., during logout)
     if (!studentId || !teacherId) {
       setLoading(false);
       return;
     }
     
-    // CRITICAL: Fetch schedule FIRST before tracking, to ensure studentLessonDays is populated
     const loadData = async () => {
       await fetchStudentSchedule();
       await fetchLessonOverrides();
@@ -71,9 +64,7 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
         .order("day_of_week");
 
       if (error) throw error;
-
-      const days = data.map((lesson: any) => lesson.day_of_week);
-      setStudentLessonDays(days);
+      setStudentLessonDays(data.map((lesson: any) => lesson.day_of_week));
     } catch (error: any) {
       console.error("Failed to fetch student schedule:", error);
     }
@@ -96,8 +87,6 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
 
   const fetchTracking = async () => {
     try {
-      // CRITICAL: Get the MOST RECENT tracking record by ordering by updated_at DESC
-      // This ensures consistent results when multiple records exist
       const { data: records, error } = await supabase
         .from("student_lesson_tracking")
         .select("*")
@@ -113,7 +102,6 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
         setCompletedLessons((data as any).completed_lessons || []);
         setLessonDates((data as any).lesson_dates || {});
       } else {
-        // Create initial tracking record based on student's lessons per week
         const { data: lessonsData } = await supabase
           .from("student_lessons")
           .select("id")
@@ -151,60 +139,8 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
     }
   };
 
-  const calculateLessonDates = (markedLessonNumber: number, markedDate: Date): LessonDates => {
-    if (studentLessonDays.length === 0) return {};
-
-    const dates: LessonDates = {};
-    const totalLessons = studentLessonDays.length * 4; // 4 weeks
-    
-    // Set the marked lesson's date
-    dates[markedLessonNumber.toString()] = format(markedDate, "yyyy-MM-dd");
-    
-    // Calculate dates for lessons BEFORE the marked lesson (going backwards)
-    let currentDate = new Date(markedDate);
-    currentDate.setHours(0, 0, 0, 0);
-    
-    for (let lessonCount = markedLessonNumber - 1; lessonCount >= 1; lessonCount--) {
-      // Find the previous lesson day (going backwards)
-      let daysToSubtract = 1;
-      let prevDate = addDays(currentDate, -daysToSubtract);
-      
-      while (!studentLessonDays.includes(prevDate.getDay())) {
-        daysToSubtract++;
-        prevDate = addDays(currentDate, -daysToSubtract);
-      }
-      
-      currentDate = prevDate;
-      dates[lessonCount.toString()] = format(currentDate, "yyyy-MM-dd");
-    }
-    
-    // Calculate dates for lessons AFTER the marked lesson (going forwards)
-    currentDate = new Date(markedDate);
-    currentDate.setHours(0, 0, 0, 0);
-    
-    for (let lessonCount = markedLessonNumber + 1; lessonCount <= totalLessons; lessonCount++) {
-      // Find the next lesson day
-      let daysToAdd = 1;
-      let nextDate = addDays(currentDate, daysToAdd);
-      
-      while (!studentLessonDays.includes(nextDate.getDay())) {
-        daysToAdd++;
-        nextDate = addDays(currentDate, daysToAdd);
-      }
-      
-      currentDate = nextDate;
-      dates[lessonCount.toString()] = format(currentDate, "yyyy-MM-dd");
-    }
-
-    return dates;
-  };
-
   const handleLessonClick = (lessonNumber: number) => {
-    // If already completed, don't allow unchecking
-    if (completedLessons.includes(lessonNumber)) {
-      return;
-    }
-
+    if (completedLessons.includes(lessonNumber)) return;
     setPendingLesson(lessonNumber);
     setShowConfirm(true);
   };
@@ -213,7 +149,6 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
     if (pendingLesson === null) return;
 
     try {
-      // CRITICAL: Ensure student lesson days are loaded before calculating dates
       if (studentLessonDays.length === 0) {
         toast({
           title: t("common.error"),
@@ -228,13 +163,11 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
       const newCompletedLessons = [...completedLessons, pendingLesson].sort((a, b) => a - b);
       let newLessonDates = { ...lessonDates };
 
-      // If this is the first time marking a lesson, calculate all dates based on the marked lesson
       if (Object.keys(lessonDates).length === 0) {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        newLessonDates = calculateLessonDates(pendingLesson, today);
+        newLessonDates = calculateLessonDates(pendingLesson, today, studentLessonDays);
         
-        // Double check that dates were calculated correctly
         if (Object.keys(newLessonDates).length === 0) {
           toast({
             title: t("common.error"), 
@@ -247,7 +180,6 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
         }
       }
 
-      // CRITICAL: Get the most recent tracking record ID first, then update by ID
       const { data: existingRecords } = await supabase
         .from("student_lesson_tracking")
         .select("id")
@@ -270,8 +202,7 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
 
       if (error) throw error;
 
-      // Update teacher balance
-      await updateTeacherBalance();
+      await addRegularLessonToBalance(teacherId, studentId);
 
       setCompletedLessons(newCompletedLessons);
       setLessonDates(newLessonDates);
@@ -291,133 +222,9 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
     }
   };
 
-  const updateTeacherBalance = async () => {
-    try {
-      // Get lesson duration
-      const { data: lessonData } = await supabase
-        .from("student_lessons")
-        .select("start_time, end_time")
-        .eq("student_id", studentId)
-        .eq("teacher_id", teacherId)
-        .limit(1)
-        .single();
-
-      if (!lessonData) return;
-
-      const startTime = new Date(`2000-01-01T${lessonData.start_time}`);
-      const endTime = new Date(`2000-01-01T${lessonData.end_time}`);
-      const durationMinutes = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
-
-      // Check if teacher balance exists
-      const { data: existingBalance } = await supabase
-        .from("teacher_balance")
-        .select("*")
-        .eq("teacher_id", teacherId)
-        .maybeSingle();
-
-      if (existingBalance) {
-        // Update existing balance
-        await supabase
-          .from("teacher_balance")
-          .update({
-            total_minutes: existingBalance.total_minutes + durationMinutes,
-            completed_regular_lessons: existingBalance.completed_regular_lessons + 1,
-            regular_lessons_minutes: existingBalance.regular_lessons_minutes + durationMinutes,
-          })
-          .eq("teacher_id", teacherId);
-      } else {
-        // Create new balance
-        await supabase.from("teacher_balance").insert({
-          teacher_id: teacherId,
-          total_minutes: durationMinutes,
-          completed_regular_lessons: 1,
-          completed_trial_lessons: 0,
-          regular_lessons_minutes: durationMinutes,
-          trial_lessons_minutes: 0,
-        });
-      }
-    } catch (error) {
-      console.error("Error updating teacher balance:", error);
-    }
-  };
-
   const totalLessonsPerMonth = studentLessonDays.length * 4;
-
-  // Satır yapılandırması
-  const getRowConfig = () => {
-    if (studentLessonDays.length === 1) return { rows: 1, buttonsPerRow: 4 };
-    if (studentLessonDays.length === 2) return { rows: 2, buttonsPerRow: 4 };
-    return { rows: 2, buttonsPerRow: 6 };
-  };
-
-  const rowConfig = getRowConfig();
-
-  // Build sorted lesson data with overrides applied
-  const getSortedLessons = () => {
-    const lessonsWithDates: { lessonNumber: number; originalDate: string; effectiveDate: string; isCancelled: boolean }[] = [];
-    
-    for (let i = 1; i <= totalLessonsPerMonth; i++) {
-      const originalDate = lessonDates[i.toString()];
-      if (!originalDate) continue;
-      
-      const override = lessonOverrides.find((o) => o.original_date === originalDate);
-      const isCancelled = override?.is_cancelled || false;
-      const effectiveDate = override && override.new_date && !isCancelled 
-        ? override.new_date 
-        : originalDate;
-      
-      lessonsWithDates.push({
-        lessonNumber: i,
-        originalDate,
-        effectiveDate,
-        isCancelled,
-      });
-    }
-    
-    // Sort by effective date (chronological order)
-    lessonsWithDates.sort((a, b) => {
-      // Cancelled lessons go to their original position
-      if (a.isCancelled && b.isCancelled) return a.originalDate.localeCompare(b.originalDate);
-      if (a.isCancelled) return a.originalDate.localeCompare(b.effectiveDate);
-      if (b.isCancelled) return a.effectiveDate.localeCompare(b.originalDate);
-      return a.effectiveDate.localeCompare(b.effectiveDate);
-    });
-    
-    return lessonsWithDates;
-  };
-
-  const sortedLessons = getSortedLessons();
-
-  // Create a map from display position to lesson data
-  const getDisplayLessonData = (displayPosition: number) => {
-    if (Object.keys(lessonDates).length === 0) {
-      // No dates yet, show sequential numbers
-      return {
-        lessonNumber: displayPosition,
-        displayDate: null,
-        isCancelled: false,
-        isOverridden: false,
-      };
-    }
-    
-    // Find the lesson at this display position from sorted array
-    const lessonData = sortedLessons[displayPosition - 1];
-    if (!lessonData) {
-      return {
-        lessonNumber: displayPosition,
-        displayDate: null,
-        isCancelled: false,
-        isOverridden: false,
-      };
-    }
-    
-    return {
-      lessonNumber: lessonData.lessonNumber,
-      displayDate: lessonData.effectiveDate,
-      isCancelled: lessonData.isCancelled,
-      isOverridden: lessonData.effectiveDate !== lessonData.originalDate,
-    };
-  };
+  const rowConfig = getRowConfig(studentLessonDays.length);
+  const sortedLessons = getSortedLessons(lessonDates, lessonOverrides, totalLessonsPerMonth);
 
   if (loading) {
     return <div className="animate-pulse h-40 bg-muted rounded-lg"></div>;
@@ -426,7 +233,6 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
   return (
     <>
       <div className="flex items-center gap-3">
-        {/* İşlenen Dersler */}
         <div className="flex items-center gap-2 border-2 border-border rounded-xl p-2.5 bg-secondary/20 shadow-sm">
           <div className="flex flex-col gap-1.5">
             {Array.from({ length: rowConfig.rows }, (_, rowIndex) => (
@@ -435,7 +241,7 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
                   const displayPosition = rowIndex * rowConfig.buttonsPerRow + colIndex + 1;
                   if (displayPosition > totalLessonsPerMonth) return null;
 
-                  const lessonData = getDisplayLessonData(displayPosition);
+                  const lessonData = getDisplayLessonData(sortedLessons, lessonDates, displayPosition);
                   const { lessonNumber, displayDate, isCancelled, isOverridden } = lessonData;
                   const isCompleted = completedLessons.includes(lessonNumber);
 
@@ -475,7 +281,6 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
         </div>
       </div>
 
-      {/* Onaylama Dialog */}
       <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>

@@ -10,24 +10,9 @@ import { useLessonOverrides, getLessonDateForCurrentWeek, LessonOverride } from 
 import { format, startOfWeek, addDays } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/contexts/LanguageContext";
-
-interface StudentLesson {
-  id: string;
-  student_id: string;
-  day_of_week: number;
-  start_time: string;
-  end_time: string;
-  student_name: string;
-  is_completed: boolean;
-  note?: string;
-}
-interface TrialLesson {
-  id: string;
-  day_of_week: number;
-  start_time: string;
-  end_time: string;
-  is_completed: boolean;
-}
+import type { StudentLesson, TrialLesson } from "@/types/lessons";
+import { formatTime as formatTimeUtil } from "@/utils/lessonDateUtils";
+import { addTrialLessonToBalance, subtractTrialLessonFromBalance } from "@/services/teacherBalanceService";
 interface WeeklyScheduleDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -50,7 +35,7 @@ export function WeeklyScheduleDialog({
     toast
   } = useToast();
   const { t } = useTranslation();
-  const { daysOfWeek } = useLanguage();
+  const { daysOfWeek, language } = useLanguage();
   const { overrides, isLessonCancelled, getLessonOverride, refetch: refetchOverrides } = useLessonOverrides(teacherId);
   const DAYS = daysOfWeek.map(d => d.label);
   useEffect(() => {
@@ -150,14 +135,8 @@ export function WeeklyScheduleDialog({
     }
   };
   const formatTime = (time: string) => {
-    try {
-      return new Date(`2000-01-01T${time}`).toLocaleTimeString("tr-TR", {
-        hour: "2-digit",
-        minute: "2-digit"
-      });
-    } catch {
-      return time;
-    }
+    const locale = language === 'tr' ? 'tr-TR' : language === 'es' ? 'es-ES' : 'en-US';
+    return formatTimeUtil(time, locale);
   };
   // Get the date for a specific day in the current week
   const getDateForDayIndex = (dayIndex: number): Date => {
@@ -267,8 +246,7 @@ export function WeeklyScheduleDialog({
       }).eq("id", selectedTrialLesson.id);
       if (error) throw error;
 
-      // Update teacher balance
-      await updateTeacherBalance(selectedTrialLesson);
+      await addTrialLessonToBalance(teacherId, selectedTrialLesson);
       toast({
         title: t("common.success"),
         description: t("dialogs.weeklySchedule.trialMarked")
@@ -297,8 +275,7 @@ export function WeeklyScheduleDialog({
       }).eq("id", selectedTrialLesson.id);
       if (error) throw error;
 
-      // Subtract from teacher balance
-      await subtractFromTeacherBalance(selectedTrialLesson);
+      await subtractTrialLessonFromBalance(teacherId, selectedTrialLesson);
       toast({
         title: t("common.success"),
         description: t("dialogs.weeklySchedule.trialUnmarked")
@@ -314,60 +291,6 @@ export function WeeklyScheduleDialog({
       setSelectedTrialLesson(null);
       setConfirmAction(null);
       setProcessing(false);
-    }
-  };
-  const subtractFromTeacherBalance = async (lesson: TrialLesson) => {
-    try {
-      const startTime = new Date(`2000-01-01T${lesson.start_time}`);
-      const endTime = new Date(`2000-01-01T${lesson.end_time}`);
-      const durationMinutes = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
-
-      // Get current balance
-      const {
-        data: existingBalance
-      } = await supabase.from("teacher_balance").select("*").eq("teacher_id", teacherId).maybeSingle();
-      if (existingBalance) {
-        // Subtract from existing balance
-        await supabase.from("teacher_balance").update({
-          total_minutes: Math.max(0, existingBalance.total_minutes - durationMinutes),
-          completed_trial_lessons: Math.max(0, existingBalance.completed_trial_lessons - 1),
-          trial_lessons_minutes: Math.max(0, existingBalance.trial_lessons_minutes - durationMinutes)
-        }).eq("teacher_id", teacherId);
-      }
-    } catch (error) {
-      console.error("Error subtracting from teacher balance:", error);
-    }
-  };
-  const updateTeacherBalance = async (lesson: TrialLesson) => {
-    try {
-      const startTime = new Date(`2000-01-01T${lesson.start_time}`);
-      const endTime = new Date(`2000-01-01T${lesson.end_time}`);
-      const durationMinutes = Math.round((endTime.getTime() - startTime.getTime()) / 60000);
-
-      // Check if teacher balance exists
-      const {
-        data: existingBalance
-      } = await supabase.from("teacher_balance").select("*").eq("teacher_id", teacherId).maybeSingle();
-      if (existingBalance) {
-        // Update existing balance
-        await supabase.from("teacher_balance").update({
-          total_minutes: existingBalance.total_minutes + durationMinutes,
-          completed_trial_lessons: existingBalance.completed_trial_lessons + 1,
-          trial_lessons_minutes: existingBalance.trial_lessons_minutes + durationMinutes
-        }).eq("teacher_id", teacherId);
-      } else {
-        // Create new balance
-        await supabase.from("teacher_balance").insert({
-          teacher_id: teacherId,
-          total_minutes: durationMinutes,
-          completed_regular_lessons: 0,
-          completed_trial_lessons: 1,
-          regular_lessons_minutes: 0,
-          trial_lessons_minutes: durationMinutes
-        });
-      }
-    } catch (error) {
-      console.error("Error updating teacher balance:", error);
     }
   };
   const timeSlots = getAllTimeSlots();
