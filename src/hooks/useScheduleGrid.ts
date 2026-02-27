@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfWeek, addDays } from "date-fns";
+import { startOfWeek, addDays, format } from "date-fns";
 import type { StudentLesson, TrialLesson } from "@/types/lessons";
 
 const STUDENT_COLORS = [
@@ -32,11 +32,19 @@ interface UseScheduleGridResult {
   refetch: () => Promise<void>;
   getDateForDayIndex: (dayIndex: number) => Date;
   getTrialLessonForDayAndTime: (dayIndex: number, timeSlot: string) => TrialLesson | undefined;
+  mode: "template" | "actual";
+  setMode: (mode: "template" | "actual") => void;
+  /** In actual mode, lessons that are instances for the current week */
+  actualLessons: StudentLesson[];
 }
 
 /**
  * Shared hook for fetching and managing schedule grid data.
  * Used by both WeeklyScheduleDialog (teacher) and AdminWeeklySchedule (admin).
+ * 
+ * Supports two modes:
+ * - "template": Shows template slots from student_lessons (default behavior)
+ * - "actual": Shows actual lesson_instances for the current week
  */
 export function useScheduleGrid({
   teacherId,
@@ -44,9 +52,11 @@ export function useScheduleGrid({
   channelSuffix = "default",
 }: UseScheduleGridOptions): UseScheduleGridResult {
   const [lessons, setLessons] = useState<StudentLesson[]>([]);
+  const [actualLessons, setActualLessons] = useState<StudentLesson[]>([]);
   const [trialLessons, setTrialLessons] = useState<TrialLesson[]>([]);
   const [studentColors, setStudentColors] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [mode, setMode] = useState<"template" | "actual">("actual");
 
   const fetchSchedule = useCallback(async () => {
     try {
@@ -63,7 +73,7 @@ export function useScheduleGrid({
 
       const activeStudentIds = (activeStudents || []).map((s) => s.student_id);
 
-      // Fetch regular lessons only for active students
+      // Always fetch template lessons (needed for template mode and color mapping)
       const { data: lessonsData, error: lessonsError } = await supabase
         .from("student_lessons")
         .select("id, student_id, day_of_week, start_time, end_time, is_completed, note")
@@ -92,7 +102,6 @@ export function useScheduleGrid({
 
       if (profilesError) throw profilesError;
 
-      // Create student name map
       const studentNameMap: Record<string, string> = {};
       (profilesData || []).forEach((profile) => {
         studentNameMap[profile.user_id] = profile.full_name;
@@ -109,6 +118,42 @@ export function useScheduleGrid({
         note: lesson.note,
       }));
       setLessons(formattedLessons);
+
+      // Fetch actual lesson instances for current week
+      const today = new Date();
+      const weekStart = startOfWeek(today, { weekStartsOn: 1 });
+      const weekEnd = addDays(weekStart, 6);
+      const weekStartStr = format(weekStart, "yyyy-MM-dd");
+      const weekEndStr = format(weekEnd, "yyyy-MM-dd");
+
+      const { data: instancesData, error: instancesError } = await supabase
+        .from("lesson_instances")
+        .select("id, student_id, lesson_date, start_time, end_time, status, lesson_number")
+        .eq("teacher_id", teacherId)
+        .in("student_id", activeStudentIds.length > 0 ? activeStudentIds : ["no-students"])
+        .gte("lesson_date", weekStartStr)
+        .lte("lesson_date", weekEndStr)
+        .in("status", ["planned", "completed"])
+        .order("start_time", { ascending: true });
+
+      if (instancesError) throw instancesError;
+
+      // Convert instances to StudentLesson format for grid rendering
+      const actualFormatted: StudentLesson[] = (instancesData || []).map((inst) => {
+        const instDate = new Date(inst.lesson_date + "T00:00:00");
+        const dayOfWeek = instDate.getDay(); // 0=Sun
+        return {
+          id: inst.id,
+          student_id: inst.student_id,
+          day_of_week: dayOfWeek,
+          start_time: inst.start_time,
+          end_time: inst.end_time,
+          student_name: studentNameMap[inst.student_id] || "Bilinmeyen",
+          is_completed: inst.status === "completed",
+          note: undefined,
+        };
+      });
+      setActualLessons(actualFormatted);
 
       // Assign colors to students
       const uniqueStudents = Array.from(new Set(formattedLessons.map((l) => l.student_id)));
@@ -178,5 +223,8 @@ export function useScheduleGrid({
     refetch: fetchSchedule,
     getDateForDayIndex,
     getTrialLessonForDayAndTime,
+    mode,
+    setMode,
+    actualLessons,
   };
 }
