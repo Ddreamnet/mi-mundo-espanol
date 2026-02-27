@@ -16,6 +16,7 @@ import { WeeklyScheduleDialog } from "./WeeklyScheduleDialog";
 import { TeacherBalanceDialog } from "./TeacherBalanceDialog";
 import { StudentAboutDialog } from "./StudentAboutDialog";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatTime as formatTimeUtil, getLocale } from "@/utils/lessonDateUtils";
 
 interface StudentLesson {
   id?: string;
@@ -154,11 +155,7 @@ export function TeacherDashboard() {
 
   const formatTime = (time?: string) => {
     if (!time) return "";
-    const locale = language === "tr" ? "tr-TR" : language === "es" ? "es-ES" : "en-US";
-    return new Date(`2000-01-01T${time}`).toLocaleTimeString(locale, {
-      hour: "numeric",
-      minute: "2-digit"
-    });
+    return formatTimeUtil(time, getLocale(language));
   };
 
   const getLessonStatus = (dayOfWeek: number, startTime: string) => {
