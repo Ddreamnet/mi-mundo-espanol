@@ -1,5 +1,12 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { ConflictInfo } from "@/types/lessonInstance";
+
+export interface ConflictInfo {
+  studentName: string;
+  date: string;
+  timeRange: string;
+  type: "lesson" | "trial";
+  teacherId: string;
+}
 
 /**
  * Pure function: check if two time ranges overlap.
@@ -17,14 +24,17 @@ export function hasTimeOverlap(
 /**
  * Check a teacher's actual schedule for conflicts on a given date+time range.
  * Queries lesson_instances (planned/completed) and trial_lessons.
- * Returns an array of ConflictInfo for any overlapping entries.
+ * 
+ * @param excludeInstanceId - Exclude a specific instance (for editing that instance)
+ * @param excludeStudentId - Exclude ALL instances for a student (prevents self-conflict)
  */
 export async function checkTeacherConflicts(
   teacherId: string,
   date: string,
   startTime: string,
   endTime: string,
-  excludeInstanceId?: string
+  excludeInstanceId?: string,
+  excludeStudentId?: string
 ): Promise<ConflictInfo[]> {
   const conflicts: ConflictInfo[] = [];
 
@@ -43,26 +53,32 @@ export async function checkTeacherConflicts(
   const { data: instances } = await instanceQuery;
 
   if (instances && instances.length > 0) {
-    // Fetch student names for conflict display
-    const studentIds = [...new Set(instances.map((i) => i.student_id))];
-    const { data: profiles } = await supabase
-      .from("profiles")
-      .select("user_id, full_name")
-      .in("user_id", studentIds);
+    // Filter out excluded student's instances
+    const filteredInstances = excludeStudentId
+      ? instances.filter((i) => i.student_id !== excludeStudentId)
+      : instances;
 
-    const nameMap = new Map(
-      (profiles || []).map((p) => [p.user_id, p.full_name])
-    );
+    if (filteredInstances.length > 0) {
+      const studentIds = [...new Set(filteredInstances.map((i) => i.student_id))];
+      const { data: profiles } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", studentIds);
 
-    for (const inst of instances) {
-      if (hasTimeOverlap(startTime, endTime, inst.start_time, inst.end_time)) {
-        conflicts.push({
-          studentName: nameMap.get(inst.student_id) || "Öğrenci",
-          date: inst.lesson_date,
-          timeRange: `${inst.start_time.slice(0, 5)} - ${inst.end_time.slice(0, 5)}`,
-          type: "lesson",
-          teacherId,
-        });
+      const nameMap = new Map(
+        (profiles || []).map((p) => [p.user_id, p.full_name])
+      );
+
+      for (const inst of filteredInstances) {
+        if (hasTimeOverlap(startTime, endTime, inst.start_time, inst.end_time)) {
+          conflicts.push({
+            studentName: nameMap.get(inst.student_id) || "Öğrenci",
+            date: inst.lesson_date,
+            timeRange: `${inst.start_time.slice(0, 5)} - ${inst.end_time.slice(0, 5)}`,
+            type: "lesson",
+            teacherId,
+          });
+        }
       }
     }
   }
@@ -89,4 +105,29 @@ export async function checkTeacherConflicts(
   }
 
   return conflicts;
+}
+
+/**
+ * Batch conflict check for multiple instances.
+ */
+export async function checkTeacherConflictsBatch(
+  teacherId: string,
+  instances: { lessonDate: string; startTime: string; endTime: string }[],
+  excludeStudentId?: string
+): Promise<ConflictInfo[]> {
+  const allConflicts: ConflictInfo[] = [];
+
+  for (const inst of instances) {
+    const conflicts = await checkTeacherConflicts(
+      teacherId,
+      inst.lessonDate,
+      inst.startTime,
+      inst.endTime,
+      undefined,
+      excludeStudentId
+    );
+    allConflicts.push(...conflicts);
+  }
+
+  return allConflicts;
 }

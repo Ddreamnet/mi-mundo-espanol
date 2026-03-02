@@ -12,7 +12,7 @@ import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { StudentLesson, TrialLesson } from "@/types/lessons";
 import { formatTime as formatTimeUtil } from "@/utils/lessonDateUtils";
-import { addTrialLessonToBalance, subtractTrialLessonFromBalance } from "@/services/teacherBalanceService";
+import { addTrialLessonToBalance, subtractTrialLessonFromBalance } from "@/lib/teacherBalance";
 import { useScheduleGrid } from "@/hooks/useScheduleGrid";
 
 interface WeeklyScheduleDialogProps {

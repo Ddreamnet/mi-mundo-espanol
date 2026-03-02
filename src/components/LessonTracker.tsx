@@ -14,14 +14,11 @@ import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { Ban } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { LessonDates, LessonOverrideBasic } from "@/types/lessons";
-import {
-  getSortedLessons,
-  getDisplayLessonData,
-  getRowConfig,
-  calculateLessonDates,
-} from "@/utils/lessonDateUtils";
-import { addRegularLessonToBalance, addRegularLessonToBalanceFromInstance } from "@/services/teacherBalanceService";
+import type { LessonDates, LessonOverrideInfo } from "@/lib/lessonTypes";
+import { getRowConfig } from "@/lib/lessonTypes";
+import { getSortedLessons, getDisplayLessonData } from "@/lib/lessonSorting";
+import { calculateLessonDates } from "@/lib/lessonDateCalculation";
+import { addRegularLessonBalance } from "@/lib/teacherBalance";
 
 interface InstanceData {
   id: string;
@@ -43,11 +40,12 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const [lessonDates, setLessonDates] = useState<LessonDates>({});
   const [studentLessonDays, setStudentLessonDays] = useState<number[]>([]);
-  const [lessonOverrides, setLessonOverrides] = useState<LessonOverrideBasic[]>([]);
+  const [lessonOverrides, setLessonOverrides] = useState<LessonOverrideInfo[]>([]);
   const [loading, setLoading] = useState(true);
   const [showConfirm, setShowConfirm] = useState(false);
   const [pendingLesson, setPendingLesson] = useState<number | null>(null);
-  const [lessonInstances, setLessonInstances] = useState<InstanceData[]>([]);
+  const [pendingInstanceId, setPendingInstanceId] = useState<string | null>(null);
+  const [instances, setInstances] = useState<InstanceData[]>([]);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -60,7 +58,7 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
       await fetchStudentSchedule();
       await fetchLessonOverrides();
       await fetchTracking();
-      await fetchLessonInstances();
+      await fetchInstances();
     };
     loadData();
   }, [studentId, teacherId]);
@@ -96,17 +94,18 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
     }
   };
 
-  const fetchLessonInstances = async () => {
+  const fetchInstances = async () => {
     try {
       const { data, error } = await supabase
         .from("lesson_instances")
         .select("id, lesson_number, lesson_date, start_time, end_time, status")
         .eq("student_id", studentId)
         .eq("teacher_id", teacherId)
-        .order("lesson_date", { ascending: true });
+        .order("lesson_date", { ascending: true })
+        .order("start_time", { ascending: true });
 
       if (error) throw error;
-      setLessonInstances(data || []);
+      setInstances(data || []);
     } catch (error: any) {
       console.error("Failed to fetch lesson instances:", error);
     }
@@ -166,9 +165,10 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
     }
   };
 
-  const handleLessonClick = (lessonNumber: number) => {
+  const handleLessonClick = (lessonNumber: number, instanceId?: string) => {
     if (completedLessons.includes(lessonNumber)) return;
     setPendingLesson(lessonNumber);
+    setPendingInstanceId(instanceId || null);
     setShowConfirm(true);
   };
 
@@ -184,16 +184,19 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
         });
         setShowConfirm(false);
         setPendingLesson(null);
+        setPendingInstanceId(null);
         return;
       }
 
+      const totalLessons = studentLessonDays.length * 4;
       const newCompletedLessons = [...completedLessons, pendingLesson].sort((a, b) => a - b);
       let newLessonDates = { ...lessonDates };
 
+      // First mark: calculate all dates and sync to instances
       if (Object.keys(lessonDates).length === 0) {
         const today = new Date();
         today.setHours(0, 0, 0, 0);
-        newLessonDates = calculateLessonDates(pendingLesson, today, studentLessonDays);
+        newLessonDates = calculateLessonDates(pendingLesson, today, studentLessonDays, totalLessons);
         
         if (Object.keys(newLessonDates).length === 0) {
           toast({
@@ -203,7 +206,19 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
           });
           setShowConfirm(false);
           setPendingLesson(null);
+          setPendingInstanceId(null);
           return;
+        }
+
+        // Sync calculated dates to instances
+        for (const inst of instances) {
+          const dateForLesson = newLessonDates[inst.lesson_number.toString()];
+          if (dateForLesson) {
+            await supabase
+              .from("lesson_instances")
+              .update({ lesson_date: dateForLesson })
+              .eq("id", inst.id);
+          }
         }
       }
 
@@ -230,15 +245,18 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
       if (error) throw error;
 
       // Update lesson_instances and use instance-aware balance
-      const matchingInstance = lessonInstances.find((i) => i.lesson_number === pendingLesson);
+      const matchingInstance = pendingInstanceId
+        ? instances.find((i) => i.id === pendingInstanceId)
+        : instances.find((i) => i.lesson_number === pendingLesson);
+
       if (matchingInstance) {
         await supabase
           .from("lesson_instances")
           .update({ status: "completed" })
           .eq("id", matchingInstance.id);
-        await addRegularLessonToBalanceFromInstance(teacherId, matchingInstance.id);
+        await addRegularLessonBalance(teacherId, studentId, matchingInstance.id);
       } else {
-        await addRegularLessonToBalance(teacherId, studentId);
+        await addRegularLessonBalance(teacherId, studentId);
       }
 
       setCompletedLessons(newCompletedLessons);
@@ -256,12 +274,20 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
     } finally {
       setShowConfirm(false);
       setPendingLesson(null);
+      setPendingInstanceId(null);
     }
   };
 
   const totalLessonsPerMonth = studentLessonDays.length * 4;
   const rowConfig = getRowConfig(studentLessonDays.length);
-  const sortedLessons = getSortedLessons(lessonDates, lessonOverrides, totalLessonsPerMonth);
+
+  // Build instanceStartTimes map for time-aware sorting
+  const instanceStartTimes: Record<string, string> = {};
+  instances.forEach((inst) => {
+    instanceStartTimes[inst.lesson_number.toString()] = inst.start_time;
+  });
+
+  const sortedLessons = getSortedLessons(lessonDates, lessonOverrides, totalLessonsPerMonth, instanceStartTimes);
 
   if (loading) {
     return <div className="animate-pulse h-40 bg-muted rounded-lg"></div>;
@@ -282,10 +308,13 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
                   const { lessonNumber, displayDate, isCancelled, isOverridden } = lessonData;
                   const isCompleted = completedLessons.includes(lessonNumber);
 
+                  // Find matching instance for this lesson number
+                  const inst = instances.find((i) => i.lesson_number === lessonNumber);
+
                   return (
                     <div key={displayPosition} className="flex flex-col items-center gap-0.5">
                       <button
-                        onClick={() => handleLessonClick(lessonNumber)}
+                        onClick={() => handleLessonClick(lessonNumber, inst?.id)}
                         disabled={isCompleted || isCancelled}
                         className={`
                           h-8 w-8 rounded-lg border-2 transition-all duration-200 font-semibold text-xs
@@ -327,7 +356,7 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setPendingLesson(null)} className="border-2 border-muted-foreground/30 bg-transparent text-card-foreground hover:bg-muted hover:border-muted-foreground/40">{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogCancel onClick={() => { setPendingLesson(null); setPendingInstanceId(null); }} className="border-2 border-muted-foreground/30 bg-transparent text-card-foreground hover:bg-muted hover:border-muted-foreground/40">{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction onClick={confirmLessonComplete}>{t("common.confirm")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
