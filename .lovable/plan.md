@@ -1,177 +1,155 @@
 
-# Major Scheduling Upgrade: Implementation Plan
+# Sync EWD Revival Changes to Mi Mundo Espanol
 
-## Summary
+## Overview
 
-This is a large-scale upgrade introducing a `lesson_instances` table, conflict detection, instance generation, and UI enhancements across the scheduling system. The plan is broken into 8 phases, each independently testable.
+The other project (EWD Revival) has evolved its scheduling system significantly beyond what this project currently has. This plan brings all 10 changed files into alignment. The changes fall into these categories:
 
----
-
-## Phase 1: Database -- Create `lesson_instances` Table
-
-**SQL Migration:**
-- Create `lesson_instances` table with columns: `id`, `student_id`, `teacher_id`, `lesson_number`, `lesson_date`, `start_time`, `end_time`, `status` (planned/completed/cancelled), `original_date`, `original_start_time`, `original_end_time`, `rescheduled_count`, `created_at`, `updated_at`
-- Add UNIQUE constraint on `(student_id, teacher_id, lesson_number)`
-- Create indexes on `(teacher_id, lesson_date, start_time, end_time)` and `(student_id, teacher_id, status)`
-- Add RLS policies mirroring `student_lesson_tracking`: admin ALL, teacher ALL on own, student SELECT on own
-
-**Data Migration Script:**
-- For each `student_lesson_tracking` record, read `lesson_dates` JSON and `completed_lessons` array
-- For each lesson number in `lesson_dates`, look up the student's template slot from `student_lessons` (matching by `day_of_week` derived from the stored date) to get `start_time`/`end_time`
-- Insert into `lesson_instances` with `status = 'completed'` if lesson_number is in `completed_lessons`, else `'planned'`
-- For each `lesson_overrides` row: find matching instance by `original_date`, update its fields, set `rescheduled_count = 1`. If `is_cancelled`, set `status = 'cancelled'`
+1. **Missing files that need to be created** (3 files)
+2. **Existing files that need major rewrites** (5 files)
+3. **Existing files that need minor updates** (2 files)
 
 ---
 
-## Phase 2: Conflict Detection Service
+## Gap Analysis
 
-**New file: `src/lib/conflictDetection.ts`**
-
-- `hasTimeOverlap(startA, endA, startB, endB)`: Pure function, returns `startA < endB && endA > startB` (allows back-to-back where endA === startB)
-- `ConflictInfo` interface: `{ studentName, date, timeRange, type: 'lesson' | 'trial', teacherId }`
-- `checkTeacherConflicts(teacherId, date, startTime, endTime, excludeInstanceId?)`: Queries `lesson_instances` (planned/completed) and `trial_lessons` for that teacher on that date, runs overlap check, returns `ConflictInfo[]`
-
----
-
-## Phase 3: Instance Generation
-
-**New file: `src/lib/instanceGeneration.ts`**
-
-- `generateFutureInstances(templateSlots, existingInstances, totalLessons, startFromDate)`: Generates instance data from template slots for lessons not yet completed
-- `syncTemplateChange(studentId, teacherId, newSlots, existingInstances)`: Keeps completed instances, regenerates planned ones from new template slots, runs conflict checks, returns `{ instances, conflicts }`
-
-**New file: `src/types/lessonInstance.ts`**
-
-- `LessonInstance` interface matching the DB schema
-- `TemplateSlot` interface: `{ dayOfWeek, startTime, endTime }`
+| Feature | EWD Revival (target) | Mi Mundo (current) | Status |
+|---------|---------------------|--------------------| -------|
+| `lessonSync.ts` | Exists with `rebuildLegacyLessonDatesFromInstances` + `checkNonTemplateWeekday` | Does not exist | MISSING |
+| `lessonTypes.ts` | Consolidated types + helpers (`LessonInstance`, `formatTime`, `calculateDurationMinutes`, `getDayName`, `getRowConfig`) | Types split across `types/lessons.ts` + `types/lessonInstance.ts` | NEEDS MERGE |
+| `lessonSorting.ts` | Exists with `instanceStartTimes` parameter for time-aware sorting | Does not exist (logic inline in `lessonDateUtils.ts`) | MISSING |
+| `lessonDateCalculation.ts` | Standalone file with `calculateLessonDates`, `recalculateRemainingDates`, `calculateNextLessonDate` | Logic lives in `lessonDateUtils.ts` and inline in `EditStudentDialog` | NEEDS EXTRACTION |
+| `conflictDetection.ts` | Has `excludeStudentId` parameter + `checkTeacherConflictsBatch` | Missing `excludeStudentId`, no batch function | PARTIAL |
+| `instanceGeneration.ts` | Has `generateFutureInstanceDates`, `syncTemplateChange` (with delete/insert approach), `shiftLessonsForward` | Has `generateFutureInstances` (different signature), `syncTemplateChange` (different approach), no `shiftLessonsForward` | NEEDS REWRITE |
+| `teacherBalance.ts` (as `src/lib/teacherBalance.ts`) | Consolidated in `src/lib/` with `addToTeacherBalance`/`subtractFromTeacherBalance` generic functions | Lives in `src/services/teacherBalanceService.ts` with separate functions per type | NEEDS REWRITE + MOVE |
+| `useScheduleGrid.ts` | Has `ensureInstancesForWeek` (lazy generation, no cap), `fetchActualLessonsForWeek` | Has basic actual mode fetch but no `ensureInstancesForWeek` | NEEDS MAJOR UPDATE |
+| `EditStudentDialog.tsx` | Instance-driven lesson list, `confirmDateUpdate` with conflict checks + `excludeStudentId`, `handleResetAllLessons` deletes + regenerates instances, `handleSubmit` calls `syncTemplateChange` | Legacy JSON-driven, no conflict checks in `confirmDateUpdate`, reset only changes status, `handleSubmit` doesn't sync instances | NEEDS MAJOR REWRITE |
+| `LessonTracker.tsx` | Has `pendingInstanceId`, `instanceStartTimes` map, syncs instance dates on first mark, instance-aware balance | Partially instance-aware but missing `instanceStartTimes`, missing date sync to instances | NEEDS UPDATE |
 
 ---
 
-## Phase 4: Balance Service Update
+## Step-by-Step Implementation
 
-**Modified file: `src/services/teacherBalanceService.ts`**
+### Step 1: Create `src/lib/lessonTypes.ts`
 
-- Add `addRegularLessonToBalanceFromInstance(teacherId, instanceId)`: Reads `start_time`/`end_time` from `lesson_instances` instead of template
-- Add `subtractRegularLessonFromBalanceByInstance(teacherId, instanceId)`: Same but subtract
-- Keep existing functions for backward compatibility during transition
+New file consolidating types and utility functions from the other project:
+- `LessonDates`, `LessonOverrideInfo`, `SortedLesson`, `DisplayLessonData`, `LessonInstance`
+- `getRowConfig(lessonsPerWeek)` -- moved from `lessonDateUtils.ts`
+- `formatTime(time)` -- moved from `lessonDateUtils.ts`
+- `calculateDurationMinutes(startTime, endTime)` -- moved from `lessonDateUtils.ts`
+- `getDayName(dayOfWeek)` -- new helper
 
-**Modified file: `src/components/EditStudentDialog.tsx`** (balance functions only)
+### Step 2: Create `src/lib/lessonSorting.ts`
 
-- `updateTeacherBalance` and `subtractFromTeacherBalance` (lines 339-420): Replace with calls to `teacherBalanceService` functions, passing instance data when available
+New file with:
+- `getSortedLessons(lessonDates, lessonOverrides, totalLessons, instanceStartTimes?)` -- adds optional `instanceStartTimes` param for time-aware sorting of same-date lessons
+- `getDisplayLessonData(sortedLessons, lessonDates, displayPosition)` -- moved from `lessonDateUtils.ts`
+
+### Step 3: Create `src/lib/lessonDateCalculation.ts`
+
+New file extracting:
+- `calculateLessonDates(markedLessonNumber, markedDate, studentLessonDays, totalLessons)` -- from `lessonDateUtils.ts`
+- `recalculateRemainingDates(fromLessonNumber, startDate, currentDates, lessonDays, totalLessons)` -- from `EditStudentDialog` inline logic
+- `calculateNextLessonDate(currentDate, lessonDays)` -- from `LessonOverrideDialog` inline logic
+
+### Step 4: Create `src/lib/lessonSync.ts`
+
+New file with:
+- `rebuildLegacyLessonDatesFromInstances(studentId, teacherId)` -- reads all instances, builds `lesson_number -> lesson_date` map, updates `student_lesson_tracking.lesson_dates`
+- `checkNonTemplateWeekday(studentId, teacherId, dateStr)` -- checks if date falls on a template day, shows info toast if not
+
+### Step 5: Rewrite `src/lib/conflictDetection.ts`
+
+Add:
+- `excludeStudentId` parameter to `checkTeacherConflicts` -- filters out ALL instances for that student (prevents self-conflict)
+- `checkTeacherConflictsBatch(teacherId, instances[])` -- batch conflict check for multiple instances
+
+### Step 6: Rewrite `src/lib/instanceGeneration.ts`
+
+Replace current implementation with EWD Revival version:
+- `generateFutureInstanceDates(templateSlots, count, startFromDate)` -- simpler signature, returns `{ lessonDate, startTime, endTime }[]`
+- `syncTemplateChange(studentId, teacherId, newSlots, totalLessons)` -- reads existing instances from DB, preserves completed, regenerates planned, handles delete/insert of excess/missing, runs conflict checks
+- `shiftLessonsForward(studentId, teacherId, fromInstanceId, templateSlots)` -- "Sonraki Derse Aktar" implementation: shifts target + subsequent planned instances forward by one template slot, saves originals, checks conflicts
+
+### Step 7: Rewrite `src/lib/teacherBalance.ts` (move from `src/services/teacherBalanceService.ts`)
+
+Create `src/lib/teacherBalance.ts` with the EWD Revival consolidated approach:
+- `addToTeacherBalance({ teacherId, lessonType, startTime, endTime })` -- generic add
+- `subtractFromTeacherBalance({ ... })` -- generic subtract with `Math.max(0, ...)`
+- `addRegularLessonBalance(teacherId, studentId, instanceId?)` -- instance-aware wrapper
+- `subtractRegularLessonBalance(teacherId, studentId, instanceId?)` -- instance-aware wrapper
+
+Update all imports across the codebase to use the new path.
+
+### Step 8: Rewrite `src/hooks/useScheduleGrid.ts`
+
+Add `ensureInstancesForWeek(teacherId, weekStart)`:
+- Skip fully past weeks (`weekEnd < today`)
+- Fetch template slots from `student_lessons`
+- Fetch active students from `students`
+- Check existing instances for the week
+- Find students with templates but no instances for this week (`missingStudents`)
+- For each missing student, get `maxLessonNumber` from existing instances
+- Generate instances for each template slot (NO cap on total count)
+- Bulk insert into `lesson_instances`
+
+Update `fetchSchedule` to call `ensureInstancesForWeek` before fetching actual instances.
+
+### Step 9: Major rewrite of `src/components/EditStudentDialog.tsx`
+
+Key changes aligned with EWD Revival:
+- Add `studentUserId` / `teacherUserId` state (resolved once from `students` table)
+- Add `instanceIdMap: Record<string, string>` for `lesson_number -> id` mapping
+- **`sortedLessonsForDisplay`**: Instance-based path when `instances.length > 0`:
+  - Sort by `(lesson_date, start_time)` chronologically
+  - Cap to `totalLessons` (= `lessonsPerWeek * 4`)
+  - Handle `datesUnassigned` state (after reset, `Object.keys(lessonDates).length === 0`)
+- **`handleResetAllLessons`**: Delete ALL instances, regenerate from template with `generateFutureInstanceDates`, single-insert each, clear `lesson_dates: {}` and `completed_lessons: []`
+- **`confirmDateUpdate`**: Add conflict checks with `excludeStudentId`, update instance rows in-place, call `rebuildLegacyLessonDatesFromInstances`, call `checkNonTemplateWeekday`
+- **`handleSubmit`**: Call `syncTemplateChange` when instances exist, create tracking record + generate instances when they don't
+- **`handleDeleteStudent`**: Add `lesson_instances` deletion
+
+### Step 10: Update `src/components/LessonTracker.tsx`
+
+Key changes:
+- Add `pendingInstanceId` state
+- Add `instanceStartTimes` map passed to `getSortedLessons`
+- In `confirmLessonComplete` first-mark path: sync calculated dates to `lesson_instances` (update each instance's `lesson_date`)
+- Pass `instanceId` to `handleLessonClick`
+
+### Step 11: Update imports across all consuming files
+
+Update all files that import from the old locations:
+- `src/utils/lessonDateUtils.ts` keeps `getLocale`, `formatTime`, `calculateLessonDuration` as re-exports or utilities
+- `AdminWeeklySchedule.tsx`, `WeeklyScheduleDialog.tsx`, `TeacherDashboard.tsx` -- update balance service imports
+- `LessonOverrideDialog.tsx` stays mostly unchanged (still uses `lesson_overrides` table for now, conflict check already present)
 
 ---
 
-## Phase 5: Lessons List Upgrade (EditStudentDialog)
+## Files Summary
 
-**Modified file: `src/components/EditStudentDialog.tsx`**
-
-Current: Shows `Ders N | date input` per lesson row, reads from `lesson_dates` JSON
-New: Shows `Ders N | date | start_time - end_time | date input` per lesson row, reads from `lesson_instances`
-
-Changes:
-- Fetch `lesson_instances` instead of (or alongside) `lesson_dates` JSON
-- Sort instances by `(lesson_date, start_time)` for chronological "Ders N" labels
-- Display `start_time - end_time` as read-only text next to each date
-- Date edit with "Kalan gunleri de guncelle" checkbox:
-  - OFF: Only updates `lesson_date` on the instance, preserves times
-  - ON: Regenerates that instance and all subsequent planned instances from template using `syncTemplateChange`
-- Before saving: call `checkTeacherConflicts` for all affected instances, block on conflict
-- Mark/undo lesson: update `lesson_instances.status` AND `completed_lessons` array (kept in sync), call instance-aware balance functions
-
----
-
-## Phase 6: Override Dialog Enhancements
-
-**Modified file: `src/components/LessonOverrideDialog.tsx`**
-
-- "Sonraki Derse Aktar": Find instance, shift it and all subsequent planned instances forward by one template slot using `instanceGeneration.ts`. Run conflict checks. Update `lesson_instances` in-place (set `original_date`/times if not set)
-- "Baska Tarihe Aktar": Update instance's `lesson_date` in-place. Pre-fill time inputs with current start/end. Run conflict check before save. Set `original_*` fields and increment `rescheduled_count`
-- "Geri Al": Restore from `original_*` fields, clear them, reset `rescheduled_count`
-- All operations also sync `lesson_dates` JSON in `student_lesson_tracking` for backward compatibility with `LessonTracker` grid
+| Action | File | Description |
+|--------|------|-------------|
+| CREATE | `src/lib/lessonTypes.ts` | Consolidated types + helpers |
+| CREATE | `src/lib/lessonSorting.ts` | Sorting with time-awareness |
+| CREATE | `src/lib/lessonDateCalculation.ts` | Date calculation algorithms |
+| CREATE | `src/lib/lessonSync.ts` | Legacy sync + template weekday check |
+| CREATE | `src/lib/teacherBalance.ts` | Consolidated balance operations |
+| REWRITE | `src/lib/conflictDetection.ts` | Add `excludeStudentId` + batch check |
+| REWRITE | `src/lib/instanceGeneration.ts` | New API: `generateFutureInstanceDates`, `shiftLessonsForward` |
+| REWRITE | `src/hooks/useScheduleGrid.ts` | Add `ensureInstancesForWeek` lazy generation |
+| REWRITE | `src/components/EditStudentDialog.tsx` | Instance-driven lesson list, conflict checks, template sync |
+| UPDATE | `src/components/LessonTracker.tsx` | `pendingInstanceId`, `instanceStartTimes`, date sync |
+| UPDATE | `src/utils/lessonDateUtils.ts` | Keep as compatibility shim, delegate to new files |
+| DELETE | `src/services/teacherBalanceService.ts` | Replaced by `src/lib/teacherBalance.ts` |
+| UPDATE | Various consumers | Fix imports for moved functions |
 
 ---
 
-## Phase 7: Weekly Grid Upgrade
+## Risk Mitigation
 
-### 7A: Template/Actual Toggle
-
-**Modified files: `src/components/AdminWeeklySchedule.tsx`, `src/components/WeeklyScheduleDialog.tsx`**
-
-- Add `Switch` component near header: "Template | Actual"
-- INACTIVE (default = Actual): Queries `lesson_instances` WHERE `lesson_date` is in current week, plus `trial_lessons`. Shows moved lessons in their actual position
-- ACTIVE (Template): Shows only `student_lessons` template slots. No trials, no overrides
-
-**Modified file: `src/hooks/useScheduleGrid.ts`**
-
-- Add `mode: 'template' | 'actual'` parameter
-- In 'actual' mode: fetch `lesson_instances` for current week instead of `student_lessons`
-- In 'template' mode: existing behavior (fetch `student_lessons`)
-
-### 7B: Back-to-Back Grouping
-
-- Detect consecutive lessons for same student on same day where `end_time` of one === `start_time` of next
-- Render as single combined card with "2 ders" badge
-- Click shows popover/menu to select which instance to modify
-
----
-
-## Phase 8: Trial Lesson Conflict Validation + Tracker Updates
-
-**Modified file: `src/components/AddTrialLessonDialog.tsx`**
-
-- Before saving: call `checkTeacherConflicts(teacherId, lessonDate, startTime, endTime)`
-- If conflicts found: block save, show conflict summary
-
-**Modified files: `src/components/LessonTracker.tsx`, `src/components/StudentLessonTracker.tsx`**
-
-- Read from `lesson_instances` for per-lesson date + time data
-- Continue using `completed_lessons` array for grid checkmark display (kept in sync)
-- Update `getSortedLessons` in `lessonDateUtils.ts` to accept time data, sort by `(date, startTime)`
-
-**Modified file: `src/utils/lessonDateUtils.ts`**
-
-- Update `getSortedLessons` to support time-aware sorting key
-
----
-
-## New Files Summary
-
-| File | Purpose | Est. Lines |
-|------|---------|-----------|
-| SQL migration | `lesson_instances` table + RLS + data migration | ~80 |
-| `src/lib/conflictDetection.ts` | Overlap checks + teacher conflict queries | ~80 |
-| `src/lib/instanceGeneration.ts` | Generate/regenerate instances from template | ~100 |
-| `src/types/lessonInstance.ts` | `LessonInstance` + `TemplateSlot` interfaces | ~30 |
-
-## Modified Files Summary
-
-| File | Key Changes |
-|------|------------|
-| `src/services/teacherBalanceService.ts` | Add instance-aware balance functions |
-| `src/components/EditStudentDialog.tsx` | Show times per row, instance-based CRUD, conflict checks |
-| `src/components/LessonOverrideDialog.tsx` | Instance-based postpone/move/revert with conflict checks |
-| `src/components/AdminWeeklySchedule.tsx` | Template/Actual toggle, back-to-back grouping |
-| `src/components/WeeklyScheduleDialog.tsx` | Template/Actual toggle, back-to-back grouping |
-| `src/hooks/useScheduleGrid.ts` | Support template vs actual mode |
-| `src/components/LessonTracker.tsx` | Read from instances, instance-aware balance |
-| `src/components/StudentLessonTracker.tsx` | Read from instances |
-| `src/utils/lessonDateUtils.ts` | Time-aware sorting |
-| `src/components/AddTrialLessonDialog.tsx` | Conflict validation before save |
-
-## Untouched Files
-
-All landing page components, auth, blog, topics, homework, notifications, admin directory restructuring, and i18n remain unchanged.
-
-## Implementation Order
-
-Phases are sequential (each builds on the previous):
-1. DB migration (foundation)
-2. Conflict detection (pure logic, no UI changes)
-3. Instance generation (pure logic, no UI changes)
-4. Balance service update (low risk, backward compat)
-5. EditStudentDialog upgrade (medium complexity)
-6. LessonOverrideDialog upgrade (medium complexity)
-7. Weekly grid upgrade (medium complexity)
-8. Trial lesson validation + tracker updates (low complexity)
-
-Each phase is independently deployable and testable. Phases 1-4 are additive and do not break existing functionality.
+- All changes are structural refactors that preserve existing UI behavior
+- `ensureInstancesForWeek` with no cap fixes the visibility bug where students with completed months don't appear in new weeks
+- `excludeStudentId` in conflict detection prevents false self-conflicts when editing a student's own dates
+- `rebuildLegacyLessonDatesFromInstances` keeps `student_lesson_tracking.lesson_dates` in sync as a safety net for any code still reading from it
+- Balance operations remain identical in behavior, just consolidated into fewer functions
