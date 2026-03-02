@@ -18,9 +18,7 @@ const STUDENT_COLORS = [
 
 interface UseScheduleGridOptions {
   teacherId: string;
-  /** If true, fetch is triggered immediately. If false, caller must call refetch. */
   autoFetch?: boolean;
-  /** Supabase realtime channel name suffix for deduplication */
   channelSuffix?: string;
 }
 
@@ -34,18 +32,136 @@ interface UseScheduleGridResult {
   getTrialLessonForDayAndTime: (dayIndex: number, timeSlot: string) => TrialLesson | undefined;
   mode: "template" | "actual";
   setMode: (mode: "template" | "actual") => void;
-  /** In actual mode, lessons that are instances for the current week */
   actualLessons: StudentLesson[];
 }
 
 /**
- * Shared hook for fetching and managing schedule grid data.
- * Used by both WeeklyScheduleDialog (teacher) and AdminWeeklySchedule (admin).
- * 
- * Supports two modes:
- * - "template": Shows template slots from student_lessons (default behavior)
- * - "actual": Shows actual lesson_instances for the current week
+ * Lazy-generate lesson_instances for a given teacher + week.
+ * Skips fully past weeks. No cap on total instance count.
  */
+async function ensureInstancesForWeek(teacherId: string, ws: Date) {
+  const weekStart = new Date(ws);
+  weekStart.setHours(0, 0, 0, 0);
+  const weekEnd = addDays(weekStart, 6);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  // Skip fully past weeks
+  if (weekEnd < today) return;
+
+  const weekStartStr = format(weekStart, "yyyy-MM-dd");
+  const weekEndStr = format(weekEnd, "yyyy-MM-dd");
+
+  // 1. Get template slots for this teacher
+  const { data: templates } = await supabase
+    .from("student_lessons")
+    .select("student_id, day_of_week, start_time, end_time")
+    .eq("teacher_id", teacherId);
+
+  if (!templates || templates.length === 0) return;
+
+  // 2. Get active (non-archived) students
+  const { data: activeStudents } = await supabase
+    .from("students")
+    .select("student_id")
+    .eq("teacher_id", teacherId)
+    .eq("is_archived", false);
+
+  const activeIds = new Set((activeStudents || []).map((s) => s.student_id));
+
+  // 3. Check existing instances for this week
+  const { data: existingInstances } = await supabase
+    .from("lesson_instances")
+    .select("student_id, lesson_date")
+    .eq("teacher_id", teacherId)
+    .gte("lesson_date", weekStartStr)
+    .lte("lesson_date", weekEndStr);
+
+  // Build set of "student_id:lesson_date" for quick lookup
+  const existingSet = new Set(
+    (existingInstances || []).map((i) => `${i.student_id}:${i.lesson_date}`)
+  );
+
+  // 4. Group templates by student
+  const templatesByStudent = new Map<string, typeof templates>();
+  for (const t of templates) {
+    if (!activeIds.has(t.student_id)) continue;
+    const arr = templatesByStudent.get(t.student_id) || [];
+    arr.push(t);
+    templatesByStudent.set(t.student_id, arr);
+  }
+
+  // 5. Find missing students who need instances for this week
+  const toInsert: any[] = [];
+
+  // Get max lesson numbers for students that need new instances
+  const studentsNeedingInstances: string[] = [];
+  for (const [studentId, slots] of templatesByStudent) {
+    for (const slot of slots) {
+      // Calculate the date for this slot in this week
+      // day_of_week: 0=Sun, 1=Mon, ..., 6=Sat
+      // weekStart is Monday (weekStartsOn: 1)
+      const dayOffset = slot.day_of_week === 0 ? 6 : slot.day_of_week - 1;
+      const slotDate = format(addDays(weekStart, dayOffset), "yyyy-MM-dd");
+
+      // Skip if date is before today
+      if (slotDate < format(today, "yyyy-MM-dd")) continue;
+
+      // Skip if already exists
+      if (existingSet.has(`${studentId}:${slotDate}`)) continue;
+
+      if (!studentsNeedingInstances.includes(studentId)) {
+        studentsNeedingInstances.push(studentId);
+      }
+    }
+  }
+
+  if (studentsNeedingInstances.length === 0) return;
+
+  // Get max lesson_number for each student needing instances
+  const maxLessonMap = new Map<string, number>();
+  for (const sid of studentsNeedingInstances) {
+    const { data: maxData } = await supabase
+      .from("lesson_instances")
+      .select("lesson_number")
+      .eq("student_id", sid)
+      .eq("teacher_id", teacherId)
+      .order("lesson_number", { ascending: false })
+      .limit(1);
+
+    maxLessonMap.set(sid, maxData && maxData.length > 0 ? maxData[0].lesson_number : 0);
+  }
+
+  // Generate instances
+  for (const [studentId, slots] of templatesByStudent) {
+    if (!studentsNeedingInstances.includes(studentId)) continue;
+    let nextNumber = (maxLessonMap.get(studentId) || 0) + 1;
+
+    for (const slot of slots) {
+      const dayOffset = slot.day_of_week === 0 ? 6 : slot.day_of_week - 1;
+      const slotDate = format(addDays(weekStart, dayOffset), "yyyy-MM-dd");
+
+      if (slotDate < format(today, "yyyy-MM-dd")) continue;
+      if (existingSet.has(`${studentId}:${slotDate}`)) continue;
+
+      toInsert.push({
+        student_id: studentId,
+        teacher_id: teacherId,
+        lesson_number: nextNumber++,
+        lesson_date: slotDate,
+        start_time: slot.start_time,
+        end_time: slot.end_time,
+        status: "planned",
+        rescheduled_count: 0,
+      });
+    }
+  }
+
+  if (toInsert.length > 0) {
+    await supabase.from("lesson_instances").insert(toInsert);
+  }
+}
+
 export function useScheduleGrid({
   teacherId,
   autoFetch = true,
@@ -62,7 +178,6 @@ export function useScheduleGrid({
     try {
       setLoading(true);
 
-      // Get non-archived students for this teacher
       const { data: activeStudents, error: studentsError } = await supabase
         .from("students")
         .select("student_id")
@@ -73,7 +188,7 @@ export function useScheduleGrid({
 
       const activeStudentIds = (activeStudents || []).map((s) => s.student_id);
 
-      // Always fetch template lessons (needed for template mode and color mapping)
+      // Always fetch template lessons
       const { data: lessonsData, error: lessonsError } = await supabase
         .from("student_lessons")
         .select("id, student_id, day_of_week, start_time, end_time, is_completed, note")
@@ -119,9 +234,11 @@ export function useScheduleGrid({
       }));
       setLessons(formattedLessons);
 
-      // Fetch actual lesson instances for current week
+      // Ensure instances exist for current week, then fetch
       const today = new Date();
       const weekStart = startOfWeek(today, { weekStartsOn: 1 });
+      await ensureInstancesForWeek(teacherId, weekStart);
+
       const weekEnd = addDays(weekStart, 6);
       const weekStartStr = format(weekStart, "yyyy-MM-dd");
       const weekEndStr = format(weekEnd, "yyyy-MM-dd");
@@ -138,10 +255,24 @@ export function useScheduleGrid({
 
       if (instancesError) throw instancesError;
 
-      // Convert instances to StudentLesson format for grid rendering
+      // Also fetch names for any instance students not in template
+      const instanceStudentIds = Array.from(
+        new Set((instancesData || []).map((i) => i.student_id))
+      );
+      const missingNameIds = instanceStudentIds.filter((id) => !studentNameMap[id]);
+      if (missingNameIds.length > 0) {
+        const { data: extraProfiles } = await supabase
+          .from("profiles")
+          .select("user_id, full_name")
+          .in("user_id", missingNameIds);
+        (extraProfiles || []).forEach((p) => {
+          studentNameMap[p.user_id] = p.full_name;
+        });
+      }
+
       const actualFormatted: StudentLesson[] = (instancesData || []).map((inst) => {
         const instDate = new Date(inst.lesson_date + "T00:00:00");
-        const dayOfWeek = instDate.getDay(); // 0=Sun
+        const dayOfWeek = instDate.getDay();
         return {
           id: inst.id,
           student_id: inst.student_id,
@@ -155,11 +286,14 @@ export function useScheduleGrid({
       });
       setActualLessons(actualFormatted);
 
-      // Assign colors to students
-      const uniqueStudents = Array.from(new Set(formattedLessons.map((l) => l.student_id)));
+      // Assign colors
+      const allStudentIds = new Set([
+        ...formattedLessons.map((l) => l.student_id),
+        ...actualFormatted.map((l) => l.student_id),
+      ]);
       const colors: Record<string, string> = {};
-      uniqueStudents.forEach((studentId, index) => {
-        colors[studentId] = STUDENT_COLORS[index % STUDENT_COLORS.length];
+      Array.from(allStudentIds).forEach((sid, index) => {
+        colors[sid] = STUDENT_COLORS[index % STUDENT_COLORS.length];
       });
       setStudentColors(colors);
     } finally {
@@ -167,14 +301,12 @@ export function useScheduleGrid({
     }
   }, [teacherId]);
 
-  // Auto-fetch on mount if enabled
   useEffect(() => {
     if (autoFetch && teacherId) {
       fetchSchedule();
     }
   }, [teacherId, autoFetch, fetchSchedule]);
 
-  // Real-time listener for trial lesson updates
   useEffect(() => {
     if (!teacherId) return;
 
@@ -199,14 +331,12 @@ export function useScheduleGrid({
     };
   }, [teacherId, channelSuffix, fetchSchedule]);
 
-  /** Get the date for a specific day index (0=Monday, 6=Sunday) in the current week. */
   const getDateForDayIndex = useCallback((dayIndex: number): Date => {
     const today = new Date();
     const weekStart = startOfWeek(today, { weekStartsOn: 1 });
     return addDays(weekStart, dayIndex);
   }, []);
 
-  /** Find a trial lesson for a given day index and time slot. */
   const getTrialLessonForDayAndTime = useCallback(
     (dayIndex: number, timeSlot: string): TrialLesson | undefined => {
       const dbDayOfWeek = dayIndex === 6 ? 0 : dayIndex + 1;

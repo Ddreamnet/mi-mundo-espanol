@@ -8,8 +8,8 @@ import type { LessonDates, LessonOverrideBasic } from "@/types/lessons";
 import {
   getSortedLessons,
   getDisplayLessonData,
-  getRowConfig,
-} from "@/utils/lessonDateUtils";
+} from "@/lib/lessonSorting";
+import { getRowConfig } from "@/lib/lessonTypes";
 
 interface StudentLessonTrackerProps {
   studentId: string;
