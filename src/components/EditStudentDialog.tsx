@@ -31,7 +31,7 @@ import type { LessonInstance } from "@/lib/lessonTypes";
 import { generateFutureInstanceDates, syncTemplateChange } from "@/lib/instanceGeneration";
 import type { TemplateSlot } from "@/lib/instanceGeneration";
 import { rebuildLegacyLessonDatesFromInstances, checkNonTemplateWeekday } from "@/lib/lessonSync";
-import { recalculateRemainingDates } from "@/lib/lessonDateCalculation";
+
 
 interface StudentLesson {
   id?: string;
@@ -59,6 +59,8 @@ interface InstanceData {
   start_time: string;
   end_time: string;
   status: string;
+  original_date: string | null;
+  rescheduled_count: number;
 }
 
 interface EditStudentDialogProps {
@@ -182,7 +184,7 @@ export function EditStudentDialog({
   const fetchInstances = async (sid: string, tid: string) => {
     const { data, error } = await supabase
       .from("lesson_instances")
-      .select("id, lesson_number, lesson_date, start_time, end_time, status")
+      .select("id, lesson_number, lesson_date, start_time, end_time, status, original_date, rescheduled_count")
       .eq("student_id", sid)
       .eq("teacher_id", tid)
       .order("lesson_date", { ascending: true })
@@ -414,13 +416,52 @@ export function EditStudentDialog({
 
         if (changedKeys.length > 0) {
           const firstChangedLesson = Math.min(...changedKeys.map(Number));
-          finalDates = recalculateRemainingDates(
-            firstChangedLesson,
-            lessonDates[firstChangedLesson.toString()],
-            lessonDates,
-            lessonDays,
-            totalLessons
-          );
+          
+          // Build template slots from current lessons
+          const templateSlots: TemplateSlot[] = lessons.map((l) => ({
+            dayOfWeek: l.dayOfWeek,
+            startTime: l.startTime,
+            endTime: l.endTime,
+          }));
+
+          // Keep the manually changed date for firstChangedLesson
+          finalDates[firstChangedLesson.toString()] = lessonDates[firstChangedLesson.toString()];
+
+          // Regenerate remaining lessons using template-aware generation
+          const remainingCount = totalLessons - firstChangedLesson;
+          if (remainingCount > 0) {
+            const startDate = new Date(lessonDates[firstChangedLesson.toString()] + "T00:00:00");
+            // Start from the day after the changed date
+            const nextDay = new Date(startDate);
+            nextDay.setDate(nextDay.getDate() + 1);
+            const generated = generateFutureInstanceDates(templateSlots, remainingCount, nextDay);
+
+            // Map generated dates to lesson numbers
+            for (let i = 0; i < generated.length; i++) {
+              const lessonNum = firstChangedLesson + 1 + i;
+              if (lessonNum <= totalLessons) {
+                finalDates[lessonNum.toString()] = generated[i].lessonDate;
+                
+                // Also update instance times if instance exists
+                const instId = instanceIdMap[lessonNum.toString()];
+                if (instId) {
+                  const inst = instances.find((ins) => ins.id === instId);
+                  if (inst && inst.status === "planned") {
+                    await supabase
+                      .from("lesson_instances")
+                      .update({
+                        lesson_date: generated[i].lessonDate,
+                        start_time: generated[i].startTime,
+                        end_time: generated[i].endTime,
+                        original_date: inst.lesson_date !== generated[i].lessonDate ? inst.lesson_date : inst.original_date,
+                        rescheduled_count: inst.lesson_date !== generated[i].lessonDate ? inst.rescheduled_count + 1 : inst.rescheduled_count,
+                      })
+                      .eq("id", instId);
+                  }
+                }
+              }
+            }
+          }
         }
       }
 
