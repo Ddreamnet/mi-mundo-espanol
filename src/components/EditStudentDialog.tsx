@@ -1036,6 +1036,23 @@ export function EditStudentDialog({
 
                       if (error) throw error;
 
+                      // Clean up planned instances (keep completed for history)
+                      if (studentUserId && teacherUserId) {
+                        await supabase
+                          .from("lesson_instances")
+                          .delete()
+                          .eq("student_id", studentUserId)
+                          .eq("teacher_id", teacherUserId)
+                          .eq("status", "planned");
+
+                        // Clean up lesson overrides
+                        await supabase
+                          .from("lesson_overrides")
+                          .delete()
+                          .eq("student_id", studentUserId)
+                          .eq("teacher_id", teacherUserId);
+                      }
+
                       toast({
                         title: t("common.success"),
                         description: t("dialogs.editStudent.archiveSuccess"),
