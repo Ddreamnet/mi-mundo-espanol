@@ -608,6 +608,13 @@ export function EditStudentDialog({
           });
         }
 
+        // Sync lessons_per_week in tracking record
+        await supabase
+          .from("student_lesson_tracking")
+          .update({ lessons_per_week: lessonsPerWeek })
+          .eq("student_id", studentUserId)
+          .eq("teacher_id", teacherUserId);
+
         // Rebuild legacy dates
         const rebuiltDates = await rebuildLegacyLessonDatesFromInstances(studentUserId, teacherUserId);
         setLessonDates(rebuiltDates);
