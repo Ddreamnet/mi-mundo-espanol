@@ -163,7 +163,7 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
 
   const totalLessonsPerMonth = lessonsPerWeek * 4;
   const rowConfig = getRowConfig(lessonsPerWeek);
-  const sortedLessons = getSortedLessons(lessonDates, lessonOverrides, totalLessonsPerMonth, instanceStartTimes);
+  const sortedLessons = getSortedLessons(lessonDates, lessonOverrides, totalLessonsPerMonth, Object.fromEntries(instanceStartTimes));
 
   if (loading) {
     return (
