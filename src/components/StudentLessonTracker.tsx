@@ -21,6 +21,7 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
   const [completedLessons, setCompletedLessons] = useState<number[]>([]);
   const [lessonDates, setLessonDates] = useState<LessonDates>({});
   const [lessonOverrides, setLessonOverrides] = useState<LessonOverrideBasic[]>([]);
+  const [instanceStartTimes, setInstanceStartTimes] = useState<Map<string, string>>(new Map());
   const [loading, setLoading] = useState(true);
 
   // Fetch teacher_id once and reuse for both data fetches
@@ -49,6 +50,8 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
       await Promise.all([
         fetchLessonOverrides(teacherId),
         fetchTracking(teacherId),
+        fetchLiveLessonsPerWeek(teacherId),
+        fetchInstanceStartTimes(teacherId),
       ]);
     };
     loadData();
@@ -67,7 +70,6 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
         (payload) => {
           if (payload.new && typeof payload.new === "object") {
             const data = payload.new as any;
-            setLessonsPerWeek(data.lessons_per_week || 1);
             setCompletedLessons(data.completed_lessons || []);
             setLessonDates(data.lesson_dates || {});
           }
@@ -95,6 +97,45 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
     }
   };
 
+  const fetchLiveLessonsPerWeek = async (teacherId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("student_lessons")
+        .select("id")
+        .eq("student_id", studentId)
+        .eq("teacher_id", teacherId);
+
+      if (error) throw error;
+      if (data && data.length > 0) {
+        setLessonsPerWeek(data.length);
+      }
+    } catch (error: any) {
+      console.error("Failed to fetch live lessons per week:", error);
+    }
+  };
+
+  const fetchInstanceStartTimes = async (teacherId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from("lesson_instances")
+        .select("lesson_number, start_time")
+        .eq("student_id", studentId)
+        .eq("teacher_id", teacherId)
+        .in("status", ["planned", "completed"]);
+
+      if (error) throw error;
+      if (data) {
+        const map = new Map<string, string>();
+        for (const inst of data) {
+          map.set(String(inst.lesson_number), inst.start_time);
+        }
+        setInstanceStartTimes(map);
+      }
+    } catch (error: any) {
+      console.error("Failed to fetch instance start times:", error);
+    }
+  };
+
   const fetchTracking = async (teacherId: string) => {
     try {
       const { data: records, error } = await supabase
@@ -109,9 +150,9 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
 
       if (records && records.length > 0) {
         const data = records[0];
-        setLessonsPerWeek((data as any).lessons_per_week);
         setCompletedLessons((data as any).completed_lessons || []);
         setLessonDates((data as any).lesson_dates || {});
+        // lessonsPerWeek is set by fetchLiveLessonsPerWeek from template
       }
     } catch (error: any) {
       console.error("Failed to fetch lesson tracking:", error);
@@ -122,7 +163,7 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
 
   const totalLessonsPerMonth = lessonsPerWeek * 4;
   const rowConfig = getRowConfig(lessonsPerWeek);
-  const sortedLessons = getSortedLessons(lessonDates, lessonOverrides, totalLessonsPerMonth);
+  const sortedLessons = getSortedLessons(lessonDates, lessonOverrides, totalLessonsPerMonth, Object.fromEntries(instanceStartTimes));
 
   if (loading) {
     return (

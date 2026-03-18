@@ -608,6 +608,13 @@ export function EditStudentDialog({
           });
         }
 
+        // Sync lessons_per_week in tracking record
+        await supabase
+          .from("student_lesson_tracking")
+          .update({ lessons_per_week: lessonsPerWeek })
+          .eq("student_id", studentUserId)
+          .eq("teacher_id", teacherUserId);
+
         // Rebuild legacy dates
         const rebuiltDates = await rebuildLegacyLessonDatesFromInstances(studentUserId, teacherUserId);
         setLessonDates(rebuiltDates);
@@ -1035,6 +1042,23 @@ export function EditStudentDialog({
                         .eq("id", studentId);
 
                       if (error) throw error;
+
+                      // Clean up planned instances (keep completed for history)
+                      if (studentUserId && teacherUserId) {
+                        await supabase
+                          .from("lesson_instances")
+                          .delete()
+                          .eq("student_id", studentUserId)
+                          .eq("teacher_id", teacherUserId)
+                          .eq("status", "planned");
+
+                        // Clean up lesson overrides
+                        await supabase
+                          .from("lesson_overrides")
+                          .delete()
+                          .eq("student_id", studentUserId)
+                          .eq("teacher_id", teacherUserId);
+                      }
 
                       toast({
                         title: t("common.success"),

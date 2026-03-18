@@ -1,78 +1,91 @@
 
 
-# Plan: Fix Archived Student Cleanup + İşlenen Dersler Consistency
+# Audit Report: EWD Revival Sync Compliance
 
-## Revised Findings (After Code Audit)
+## Summary
 
-### Issue 1: Archived students — PARTIALLY confirmed
-
-The plan's claim that "actual mode doesn't filter archived students" is **outdated**. `useScheduleGrid.fetchSchedule()` (line 250) already filters instances by `activeStudentIds`. The grid display is correct.
-
-**What IS broken:**
-1. **Archive handler does no cleanup** (lines 1027-1055 in `EditStudentDialog.tsx`): Only sets `is_archived: true`. Does NOT delete `planned` instances or `lesson_overrides`. Orphaned data stays in DB.
-2. **Conflict detection** (`conflictDetection.ts`): Queries `lesson_instances` by teacher+date with no archive check. Orphaned planned instances from archived students cause **false conflict blocks** for active students.
-3. **`lesson_overrides`** for archived students remain and could cause stale data.
-
-### Issue 2: İşlenen dersler — CONFIRMED
-
-1. **`StudentLessonTracker` uses stale `lessons_per_week`** (line 112): Reads from `student_lesson_tracking.lessons_per_week`. This field IS updated when admin saves via `EditStudentDialog.handleSubmit` (line 646-654), but ONLY when the tracking record doesn't yet exist OR when the existing record is found. The real-time subscription (line 70) also reads `lessons_per_week` from the tracking table. So if the tracking record's `lessons_per_week` gets updated correctly, it should sync. **However**, the update only happens in the `else` branch (line 650-654) when instances don't exist. When instances DO exist (line 600-612), `lessons_per_week` is NOT updated in the tracking record. This is the bug.
-2. **No `instanceStartTimes`** passed to `getSortedLessons` in `StudentLessonTracker` (line 125): Same-day lessons may sort differently than teacher panel.
+All 10 files from the spec exist and are functionally aligned. There are a few minor gaps and one orphaned file to clean up.
 
 ---
 
-## Fix Strategy
+## File-by-File Compliance
 
-### Fix 1: Archive cleanup (EditStudentDialog.tsx)
+### 1. `src/lib/lessonTypes.ts` — PASS
+All interfaces (`LessonDates`, `LessonOverrideInfo`, `SortedLesson`, `DisplayLessonData`, `LessonInstance`, `RowConfig`) and helpers (`getRowConfig`, `formatTime`, `calculateDurationMinutes`, `getDayName`) match the spec exactly.
 
-In the archive handler (lines 1027-1055), after setting `is_archived: true`:
-- Delete all `planned` instances: `DELETE FROM lesson_instances WHERE student_id = X AND teacher_id = Y AND status = 'planned'`
-- Delete all `lesson_overrides`: `DELETE FROM lesson_overrides WHERE student_id = X AND teacher_id = Y`
-- Keep `completed` instances (historical data)
-- Keep `student_lessons` template + `student_lesson_tracking` (needed for unarchive)
+### 2. `src/lib/lessonSorting.ts` — PASS
+`getSortedLessons` accepts optional `instanceStartTimes` for time-aware sorting. `getDisplayLessonData` handles empty `lessonDates` correctly.
 
-### Fix 2: `lessons_per_week` sync on template save (EditStudentDialog.tsx)
+### 3. `src/lib/lessonDateCalculation.ts` — PASS
+`calculateLessonDates`, `recalculateRemainingDates`, `calculateNextLessonDate` all present and match spec.
 
-In `handleSubmit`, when instances exist (line 600-612 branch), also update the tracking record's `lessons_per_week`:
-```
-await supabase
-  .from("student_lesson_tracking")
-  .update({ lessons_per_week: lessonsPerWeek })
-  .eq("student_id", studentUserId)
-  .eq("teacher_id", teacherUserId);
-```
+### 4. `src/lib/lessonSync.ts` — PASS
+`rebuildLegacyLessonDatesFromInstances` and `checkNonTemplateWeekday` match spec.
 
-### Fix 3: StudentLessonTracker — use template count + instanceStartTimes
+### 5. `src/lib/teacherBalance.ts` — PASS
+`addToTeacherBalance`, `subtractFromTeacherBalance`, `addRegularLessonBalance` (instance-aware), `subtractRegularLessonBalance` (instance-aware), `addTrialLessonToBalance`, `subtractTrialLessonFromBalance` all present and correct. Uses `Math.max(0, ...)` for subtracts.
 
-1. Fetch `student_lessons` count for the student to get live `lessonsPerWeek` instead of relying on potentially stale tracking field
-2. Fetch `lesson_instances` to build `instanceStartTimes` map and pass to `getSortedLessons`
+### 6. `src/lib/conflictDetection.ts` — PASS
+`hasTimeOverlap` uses `startA < endB && endA > startB`. `checkTeacherConflicts` has both `excludeInstanceId` and `excludeStudentId`. `checkTeacherConflictsBatch` present. Checks both `lesson_instances` and `trial_lessons`.
+
+### 7. `src/lib/instanceGeneration.ts` — PASS
+`generateFutureInstanceDates`, `syncTemplateChange` (delete planned + regenerate, conflict check), `shiftLessonsForward` (saves originals, increments `rescheduled_count`) all present and match spec.
+
+### 8. `src/hooks/useScheduleGrid.ts` — PASS
+`ensureInstancesForWeek`: skips past weeks, no cap, generates per template slot, uses `maxLessonMap`. `fetchSchedule` calls `ensureInstancesForWeek` then fetches instances. Returns `mode`, `setMode`, `actualLessons`.
+
+### 9. `src/components/EditStudentDialog.tsx` — PASS
+- `studentUserId`/`teacherUserId` state
+- `instanceIdMap` for lesson_number -> id
+- `sortedLessonsForDisplay`: instance-based path with chronological sort, `datesUnassigned` check, padding
+- `handleResetAllLessons`: deletes all instances, regenerates, clears tracking
+- `confirmDateUpdate`: conflict checks with `excludeStudentId`, instance DB updates, `rebuildLegacyLessonDatesFromInstances`, `checkNonTemplateWeekday`
+- `handleSubmit`: calls `syncTemplateChange` when instances exist, generates from scratch otherwise
+- `handleDeleteStudent`: deletes `lesson_instances`
+- `handleMarkLastLesson`/`handleUndoLastLesson`: instance-aware balance
+- UI shows `start_time - end_time` per row
+
+### 10. `src/components/LessonTracker.tsx` — PASS
+- `pendingInstanceId` state
+- `instanceStartTimes` map passed to `getSortedLessons`
+- First-mark: syncs calculated dates to `lesson_instances`
+- `handleLessonClick` passes `inst?.id`
+- `confirmLessonComplete`: instance-aware balance via `addRegularLessonBalance(teacherId, studentId, matchingInstance.id)`
 
 ---
 
-## Affected Files
+## Minor Issues Found
 
-| File | Change | Risk |
-|------|--------|------|
-| `src/components/EditStudentDialog.tsx` | Archive handler cleanup + `lessons_per_week` sync in instances branch | Low |
-| `src/components/StudentLessonTracker.tsx` | Fetch `student_lessons` count + `lesson_instances` for `instanceStartTimes` | Low |
+### 1. Orphaned file: `src/types/lessonInstance.ts`
+This file duplicates interfaces from `src/lib/lessonTypes.ts` and has zero imports. Should be deleted to avoid confusion.
+
+### 2. `confirmDateUpdate` — "Kalan gunleri de guncelle" ON path
+The spec says when ON, it should use `generateFutureInstanceDates` from instance generation to regenerate subsequent planned instances from template. Current implementation uses `recalculateRemainingDates` (legacy date-only calculation) which only recalculates dates in the `lessonDates` JSON map, then updates instances with those dates. This means the **times are preserved from the original instance** rather than regenerated from template.
+
+**Impact:** If template times have changed since instances were created, the "kalan gunleri de guncelle" ON path won't pick up new template times. The spec says it should regenerate from template including times.
+
+**Fix:** In `confirmDateUpdate`, when `updateRemainingDays` is true, after identifying the first changed lesson, use `generateFutureInstanceDates` from template slots for subsequent lessons (similar to how `handleResetAllLessons` works), then update/delete/insert instances accordingly.
+
+### 3. `src/utils/lessonDateUtils.ts` compatibility shim
+This is fine — it re-exports from the new modules. No issue.
 
 ---
 
-## Implementation Order
+## Plan: Minimal Fixes
 
-1. **EditStudentDialog archive handler** — add planned instance + override deletion
-2. **EditStudentDialog handleSubmit** — add `lessons_per_week` update in the instances-exist branch
-3. **StudentLessonTracker** — add `student_lessons` count fetch + `instanceStartTimes`
+Only two changes needed:
 
----
+### Fix 1: Delete orphaned `src/types/lessonInstance.ts`
+- Delete the file (confirmed zero imports)
 
-## Test Scenarios
+### Fix 2: Update `confirmDateUpdate` "kalan gunleri de guncelle" ON path
+In `EditStudentDialog.tsx`, when `updateRemainingDays` is true:
+1. Instead of calling `recalculateRemainingDates` (date-only), build template slots from current `lessons` state
+2. Find the first changed instance and all subsequent planned instances
+3. Use `generateFutureInstanceDates(templateSlots, count, startDate)` to regenerate dates+times
+4. For each regenerated entry, run `checkTeacherConflicts` with `excludeStudentId`
+5. Update instance rows with new `lesson_date`, `start_time`, `end_time`
+6. Call `rebuildLegacyLessonDatesFromInstances` at the end
 
-| # | Scenario | Expected |
-|---|----------|----------|
-| 1 | Archive student → check `lesson_instances` table | All `planned` deleted, `completed` kept |
-| 2 | Archive student → schedule another at same time | No conflict |
-| 3 | Archive student → admin weekly grid (actual mode) | Not visible |
-| 4 | Unarchive student → view schedule | New instances generated via lazy gen |
-| 5 | Change template from 2→3 slots via admin → check student panel | Shows 12 lessons (not 8) |
-| 6 | Two same-day lessons → check student vs teacher panel ordering | Identical order |
+This aligns the ON path with the spec's requirement that regeneration respects template slot durations.
 
