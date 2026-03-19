@@ -1,15 +1,20 @@
 import { useState, useEffect, useCallback } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
-import { BookCheck, Ban } from "lucide-react";
+import { BookCheck } from "lucide-react";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
-import type { LessonDates, LessonOverrideBasic } from "@/types/lessons";
-import {
-  getSortedLessons,
-  getDisplayLessonData,
-} from "@/lib/lessonSorting";
 import { getRowConfig } from "@/lib/lessonTypes";
+
+interface InstanceData {
+  id: string;
+  lesson_number: number;
+  lesson_date: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  original_date: string | null;
+}
 
 interface StudentLessonTrackerProps {
   studentId: string;
@@ -18,13 +23,9 @@ interface StudentLessonTrackerProps {
 export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
   const { t } = useTranslation();
   const [lessonsPerWeek, setLessonsPerWeek] = useState<number>(1);
-  const [completedLessons, setCompletedLessons] = useState<number[]>([]);
-  const [lessonDates, setLessonDates] = useState<LessonDates>({});
-  const [lessonOverrides, setLessonOverrides] = useState<LessonOverrideBasic[]>([]);
-  const [instanceStartTimes, setInstanceStartTimes] = useState<Map<string, string>>(new Map());
+  const [instances, setInstances] = useState<InstanceData[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // Fetch teacher_id once and reuse for both data fetches
   const getTeacherId = useCallback(async (): Promise<string | null> => {
     try {
       const { data, error } = await supabase
@@ -48,30 +49,28 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
         return;
       }
       await Promise.all([
-        fetchLessonOverrides(teacherId),
-        fetchTracking(teacherId),
+        fetchInstances(teacherId),
         fetchLiveLessonsPerWeek(teacherId),
-        fetchInstanceStartTimes(teacherId),
       ]);
+      setLoading(false);
     };
     loadData();
 
-    // Set up real-time subscription
+    // Real-time subscription on lesson_instances
     const channel = supabase
-      .channel("lesson-tracking-changes")
+      .channel("student-lesson-instances")
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
-          table: "student_lesson_tracking",
+          table: "lesson_instances",
           filter: `student_id=eq.${studentId}`,
         },
-        (payload) => {
-          if (payload.new && typeof payload.new === "object") {
-            const data = payload.new as any;
-            setCompletedLessons(data.completed_lessons || []);
-            setLessonDates(data.lesson_dates || {});
+        async () => {
+          const teacherId = await getTeacherId();
+          if (teacherId) {
+            await fetchInstances(teacherId);
           }
         },
       )
@@ -82,18 +81,31 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
     };
   }, [studentId, getTeacherId]);
 
-  const fetchLessonOverrides = async (teacherId: string) => {
+  const fetchInstances = async (teacherId: string) => {
     try {
-      const { data, error } = await supabase
-        .from("lesson_overrides")
-        .select("id, original_date, new_date, is_cancelled")
+      // Get current cycle
+      const { data: tracking } = await supabase
+        .from("student_lesson_tracking")
+        .select("package_cycle")
         .eq("student_id", studentId)
-        .eq("teacher_id", teacherId);
+        .eq("teacher_id", teacherId)
+        .maybeSingle();
+
+      const currentCycle = tracking?.package_cycle ?? 1;
+
+      const { data, error } = await supabase
+        .from("lesson_instances")
+        .select("id, lesson_number, lesson_date, start_time, end_time, status, original_date")
+        .eq("student_id", studentId)
+        .eq("teacher_id", teacherId)
+        .eq("package_cycle", currentCycle)
+        .order("lesson_date", { ascending: true })
+        .order("start_time", { ascending: true });
 
       if (error) throw error;
-      setLessonOverrides(data || []);
+      setInstances(data || []);
     } catch (error: any) {
-      console.error("Failed to fetch lesson overrides:", error);
+      console.error("Failed to fetch lesson instances:", error);
     }
   };
 
@@ -114,56 +126,9 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
     }
   };
 
-  const fetchInstanceStartTimes = async (teacherId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("lesson_instances")
-        .select("lesson_number, start_time")
-        .eq("student_id", studentId)
-        .eq("teacher_id", teacherId)
-        .in("status", ["planned", "completed"]);
-
-      if (error) throw error;
-      if (data) {
-        const map = new Map<string, string>();
-        for (const inst of data) {
-          map.set(String(inst.lesson_number), inst.start_time);
-        }
-        setInstanceStartTimes(map);
-      }
-    } catch (error: any) {
-      console.error("Failed to fetch instance start times:", error);
-    }
-  };
-
-  const fetchTracking = async (teacherId: string) => {
-    try {
-      const { data: records, error } = await supabase
-        .from("student_lesson_tracking")
-        .select("*")
-        .eq("student_id", studentId)
-        .eq("teacher_id", teacherId)
-        .order("updated_at", { ascending: false })
-        .limit(1);
-
-      if (error) throw error;
-
-      if (records && records.length > 0) {
-        const data = records[0];
-        setCompletedLessons((data as any).completed_lessons || []);
-        setLessonDates((data as any).lesson_dates || {});
-        // lessonsPerWeek is set by fetchLiveLessonsPerWeek from template
-      }
-    } catch (error: any) {
-      console.error("Failed to fetch lesson tracking:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const totalLessonsPerMonth = lessonsPerWeek * 4;
   const rowConfig = getRowConfig(lessonsPerWeek);
-  const sortedLessons = getSortedLessons(lessonDates, lessonOverrides, totalLessonsPerMonth, Object.fromEntries(instanceStartTimes));
+  const completedCount = instances.filter(i => i.status === "completed").length;
 
   if (loading) {
     return (
@@ -183,7 +148,7 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
             <BookCheck className="h-8 w-8 flex-shrink-0" />
             <div>
               <p className="text-2x1 font-bold">
-                {completedLessons.length}/{totalLessonsPerMonth}
+                {completedCount}/{totalLessonsPerMonth}
               </p>
               <p className="text-sm opacity-70">{t("common.processedLessons")}</p>
             </div>
@@ -195,9 +160,10 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
                   const displayPosition = rowIndex * rowConfig.buttonsPerRow + colIndex + 1;
                   if (displayPosition > totalLessonsPerMonth) return null;
 
-                  const lessonData = getDisplayLessonData(sortedLessons, lessonDates, displayPosition);
-                  const { lessonNumber, displayDate, isCancelled, isOverridden } = lessonData;
-                  const isCompleted = completedLessons.includes(lessonNumber);
+                  const instance = instances[displayPosition - 1];
+                  const isCompleted = instance?.status === "completed";
+                  const isOverridden = instance?.original_date != null;
+                  const displayDate = instance?.lesson_date;
 
                   return (
                     <div key={displayPosition} className="flex flex-col items-center gap-0.5">
@@ -206,21 +172,19 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
                         h-8 w-8 rounded-lg border-2 transition-all duration-200
                         flex items-center justify-center text-xs font-semibold shadow-sm
                         ${
-                          isCancelled
-                            ? "bg-muted border-border opacity-50"
-                            : isCompleted
-                              ? "bg-secondary text-secondary-foreground border-secondary scale-95 shadow-md"
-                              : "bg-muted/50 border-border/50"
+                          isCompleted
+                            ? "bg-secondary text-secondary-foreground border-secondary scale-95 shadow-md"
+                            : "bg-muted/50 border-border/50"
                         }
                       `}
                       >
-                        {isCancelled ? <Ban className="h-4 w-4" /> : displayPosition}
+                        {displayPosition}
                       </div>
                       {displayDate && (
                         <span className={`text-[10px] whitespace-nowrap ${
                           isOverridden ? "font-semibold" : "opacity-70"
                         }`}>
-                          {format(new Date(displayDate), "dd.MM")}
+                          {format(new Date(displayDate + "T00:00:00"), "dd.MM")}
                         </span>
                       )}
                     </div>

@@ -12,13 +12,9 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
-import { Ban } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import type { LessonDates, LessonOverrideInfo } from "@/lib/lessonTypes";
 import { getRowConfig } from "@/lib/lessonTypes";
-import { getSortedLessons, getDisplayLessonData } from "@/lib/lessonSorting";
-import { calculateLessonDates } from "@/lib/lessonDateCalculation";
-import { addRegularLessonBalance } from "@/lib/teacherBalance";
+import { completeLesson, undoCompleteLesson } from "@/lib/lessonService";
 
 interface InstanceData {
   id: string;
@@ -27,6 +23,7 @@ interface InstanceData {
   start_time: string;
   end_time: string;
   status: string;
+  original_date: string | null;
 }
 
 interface LessonTrackerProps {
@@ -37,15 +34,12 @@ interface LessonTrackerProps {
 
 export function LessonTracker({ studentId, studentName, teacherId }: LessonTrackerProps) {
   const { t } = useTranslation();
-  const [completedLessons, setCompletedLessons] = useState<number[]>([]);
-  const [lessonDates, setLessonDates] = useState<LessonDates>({});
-  const [studentLessonDays, setStudentLessonDays] = useState<number[]>([]);
-  const [lessonOverrides, setLessonOverrides] = useState<LessonOverrideInfo[]>([]);
+  const [instances, setInstances] = useState<InstanceData[]>([]);
+  const [lessonsPerWeek, setLessonsPerWeek] = useState<number>(1);
   const [loading, setLoading] = useState(true);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [pendingLesson, setPendingLesson] = useState<number | null>(null);
-  const [pendingInstanceId, setPendingInstanceId] = useState<string | null>(null);
-  const [instances, setInstances] = useState<InstanceData[]>([]);
+  const [pendingInstance, setPendingInstance] = useState<InstanceData | null>(null);
+  const [confirmMode, setConfirmMode] = useState<"complete" | "undo">("complete");
   const { toast } = useToast();
 
   useEffect(() => {
@@ -53,54 +47,33 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
       setLoading(false);
       return;
     }
-    
-    const loadData = async () => {
-      await fetchStudentSchedule();
-      await fetchLessonOverrides();
-      await fetchTracking();
-      await fetchInstances();
-    };
     loadData();
   }, [studentId, teacherId]);
 
-  const fetchStudentSchedule = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("student_lessons")
-        .select("day_of_week")
-        .eq("student_id", studentId)
-        .eq("teacher_id", teacherId)
-        .order("day_of_week");
-
-      if (error) throw error;
-      setStudentLessonDays(data.map((lesson: any) => lesson.day_of_week));
-    } catch (error: any) {
-      console.error("Failed to fetch student schedule:", error);
-    }
-  };
-
-  const fetchLessonOverrides = async () => {
-    try {
-      const { data, error } = await supabase
-        .from("lesson_overrides")
-        .select("id, original_date, new_date, is_cancelled")
-        .eq("student_id", studentId)
-        .eq("teacher_id", teacherId);
-
-      if (error) throw error;
-      setLessonOverrides(data || []);
-    } catch (error: any) {
-      console.error("Failed to fetch lesson overrides:", error);
-    }
+  const loadData = async () => {
+    setLoading(true);
+    await Promise.all([fetchInstances(), fetchLessonsPerWeek()]);
+    setLoading(false);
   };
 
   const fetchInstances = async () => {
     try {
-      const { data, error } = await supabase
-        .from("lesson_instances")
-        .select("id, lesson_number, lesson_date, start_time, end_time, status")
+      // Get current cycle
+      const { data: tracking } = await supabase
+        .from("student_lesson_tracking")
+        .select("package_cycle")
         .eq("student_id", studentId)
         .eq("teacher_id", teacherId)
+        .maybeSingle();
+
+      const currentCycle = tracking?.package_cycle ?? 1;
+
+      const { data, error } = await supabase
+        .from("lesson_instances")
+        .select("id, lesson_number, lesson_date, start_time, end_time, status, original_date")
+        .eq("student_id", studentId)
+        .eq("teacher_id", teacherId)
+        .eq("package_cycle", currentCycle)
         .order("lesson_date", { ascending: true })
         .order("start_time", { ascending: true });
 
@@ -111,183 +84,92 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
     }
   };
 
-  const fetchTracking = async () => {
+  const fetchLessonsPerWeek = async () => {
     try {
-      const { data: records, error } = await supabase
-        .from("student_lesson_tracking")
-        .select("*")
+      const { data, error } = await supabase
+        .from("student_lessons")
+        .select("id")
         .eq("student_id", studentId)
-        .eq("teacher_id", teacherId)
-        .order("updated_at", { ascending: false })
-        .limit(1);
+        .eq("teacher_id", teacherId);
 
       if (error) throw error;
-
-      if (records && records.length > 0) {
-        const data = records[0];
-        setCompletedLessons((data as any).completed_lessons || []);
-        setLessonDates((data as any).lesson_dates || {});
-      } else {
-        const { data: lessonsData } = await supabase
-          .from("student_lessons")
-          .select("id")
-          .eq("student_id", studentId)
-          .eq("teacher_id", teacherId);
-
-        const lessonsPerWeek = lessonsData?.length || 1;
-
-        const { data: newData, error: insertError } = await supabase
-          .from("student_lesson_tracking")
-          .insert({
-            student_id: studentId,
-            teacher_id: teacherId,
-            lessons_per_week: lessonsPerWeek,
-            completed_lessons: [],
-            lesson_dates: {},
-          })
-          .select()
-          .single();
-
-        if (insertError) throw insertError;
-        if (newData) {
-          setCompletedLessons((newData as any).completed_lessons || []);
-          setLessonDates((newData as any).lesson_dates || {});
-        }
-      }
+      setLessonsPerWeek(data?.length || 1);
     } catch (error: any) {
-      toast({
-        title: t("common.error"),
-        description: t("lessonTracker.loadError"),
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+      console.error("Failed to fetch lessons per week:", error);
     }
   };
 
-  const handleLessonClick = (lessonNumber: number, instanceId?: string) => {
-    if (completedLessons.includes(lessonNumber)) return;
-    setPendingLesson(lessonNumber);
-    setPendingInstanceId(instanceId || null);
+  const handleLessonClick = (instance: InstanceData) => {
+    if (instance.status === "completed") {
+      // Check if this is the last completed (undoable)
+      const completedInstances = instances.filter(i => i.status === "completed");
+      const lastCompleted = completedInstances[completedInstances.length - 1];
+      if (lastCompleted && lastCompleted.id === instance.id) {
+        setPendingInstance(instance);
+        setConfirmMode("undo");
+        setShowConfirm(true);
+      }
+      return;
+    }
+
+    // Check if this is the next completable (first planned)
+    const firstPlanned = instances.find(i => i.status === "planned");
+    if (!firstPlanned || firstPlanned.id !== instance.id) return;
+
+    setPendingInstance(instance);
+    setConfirmMode("complete");
     setShowConfirm(true);
   };
 
-  const confirmLessonComplete = async () => {
-    if (pendingLesson === null) return;
+  const confirmAction = async () => {
+    if (!pendingInstance) return;
 
     try {
-      if (studentLessonDays.length === 0) {
+      if (confirmMode === "complete") {
+        const result = await completeLesson(pendingInstance.id, teacherId, studentId);
+        if (!result.success) {
+          throw new Error(result.error || "Failed to complete lesson");
+        }
         toast({
-          title: t("common.error"),
-          description: t("lessonTracker.daysNotLoaded"),
-          variant: "destructive",
+          title: t("common.success"),
+          description: t("lessonTracker.lessonMarked", { number: pendingInstance.lesson_number }),
         });
-        setShowConfirm(false);
-        setPendingLesson(null);
-        setPendingInstanceId(null);
-        return;
-      }
-
-      const totalLessons = studentLessonDays.length * 4;
-      const newCompletedLessons = [...completedLessons, pendingLesson].sort((a, b) => a - b);
-      let newLessonDates = { ...lessonDates };
-
-      // First mark: calculate all dates and sync to instances
-      if (Object.keys(lessonDates).length === 0) {
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        newLessonDates = calculateLessonDates(pendingLesson, today, studentLessonDays, totalLessons);
-        
-        if (Object.keys(newLessonDates).length === 0) {
-          toast({
-            title: t("common.error"), 
-            description: t("lessonTracker.datesCalculationError"),
-            variant: "destructive",
-          });
-          setShowConfirm(false);
-          setPendingLesson(null);
-          setPendingInstanceId(null);
-          return;
-        }
-
-        // Sync calculated dates to instances
-        for (const inst of instances) {
-          const dateForLesson = newLessonDates[inst.lesson_number.toString()];
-          if (dateForLesson) {
-            await supabase
-              .from("lesson_instances")
-              .update({ lesson_date: dateForLesson })
-              .eq("id", inst.id);
-          }
-        }
-      }
-
-      const { data: existingRecords } = await supabase
-        .from("student_lesson_tracking")
-        .select("id")
-        .eq("student_id", studentId)
-        .eq("teacher_id", teacherId)
-        .order("updated_at", { ascending: false })
-        .limit(1);
-
-      if (!existingRecords || existingRecords.length === 0) {
-        throw new Error(t("lessonTracker.trackingNotFound"));
-      }
-
-      const { error } = await supabase
-        .from("student_lesson_tracking")
-        .update({
-          completed_lessons: newCompletedLessons,
-          lesson_dates: newLessonDates,
-        })
-        .eq("id", existingRecords[0].id);
-
-      if (error) throw error;
-
-      // Update lesson_instances and use instance-aware balance
-      const matchingInstance = pendingInstanceId
-        ? instances.find((i) => i.id === pendingInstanceId)
-        : instances.find((i) => i.lesson_number === pendingLesson);
-
-      if (matchingInstance) {
-        await supabase
-          .from("lesson_instances")
-          .update({ status: "completed" })
-          .eq("id", matchingInstance.id);
-        await addRegularLessonBalance(teacherId, studentId, matchingInstance.id);
       } else {
-        await addRegularLessonBalance(teacherId, studentId);
+        const result = await undoCompleteLesson(pendingInstance.id, teacherId, studentId);
+        if (!result.success) {
+          throw new Error(result.error || "Failed to undo lesson");
+        }
+        toast({
+          title: t("common.success"),
+          description: t("lessonTracker.lessonUndone", { number: pendingInstance.lesson_number }),
+        });
       }
 
-      setCompletedLessons(newCompletedLessons);
-      setLessonDates(newLessonDates);
-      toast({
-        title: t("common.success"),
-        description: t("lessonTracker.lessonMarked", { number: pendingLesson }),
-      });
+      // Refresh instances
+      await fetchInstances();
     } catch (error: any) {
       toast({
-        title: "Hata",
+        title: t("common.error"),
         description: error.message,
         variant: "destructive",
       });
     } finally {
       setShowConfirm(false);
-      setPendingLesson(null);
-      setPendingInstanceId(null);
+      setPendingInstance(null);
     }
   };
 
-  const totalLessonsPerMonth = studentLessonDays.length * 4;
-  const rowConfig = getRowConfig(studentLessonDays.length);
+  const totalLessonsPerMonth = lessonsPerWeek * 4;
+  const rowConfig = getRowConfig(lessonsPerWeek);
 
-  // Build instanceStartTimes map for time-aware sorting
-  const instanceStartTimes: Record<string, string> = {};
-  instances.forEach((inst) => {
-    instanceStartTimes[inst.lesson_number.toString()] = inst.start_time;
-  });
+  // Derive completed count from instances
+  const completedCount = instances.filter(i => i.status === "completed").length;
 
-  const sortedLessons = getSortedLessons(lessonDates, lessonOverrides, totalLessonsPerMonth, instanceStartTimes);
+  // Find first planned for highlighting
+  const firstPlannedId = instances.find(i => i.status === "planned")?.id;
+  // Find last completed for undo highlighting
+  const completedInstances = instances.filter(i => i.status === "completed");
+  const lastCompletedId = completedInstances.length > 0 ? completedInstances[completedInstances.length - 1].id : null;
 
   if (loading) {
     return <div className="animate-pulse h-40 bg-muted rounded-lg"></div>;
@@ -304,38 +186,47 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
                   const displayPosition = rowIndex * rowConfig.buttonsPerRow + colIndex + 1;
                   if (displayPosition > totalLessonsPerMonth) return null;
 
-                  const lessonData = getDisplayLessonData(sortedLessons, lessonDates, displayPosition);
-                  const { lessonNumber, displayDate, isCancelled, isOverridden } = lessonData;
-                  const isCompleted = completedLessons.includes(lessonNumber);
-
-                  // Find matching instance for this lesson number
-                  const inst = instances.find((i) => i.lesson_number === lessonNumber);
+                  // Map display position to instance
+                  const instance = instances[displayPosition - 1];
+                  const isCompleted = instance?.status === "completed";
+                  const isNextCompletable = instance?.id === firstPlannedId;
+                  const isUndoable = instance?.id === lastCompletedId;
+                  const isOverridden = instance?.original_date != null;
+                  const displayDate = instance?.lesson_date;
 
                   return (
                     <div key={displayPosition} className="flex flex-col items-center gap-0.5">
                       <button
-                        onClick={() => handleLessonClick(lessonNumber, inst?.id)}
-                        disabled={isCompleted || isCancelled}
+                        onClick={() => instance && handleLessonClick(instance)}
+                        disabled={!instance || (instance.status === "planned" && instance.id !== firstPlannedId)}
                         className={`
                           h-8 w-8 rounded-lg border-2 transition-all duration-200 font-semibold text-xs
                           flex items-center justify-center shadow-sm relative
                           ${
-                            isCancelled
-                              ? "bg-muted opacity-50 border-border cursor-not-allowed"
-                              : isCompleted
-                                ? "bg-secondary text-secondary-foreground border-secondary scale-95 shadow-md"
-                                : "bg-muted/50 border-border/50 hover:bg-primary/10 hover:scale-105 hover:shadow-md cursor-pointer hover:border-primary"
+                            isCompleted
+                              ? isUndoable
+                                ? "bg-secondary text-secondary-foreground border-secondary scale-95 shadow-md cursor-pointer hover:bg-destructive/20 hover:border-destructive"
+                                : "bg-secondary text-secondary-foreground border-secondary scale-95 shadow-md"
+                              : isNextCompletable
+                                ? "bg-muted/50 border-primary/50 hover:bg-primary/10 hover:scale-105 hover:shadow-md cursor-pointer hover:border-primary ring-2 ring-primary/20"
+                                : "bg-muted/50 border-border/50 opacity-60"
                           }
                         `}
-                        title={isCancelled ? t("lessonTracker.lessonCancelled", { number: displayPosition }) : t("lessonTracker.lesson", { number: displayPosition })}
+                        title={
+                          isCompleted
+                            ? isUndoable
+                              ? t("lessonTracker.clickToUndo", { number: displayPosition })
+                              : t("lessonTracker.lessonCompleted", { number: displayPosition })
+                            : t("lessonTracker.lesson", { number: displayPosition })
+                        }
                       >
-                        {isCancelled ? <Ban className="h-4 w-4" /> : displayPosition}
+                        {displayPosition}
                       </button>
                       {displayDate && (
                         <span className={`text-[10px] whitespace-nowrap ${
                           isOverridden ? "font-semibold" : "opacity-70"
                         }`}>
-                          {format(new Date(displayDate), "dd.MM")}
+                          {format(new Date(displayDate + "T00:00:00"), "dd.MM")}
                         </span>
                       )}
                     </div>
@@ -350,14 +241,34 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
       <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>{t("lessonTracker.markLessonTitle")}</AlertDialogTitle>
+            <AlertDialogTitle>
+              {confirmMode === "complete"
+                ? t("lessonTracker.markLessonTitle")
+                : t("lessonTracker.undoLessonTitle", { defaultValue: "Dersi Geri Al" })}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              {t("lessonTracker.markLessonDescription", { name: studentName, number: pendingLesson })}
+              {confirmMode === "complete"
+                ? t("lessonTracker.markLessonDescription", { name: studentName, number: pendingInstance?.lesson_number })
+                : t("lessonTracker.undoLessonDescription", {
+                    defaultValue: `${studentName} için ${pendingInstance?.lesson_number}. dersi geri almak istediğinize emin misiniz?`,
+                    name: studentName,
+                    number: pendingInstance?.lesson_number,
+                  })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => { setPendingLesson(null); setPendingInstanceId(null); }} className="border-2 border-muted-foreground/30 bg-transparent text-card-foreground hover:bg-muted hover:border-muted-foreground/40">{t("common.cancel")}</AlertDialogCancel>
-            <AlertDialogAction onClick={confirmLessonComplete}>{t("common.confirm")}</AlertDialogAction>
+            <AlertDialogCancel
+              onClick={() => setPendingInstance(null)}
+              className="border-2 border-muted-foreground/30 bg-transparent text-card-foreground hover:bg-muted hover:border-muted-foreground/40"
+            >
+              {t("common.cancel")}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmAction}
+              className={confirmMode === "undo" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
+            >
+              {t("common.confirm")}
+            </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
