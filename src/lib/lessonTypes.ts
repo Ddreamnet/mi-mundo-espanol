@@ -4,28 +4,6 @@ export interface LessonDates {
   [key: string]: string;
 }
 
-export interface LessonOverrideInfo {
-  id: string;
-  original_date: string;
-  new_date: string | null;
-  is_cancelled: boolean;
-}
-
-export interface SortedLesson {
-  lessonNumber: number;
-  originalDate: string;
-  effectiveDate: string;
-  isCancelled: boolean;
-  isOverridden: boolean;
-}
-
-export interface DisplayLessonData {
-  lessonNumber: number;
-  displayDate: string | null;
-  isCancelled: boolean;
-  isOverridden: boolean;
-}
-
 export interface LessonInstance {
   id: string;
   student_id: string;
@@ -34,11 +12,12 @@ export interface LessonInstance {
   lesson_date: string;
   start_time: string;
   end_time: string;
-  status: "planned" | "completed" | "cancelled";
+  status: "planned" | "completed";
   original_date: string | null;
   original_start_time: string | null;
   original_end_time: string | null;
   rescheduled_count: number;
+  package_cycle: number;
   created_at?: string;
   updated_at?: string;
 }

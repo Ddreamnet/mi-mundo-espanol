@@ -4,10 +4,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
-import { Download, Calendar } from "lucide-react";
+import { Download } from "lucide-react";
 import { exportScheduleAsPNG } from "./ScheduleExportCanvas";
-import { useLessonOverrides, getLessonDateForCurrentWeek, LessonOverride } from "@/hooks/useLessonOverrides";
-import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { StudentLesson, TrialLesson } from "@/types/lessons";
@@ -32,15 +30,13 @@ export function WeeklyScheduleDialog({
   const { toast } = useToast();
   const { t } = useTranslation();
   const { daysOfWeek, language } = useLanguage();
-  const { overrides, isLessonCancelled, getLessonOverride, refetch: refetchOverrides } = useLessonOverrides(teacherId);
-  
+
   const {
     lessons,
     trialLessons,
     studentColors,
     loading,
     refetch: refetchSchedule,
-    getDateForDayIndex,
     getTrialLessonForDayAndTime,
   } = useScheduleGrid({ teacherId, autoFetch: false, channelSuffix: "teacher" });
 
@@ -49,7 +45,6 @@ export function WeeklyScheduleDialog({
   useEffect(() => {
     if (open && teacherId) {
       refetchSchedule();
-      refetchOverrides();
     }
   }, [open, teacherId]);
 
@@ -60,79 +55,18 @@ export function WeeklyScheduleDialog({
 
   const getAllTimeSlots = () => {
     const times = new Set<string>();
-    
-    // Teacher view: only add times for non-cancelled lessons
     lessons.forEach(lesson => {
-      const lessonDate = getLessonDateForCurrentWeek(lesson.day_of_week);
-      const override = getLessonOverride(lesson.student_id, lessonDate);
-      
-      if (!isLessonCancelled(lesson.student_id, lessonDate)) {
-        if (override && override.new_start_time) {
-          times.add(override.new_start_time);
-        } else {
-          times.add(lesson.start_time);
-        }
-      }
+      times.add(lesson.start_time);
     });
-    
     trialLessons.forEach(lesson => {
       times.add(lesson.start_time);
     });
-    
-    overrides.forEach((o) => {
-      if (!o.is_cancelled && o.new_start_time) {
-        times.add(o.new_start_time);
-      }
-    });
-    
     return Array.from(times).sort();
   };
-  
-  const getLessonForDayAndTime = (dayIndex: number, timeSlot: string): (StudentLesson & { _isOverride?: boolean; _override?: LessonOverride }) | null => {
+
+  const getLessonForDayAndTime = (dayIndex: number, timeSlot: string): StudentLesson | null => {
     const dbDayOfWeek = dayIndex === 6 ? 0 : dayIndex + 1;
-    const dateForDay = getDateForDayIndex(dayIndex);
-    
-    // Check for moved lessons that should appear here
-    const movedLesson = overrides.find((o) => {
-      if (o.is_cancelled || !o.new_date) return false;
-      const newDate = new Date(o.new_date);
-      const effectiveTime = o.new_start_time || o.original_start_time;
-      return format(newDate, "yyyy-MM-dd") === format(dateForDay, "yyyy-MM-dd") && effectiveTime === timeSlot;
-    });
-    
-    if (movedLesson) {
-      const originalLesson = lessons.find((l) => l.student_id === movedLesson.student_id);
-      if (originalLesson) {
-        return {
-          ...originalLesson,
-          start_time: movedLesson.new_start_time || movedLesson.original_start_time,
-          end_time: movedLesson.new_end_time || movedLesson.original_end_time,
-          _isOverride: true,
-          _override: movedLesson,
-        };
-      }
-    }
-    
-    // Check for regular lessons on this day
-    const lesson = lessons.find(l => l.day_of_week === dbDayOfWeek && l.start_time === timeSlot);
-    
-    if (lesson) {
-      const lessonDate = getLessonDateForCurrentWeek(lesson.day_of_week);
-      
-      // Teacher view: hide cancelled and moved lessons
-      if (isLessonCancelled(lesson.student_id, lessonDate)) {
-        return null;
-      }
-      
-      const override = getLessonOverride(lesson.student_id, lessonDate);
-      if (override && override.new_date) {
-        return null;
-      }
-      
-      return lesson;
-    }
-    
-    return null;
+    return lessons.find(l => l.day_of_week === dbDayOfWeek && l.start_time === timeSlot) || null;
   };
 
   const handleTrialLessonClick = (lesson: TrialLesson) => {
@@ -225,11 +159,9 @@ export function WeeklyScheduleDialog({
                     {DAYS.map((day, dayIndex) => {
                 const lesson = getLessonForDayAndTime(dayIndex, timeSlot);
                 const trialLesson = getTrialLessonForDayAndTime(dayIndex, timeSlot);
-                const isOverride = lesson && '_isOverride' in lesson && lesson._isOverride;
                 return <td key={day} className="border p-2">
-                          {lesson ? <div className={`p-2 rounded border-2 transition-opacity ${lesson.is_completed ? "opacity-40" : "opacity-100"} ${isOverride ? "ring-2 ring-warning" : ""} ${studentColors[lesson.student_id] || "bg-muted border-border"}`}>
-                              <div className="font-medium text-xs mb-1 flex items-center gap-1">
-                                {isOverride && <Calendar className="h-3 w-3 text-warning" />}
+                          {lesson ? <div className={`p-2 rounded border-2 transition-opacity ${lesson.is_completed ? "opacity-40" : "opacity-100"} ${studentColors[lesson.student_id] || "bg-muted border-border"}`}>
+                              <div className="font-medium text-xs mb-1">
                                 {lesson.note ? `${lesson.student_name} - ${lesson.note}` : lesson.student_name}
                               </div>
                               <div className="text-[10px] font-mono">
