@@ -171,7 +171,8 @@ serve(async (req) => {
         teacher_id: teacherId,
         lessons_per_week: lessonsPerWeek,
         completed_lessons: [],
-        lesson_dates: {}
+        lesson_dates: {},
+        package_cycle: 1
       })
 
     if (trackingError) {

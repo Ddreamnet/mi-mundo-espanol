@@ -1,9 +1,5 @@
 // Consolidated types and utility functions for lesson tracking
 
-export interface LessonDates {
-  [key: string]: string;
-}
-
 export interface LessonInstance {
   id: string;
   student_id: string;
