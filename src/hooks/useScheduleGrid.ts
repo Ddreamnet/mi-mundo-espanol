@@ -207,7 +207,7 @@ export function useScheduleGrid({
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState<"template" | "actual">("actual");
 
-  const fetchSchedule = useCallback(async () {
+  const fetchSchedule = useCallback(async () => {
     try {
       setLoading(true);
 
