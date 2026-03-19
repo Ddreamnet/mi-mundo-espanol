@@ -1,8 +1,5 @@
-// Compatibility shim — delegates to new modular files
-// Keep getLocale here as it's locale-specific and not moved elsewhere
-
+// Utility re-exports for lesson display
 export { getRowConfig, formatTime, calculateDurationMinutes as calculateLessonDuration } from "@/lib/lessonTypes";
-export { calculateLessonDates } from "@/lib/lessonDateCalculation";
 
 /**
  * Get the locale string for time/date formatting based on language code.

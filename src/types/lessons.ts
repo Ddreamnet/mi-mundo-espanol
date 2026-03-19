@@ -1,9 +1,5 @@
 // Shared types for lesson tracking, scheduling, and override flows
 
-export interface LessonDates {
-  [key: string]: string;
-}
-
 export interface StudentLesson {
   id: string;
   student_id: string;
