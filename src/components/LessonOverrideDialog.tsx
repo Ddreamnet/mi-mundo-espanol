@@ -167,8 +167,21 @@ export function LessonOverrideDialog({
         return;
       }
 
+      // Get template slots for shift calculation
+      const { data: templateData } = await supabase
+        .from("student_lessons")
+        .select("day_of_week, start_time, end_time")
+        .eq("student_id", studentId)
+        .eq("teacher_id", teacherId);
+
+      const templateSlots = (templateData || []).map((s: any) => ({
+        dayOfWeek: s.day_of_week,
+        startTime: s.start_time,
+        endTime: s.end_time,
+      }));
+
       // Use the instance-based shift function
-      await shiftLessonsForward(studentId, teacherId, instanceId);
+      await shiftLessonsForward(studentId, teacherId, instanceId, templateSlots);
 
       toast({
         title: t("common.success"),
