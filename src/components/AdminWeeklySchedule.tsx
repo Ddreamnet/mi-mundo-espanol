@@ -4,25 +4,17 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { Plus, Download, Trash2, CheckCircle, Undo2, Calendar, X } from "lucide-react";
+import { Plus, Download, Trash2, CheckCircle, Undo2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { AddTrialLessonDialog } from "./AddTrialLessonDialog";
 import { exportScheduleAsPNG } from "./ScheduleExportCanvas";
 import { LessonOverrideDialog } from "./LessonOverrideDialog";
-import { useLessonOverrides, getLessonDateForCurrentWeek, LessonOverride } from "@/hooks/useLessonOverrides";
 import { format } from "date-fns";
 import type { StudentLesson, TrialLesson } from "@/types/lessons";
 import { formatTime as formatTimeUtil } from "@/utils/lessonDateUtils";
 import { addTrialLessonToBalance, subtractTrialLessonFromBalance } from "@/lib/teacherBalance";
 import { useScheduleGrid } from "@/hooks/useScheduleGrid";
-
-// Admin-specific extended StudentLesson with override metadata
-interface AdminStudentLesson extends StudentLesson {
-  _originalStartTime?: string;
-  _originalEndTime?: string;
-  _hasOverride?: boolean;
-}
 
 interface AdminWeeklyScheduleProps {
   teacherId: string;
@@ -47,16 +39,13 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
   const [showUnmarkAlert, setShowUnmarkAlert] = useState(false);
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   
-  // Lesson override state
-  const [selectedLesson, setSelectedLesson] = useState<AdminStudentLesson | null>(null);
+  // Lesson override state (now instance-based)
+  const [selectedLesson, setSelectedLesson] = useState<StudentLesson | null>(null);
+  const [selectedInstanceId, setSelectedInstanceId] = useState<string | null>(null);
   const [selectedLessonDate, setSelectedLessonDate] = useState<Date | null>(null);
-  const [selectedLessonCurrentDate, setSelectedLessonCurrentDate] = useState<Date | null>(null);
-  const [selectedLessonCurrentStartTime, setSelectedLessonCurrentStartTime] = useState<string | null>(null);
-  const [selectedLessonCurrentEndTime, setSelectedLessonCurrentEndTime] = useState<string | null>(null);
   const [showOverrideDialog, setShowOverrideDialog] = useState(false);
   
   const { toast } = useToast();
-  const { overrides, isLessonCancelled, getLessonOverride, refetch: refetchOverrides } = useLessonOverrides(teacherId);
   
   const {
     lessons,
@@ -72,7 +61,6 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
     return formatTimeUtil(time);
   };
 
-  // Admin-specific: include ALL lesson times (even cancelled ones)
   const getAllTimeSlots = () => {
     const allTimes = new Set<string>();
     
@@ -84,116 +72,27 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
       allTimes.add(l.start_time);
     });
     
-    overrides.forEach((o) => {
-      if (!o.is_cancelled && o.new_start_time) {
-        allTimes.add(o.new_start_time);
-      }
-    });
-    
     return Array.from(allTimes).sort();
   };
 
-  // Admin-specific: find override for a student on a specific date
-  const getLessonOverrideForAdmin = (studentId: string, date: Date): LessonOverride | null => {
-    const dateStr = format(date, "yyyy-MM-dd");
-    return overrides.find((o) => {
-      return o.student_id === studentId && 
-             format(new Date(o.original_date), "yyyy-MM-dd") === dateStr;
-    }) || null;
-  };
-
-  // Admin-specific: show cancelled/postponed lessons dimmed instead of hiding them
   const getLessonForDayAndTime = (dayIndex: number, timeSlot: string) => {
     const dbDayOfWeek = dayIndex === 6 ? 0 : dayIndex + 1;
-    const dateForDay = getDateForDayIndex(dayIndex);
-    
-    // Check for moved lessons
-    const movedLesson = overrides.find((o) => {
-      if (o.is_cancelled || !o.new_date) return false;
-      const newDate = new Date(o.new_date);
-      const effectiveTime = o.new_start_time || o.original_start_time;
-      return format(newDate, "yyyy-MM-dd") === format(dateForDay, "yyyy-MM-dd") && effectiveTime === timeSlot;
-    });
-    
-    if (movedLesson) {
-      const originalLesson = lessons.find((l) => l.student_id === movedLesson.student_id);
-      if (originalLesson) {
-        return {
-          ...originalLesson,
-          start_time: movedLesson.new_start_time || movedLesson.original_start_time,
-          end_time: movedLesson.new_end_time || movedLesson.original_end_time,
-          _isOverride: true,
-          _originalDate: new Date(movedLesson.original_date),
-          _override: movedLesson,
-        };
-      }
-    }
-    
-    // Check for regular lessons
-    const lesson = lessons.find((l) => l.day_of_week === dbDayOfWeek && l.start_time === timeSlot);
-    
-    if (lesson) {
-      const lessonDate = getLessonDateForCurrentWeek(lesson.day_of_week);
-      
-      // Admin: show overridden lessons dimmed instead of hiding
-      const override = getLessonOverrideForAdmin(lesson.student_id, lessonDate);
-      if (override) {
-        return { 
-          ...lesson, 
-          _originalDate: lessonDate,
-          _isPostponed: true,
-          _override: override,
-        };
-      }
-      
-      return { ...lesson, _originalDate: lessonDate };
-    }
-    
-    return null;
+    return lessons.find((l) => l.day_of_week === dbDayOfWeek && l.start_time === timeSlot) || null;
   };
 
-  const handleLessonClick = (lesson: StudentLesson & { _originalDate?: Date; _override?: LessonOverride }) => {
-    const override = lesson._override;
-    let originalDateForOverride: Date;
-    let currentDisplayDate: Date;
-    let currentStartTime: string;
-    let currentEndTime: string;
-    let originalStartTimeForDialog: string;
-    let originalEndTimeForDialog: string;
+  const handleLessonClick = (lesson: StudentLesson, dayIndex: number) => {
+    const dateForDay = getDateForDayIndex(dayIndex);
     
-    if (override) {
-      originalDateForOverride = new Date(override.original_date);
-      currentDisplayDate = override.new_date ? new Date(override.new_date) : originalDateForOverride;
-      currentStartTime = override.new_start_time || override.original_start_time;
-      currentEndTime = override.new_end_time || override.original_end_time;
-      originalStartTimeForDialog = override.original_start_time;
-      originalEndTimeForDialog = override.original_end_time;
-    } else {
-      originalDateForOverride = lesson._originalDate || getLessonDateForCurrentWeek(lesson.day_of_week);
-      currentDisplayDate = originalDateForOverride;
-      currentStartTime = lesson.start_time;
-      currentEndTime = lesson.end_time;
-      originalStartTimeForDialog = lesson.start_time;
-      originalEndTimeForDialog = lesson.end_time;
-    }
-    
-    const lessonWithOriginalTimes: AdminStudentLesson = {
-      ...lesson,
-      _originalStartTime: originalStartTimeForDialog,
-      _originalEndTime: originalEndTimeForDialog,
-      _hasOverride: !!override,
-    };
-    
-    setSelectedLesson(lessonWithOriginalTimes);
-    setSelectedLessonDate(originalDateForOverride);
-    setSelectedLessonCurrentDate(currentDisplayDate);
-    setSelectedLessonCurrentStartTime(currentStartTime);
-    setSelectedLessonCurrentEndTime(currentEndTime);
+    // Find matching instance for this lesson on this date
+    // We'll look up instance from the schedule grid's data
+    setSelectedLesson(lesson);
+    setSelectedLessonDate(dateForDay);
+    // Instance ID will be looked up by the override dialog or we pass it if available
+    setSelectedInstanceId(null); // Will be resolved in the dialog
     setShowOverrideDialog(true);
   };
 
   const handleOverrideSuccess = () => {
-    refetchOverrides();
     refetchSchedule();
   };
 
@@ -348,19 +247,13 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
                           {lesson && (
                             <Button
                               variant="outline"
-                              className={`w-full justify-center py-2 cursor-pointer relative ${
-                                (lesson as any)._isPostponed 
-                                  ? "opacity-40 bg-muted text-muted-foreground border-border hover:opacity-60" 
-                                  : studentColors[lesson.student_id] || "bg-muted text-muted-foreground"
-                              } ${(lesson as any)._isOverride ? "ring-2 ring-warning ring-offset-1" : ""}`}
-                              onClick={() => handleLessonClick(lesson as any)}
+                              className={`w-full justify-center py-2 cursor-pointer ${
+                                studentColors[lesson.student_id] || "bg-muted text-muted-foreground"
+                              }`}
+                              onClick={() => handleLessonClick(lesson, dayIndex)}
                             >
-                              {(lesson as any)._isPostponed && (
-                                <X className="absolute top-1 right-1 h-4 w-4 text-destructive" />
-                              )}
                               <div className="text-center">
-                                <div className="font-medium flex items-center justify-center gap-1">
-                                  {(lesson as any)._isOverride && <Calendar className="h-3 w-3 text-warning" />}
+                                <div className="font-medium">
                                   {lesson.note ? `${lesson.student_name} - ${lesson.note}` : lesson.student_name}
                                 </div>
                                 <div className="text-xs mt-1">
@@ -502,7 +395,7 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Lesson Override Dialog */}
+      {/* Lesson Override Dialog — now instance-based */}
       {selectedLesson && selectedLessonDate && (
         <LessonOverrideDialog
           open={showOverrideDialog}
@@ -510,14 +403,12 @@ export function AdminWeeklySchedule({ teacherId }: AdminWeeklyScheduleProps) {
           studentId={selectedLesson.student_id}
           teacherId={teacherId}
           studentName={selectedLesson.student_name}
+          instanceId={selectedInstanceId || undefined}
           originalDate={selectedLessonDate}
           originalDayOfWeek={selectedLesson.day_of_week}
-          originalStartTime={selectedLesson._originalStartTime || selectedLesson.start_time}
-          originalEndTime={selectedLesson._originalEndTime || selectedLesson.end_time}
-          currentDate={selectedLessonCurrentDate || undefined}
-          currentStartTime={selectedLessonCurrentStartTime || undefined}
-          currentEndTime={selectedLessonCurrentEndTime || undefined}
-          hasExistingOverride={selectedLesson._hasOverride || false}
+          originalStartTime={selectedLesson.start_time}
+          originalEndTime={selectedLesson.end_time}
+          hasExistingOverride={false}
           onSuccess={handleOverrideSuccess}
         />
       )}
