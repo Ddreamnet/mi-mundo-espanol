@@ -76,7 +76,7 @@ export function generateFutureInstanceDates(
 
 /**
  * Sync template changes: keep completed instances, regenerate planned ones.
- * Reads existing instances from DB, preserves completed, deletes planned, inserts new.
+ * Cycle-aware: only operates on current package_cycle instances.
  */
 export async function syncTemplateChange(
   studentId: string,
@@ -84,12 +84,23 @@ export async function syncTemplateChange(
   newSlots: TemplateSlot[],
   totalLessons: number
 ): Promise<{ conflicts: ConflictInfo[]; success: boolean }> {
-  // 1. Get all existing instances
+  // 0. Get current cycle
+  const { data: tracking } = await supabase
+    .from("student_lesson_tracking")
+    .select("package_cycle")
+    .eq("student_id", studentId)
+    .eq("teacher_id", teacherId)
+    .maybeSingle();
+
+  const currentCycle = (tracking as any)?.package_cycle ?? 1;
+
+  // 1. Get existing instances in current cycle
   const { data: existing } = await supabase
     .from("lesson_instances")
     .select("*")
     .eq("student_id", studentId)
     .eq("teacher_id", teacherId)
+    .eq("package_cycle", currentCycle)
     .order("lesson_number", { ascending: true });
 
   const allInstances = existing || [];
@@ -98,13 +109,14 @@ export async function syncTemplateChange(
     ? Math.max(...completed.map((i) => i.lesson_number))
     : 0;
 
-  // 2. Delete all planned instances
+  // 2. Delete only planned instances in current cycle
   await supabase
     .from("lesson_instances")
     .delete()
     .eq("student_id", studentId)
     .eq("teacher_id", teacherId)
-    .eq("status", "planned");
+    .eq("status", "planned")
+    .eq("package_cycle", currentCycle);
 
   // 3. Generate new planned instances from template
   const remainingCount = totalLessons - maxCompletedNumber;
@@ -125,7 +137,7 @@ export async function syncTemplateChange(
     return { conflicts, success: false };
   }
 
-  // 5. Insert new planned instances
+  // 5. Insert new planned instances with cycle
   const toInsert = generated.map((g, idx) => ({
     student_id: studentId,
     teacher_id: teacherId,
@@ -135,6 +147,7 @@ export async function syncTemplateChange(
     end_time: g.endTime,
     status: "planned" as const,
     rescheduled_count: 0,
+    package_cycle: currentCycle,
   }));
 
   if (toInsert.length > 0) {
@@ -146,6 +159,7 @@ export async function syncTemplateChange(
 
 /**
  * "Sonraki Derse Aktar" — shift target + subsequent planned instances forward by one slot.
+ * Cycle-aware: only shifts planned instances in current cycle.
  */
 export async function shiftLessonsForward(
   studentId: string,
@@ -153,6 +167,16 @@ export async function shiftLessonsForward(
   fromInstanceId: string,
   templateSlots: TemplateSlot[]
 ): Promise<{ conflicts: ConflictInfo[]; success: boolean }> {
+  // 0. Get current cycle
+  const { data: tracking } = await supabase
+    .from("student_lesson_tracking")
+    .select("package_cycle")
+    .eq("student_id", studentId)
+    .eq("teacher_id", teacherId)
+    .maybeSingle();
+
+  const currentCycle = (tracking as any)?.package_cycle ?? 1;
+
   // 1. Get target instance
   const { data: target } = await supabase
     .from("lesson_instances")
@@ -162,13 +186,14 @@ export async function shiftLessonsForward(
 
   if (!target) return { conflicts: [], success: false };
 
-  // 2. Get all planned instances from this one forward
+  // 2. Get all planned instances from this one forward in current cycle
   const { data: planned } = await supabase
     .from("lesson_instances")
     .select("*")
     .eq("student_id", studentId)
     .eq("teacher_id", teacherId)
     .eq("status", "planned")
+    .eq("package_cycle", currentCycle)
     .gte("lesson_number", target.lesson_number)
     .order("lesson_number", { ascending: true });
 

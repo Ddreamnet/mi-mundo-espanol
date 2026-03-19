@@ -37,7 +37,7 @@ interface UseScheduleGridResult {
 
 /**
  * Lazy-generate lesson_instances for a given teacher + week.
- * Skips fully past weeks. No cap on total instance count.
+ * Cycle-aware: respects totalRights = lpw * 4 cap per student.
  */
 async function ensureInstancesForWeek(teacherId: string, ws: Date) {
   const weekStart = new Date(ws);
@@ -69,7 +69,21 @@ async function ensureInstancesForWeek(teacherId: string, ws: Date) {
 
   const activeIds = new Set((activeStudents || []).map((s) => s.student_id));
 
-  // 3. Check existing instances for this week
+  // 3. Get tracking data for cycle and lpw info
+  const { data: trackingData } = await supabase
+    .from("student_lesson_tracking")
+    .select("student_id, package_cycle, lessons_per_week")
+    .eq("teacher_id", teacherId);
+
+  const trackingMap = new Map<string, { cycle: number; lpw: number }>();
+  (trackingData || []).forEach((t: any) => {
+    trackingMap.set(t.student_id, {
+      cycle: t.package_cycle ?? 1,
+      lpw: t.lessons_per_week,
+    });
+  });
+
+  // 4. Check existing instances for this week
   const { data: existingInstances } = await supabase
     .from("lesson_instances")
     .select("student_id, lesson_date")
@@ -82,7 +96,7 @@ async function ensureInstancesForWeek(teacherId: string, ws: Date) {
     (existingInstances || []).map((i) => `${i.student_id}:${i.lesson_date}`)
   );
 
-  // 4. Group templates by student
+  // 5. Group templates by student
   const templatesByStudent = new Map<string, typeof templates>();
   for (const t of templates) {
     if (!activeIds.has(t.student_id)) continue;
@@ -91,23 +105,16 @@ async function ensureInstancesForWeek(teacherId: string, ws: Date) {
     templatesByStudent.set(t.student_id, arr);
   }
 
-  // 5. Find missing students who need instances for this week
+  // 6. Find missing students who need instances for this week
   const toInsert: any[] = [];
-
-  // Get max lesson numbers for students that need new instances
   const studentsNeedingInstances: string[] = [];
+
   for (const [studentId, slots] of templatesByStudent) {
     for (const slot of slots) {
-      // Calculate the date for this slot in this week
-      // day_of_week: 0=Sun, 1=Mon, ..., 6=Sat
-      // weekStart is Monday (weekStartsOn: 1)
       const dayOffset = slot.day_of_week === 0 ? 6 : slot.day_of_week - 1;
       const slotDate = format(addDays(weekStart, dayOffset), "yyyy-MM-dd");
 
-      // Skip if date is before today
       if (slotDate < format(today, "yyyy-MM-dd")) continue;
-
-      // Skip if already exists
       if (existingSet.has(`${studentId}:${slotDate}`)) continue;
 
       if (!studentsNeedingInstances.includes(studentId)) {
@@ -118,9 +125,25 @@ async function ensureInstancesForWeek(teacherId: string, ws: Date) {
 
   if (studentsNeedingInstances.length === 0) return;
 
-  // Get max lesson_number for each student needing instances
+  // 7. Get instance counts per student in current cycle (for cap enforcement)
+  const instanceCountMap = new Map<string, number>();
   const maxLessonMap = new Map<string, number>();
+
   for (const sid of studentsNeedingInstances) {
+    const tracking = trackingMap.get(sid);
+    const currentCycle = tracking?.cycle ?? 1;
+
+    // Count existing instances in current cycle
+    const { count } = await supabase
+      .from("lesson_instances")
+      .select("id", { count: "exact", head: true })
+      .eq("student_id", sid)
+      .eq("teacher_id", teacherId)
+      .eq("package_cycle", currentCycle);
+
+    instanceCountMap.set(sid, count ?? 0);
+
+    // Get max lesson_number
     const { data: maxData } = await supabase
       .from("lesson_instances")
       .select("lesson_number")
@@ -132,12 +155,20 @@ async function ensureInstancesForWeek(teacherId: string, ws: Date) {
     maxLessonMap.set(sid, maxData && maxData.length > 0 ? maxData[0].lesson_number : 0);
   }
 
-  // Generate instances
+  // 8. Generate instances with cap enforcement
   for (const [studentId, slots] of templatesByStudent) {
     if (!studentsNeedingInstances.includes(studentId)) continue;
+
+    const tracking = trackingMap.get(studentId);
+    const totalRights = (tracking?.lpw ?? slots.length) * 4;
+    const currentCycle = tracking?.cycle ?? 1;
+    let existingInCycle = instanceCountMap.get(studentId) ?? 0;
     let nextNumber = (maxLessonMap.get(studentId) || 0) + 1;
 
     for (const slot of slots) {
+      // Cap check: don't generate beyond totalRights
+      if (existingInCycle >= totalRights) break;
+
       const dayOffset = slot.day_of_week === 0 ? 6 : slot.day_of_week - 1;
       const slotDate = format(addDays(weekStart, dayOffset), "yyyy-MM-dd");
 
@@ -153,7 +184,9 @@ async function ensureInstancesForWeek(teacherId: string, ws: Date) {
         end_time: slot.end_time,
         status: "planned",
         rescheduled_count: 0,
+        package_cycle: currentCycle,
       });
+      existingInCycle++;
     }
   }
 
@@ -174,7 +207,7 @@ export function useScheduleGrid({
   const [loading, setLoading] = useState(true);
   const [mode, setMode] = useState<"template" | "actual">("actual");
 
-  const fetchSchedule = useCallback(async () => {
+  const fetchSchedule = useCallback(async () {
     try {
       setLoading(true);
 
