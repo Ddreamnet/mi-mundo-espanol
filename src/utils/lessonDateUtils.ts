@@ -1,7 +1,6 @@
 // Compatibility shim — delegates to new modular files
 // Keep getLocale here as it's locale-specific and not moved elsewhere
 
-export { getSortedLessons, getDisplayLessonData } from "@/lib/lessonSorting";
 export { getRowConfig, formatTime, calculateDurationMinutes as calculateLessonDuration } from "@/lib/lessonTypes";
 export { calculateLessonDates } from "@/lib/lessonDateCalculation";
 
