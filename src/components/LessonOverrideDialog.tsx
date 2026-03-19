@@ -4,7 +4,6 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogFooter,
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
@@ -31,6 +30,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useTranslation } from "react-i18next";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { shiftLessonsForward } from "@/lib/instanceGeneration";
 
 interface LessonOverrideDialogProps {
   open: boolean;
@@ -38,11 +38,13 @@ interface LessonOverrideDialogProps {
   studentId: string;
   teacherId: string;
   studentName: string;
+  // Instance-based props
+  instanceId?: string;
   originalDate: Date;
   originalDayOfWeek: number;
   originalStartTime: string;
   originalEndTime: string;
-  // Current display date/time (might be different from original if already overridden)
+  // Current display date/time (might differ if already rescheduled)
   currentDate?: Date;
   currentStartTime?: string;
   currentEndTime?: string;
@@ -56,6 +58,7 @@ export function LessonOverrideDialog({
   studentId,
   teacherId,
   studentName,
+  instanceId,
   originalDate,
   originalDayOfWeek,
   originalStartTime,
@@ -69,7 +72,6 @@ export function LessonOverrideDialog({
   const { t } = useTranslation();
   const { language } = useLanguage();
   
-  // Use current values if provided, otherwise fall back to original
   const displayDate = currentDate || originalDate;
   const displayStartTime = currentStartTime || originalStartTime;
   const displayEndTime = currentEndTime || originalEndTime;
@@ -91,7 +93,6 @@ export function LessonOverrideDialog({
     }
   };
 
-  // Reset state when dialog opens with new lesson data
   useEffect(() => {
     if (open) {
       const dateToUse = currentDate || originalDate;
@@ -101,7 +102,6 @@ export function LessonOverrideDialog({
       setNewStartTime(startTimeToUse.slice(0, 5));
       setNewEndTime(endTimeToUse.slice(0, 5));
       
-      // Calculate next lesson date for "Sonraki Derse Aktar" button
       calculateNextLessonDate(originalDate).then(setNextLessonDate);
     }
   }, [open, originalDate, originalStartTime, originalEndTime, currentDate, currentStartTime, currentEndTime]);
@@ -117,7 +117,6 @@ export function LessonOverrideDialog({
     }
   };
 
-  // Check if date/time has been changed from the display values
   const hasDateTimeChanges = (): boolean => {
     if (!newDate) return false;
     
@@ -128,66 +127,36 @@ export function LessonOverrideDialog({
     return dateChanged || startTimeChanged || endTimeChanged;
   };
 
-  // Calculate next lesson date based on student's lesson days
   const calculateNextLessonDate = async (currentDate: Date): Promise<Date | null> => {
     try {
-      // Get student's lesson days
       const { data: lessonDays, error } = await supabase
         .from("student_lessons")
         .select("day_of_week")
         .eq("student_id", studentId)
         .eq("teacher_id", teacherId);
 
-      if (error || !lessonDays || lessonDays.length === 0) {
-        console.error("Could not fetch lesson days:", error);
-        return null;
-      }
+      if (error || !lessonDays || lessonDays.length === 0) return null;
 
       const days = lessonDays.map((l: any) => l.day_of_week);
+      let nextDate = addDays(currentDate, 1);
       
-      // Find the next lesson day after current date
-      let nextDate = new Date(currentDate);
-      nextDate.setHours(0, 0, 0, 0);
-      
-      // Start from next day
-      nextDate = addDays(nextDate, 1);
-      
-      // Find the next day that matches a lesson day
       let attempts = 0;
       while (!days.includes(nextDate.getDay()) && attempts < 14) {
         nextDate = addDays(nextDate, 1);
         attempts++;
       }
       
-      if (attempts >= 14) {
-        console.error("Could not find next lesson day");
-        return null;
-      }
-      
-      return nextDate;
-    } catch (error) {
-      console.error("Error calculating next lesson date:", error);
+      return attempts >= 14 ? null : nextDate;
+    } catch {
       return null;
     }
   };
 
-  // Handler for "Sonraki Derse Aktar" - shifts all subsequent lesson dates
+  // Postpone: shift this and all subsequent planned instances forward using instanceGeneration
   const handlePostponeToNextLesson = async () => {
     setSaving(true);
     try {
-      // Get current lesson tracking data
-      const { data: trackingData, error: trackingError } = await supabase
-        .from("student_lesson_tracking")
-        .select("*")
-        .eq("student_id", studentId)
-        .eq("teacher_id", teacherId)
-        .order("updated_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      if (trackingError) throw trackingError;
-
-      if (!trackingData || !trackingData.lesson_dates) {
+      if (!instanceId) {
         toast({
           title: t("common.error"),
           description: t("dialogs.lessonOverride.noTrackingData"),
@@ -198,88 +167,12 @@ export function LessonOverrideDialog({
         return;
       }
 
-      const lessonDates = trackingData.lesson_dates as Record<string, string>;
-      const originalDateStr = format(originalDate, "yyyy-MM-dd");
-      
-      // Find which lesson number corresponds to this date
-      let targetLessonNumber: number | null = null;
-      for (const [lessonNum, dateStr] of Object.entries(lessonDates)) {
-        if (dateStr === originalDateStr) {
-          targetLessonNumber = parseInt(lessonNum);
-          break;
-        }
-      }
-
-      if (targetLessonNumber === null) {
-        toast({
-          title: t("common.error"),
-          description: t("dialogs.lessonOverride.lessonNotFound"),
-          variant: "destructive",
-        });
-        setSaving(false);
-        setShowPostponeConfirm(false);
-        return;
-      }
-
-      // Get student's lesson days for calculating new dates
-      const { data: lessonDays, error: lessonDaysError } = await supabase
-        .from("student_lessons")
-        .select("day_of_week")
-        .eq("student_id", studentId)
-        .eq("teacher_id", teacherId);
-
-      if (lessonDaysError || !lessonDays || lessonDays.length === 0) {
-        toast({
-          title: t("common.error"),
-          description: t("dialogs.lessonOverride.lessonDaysNotFound"),
-          variant: "destructive",
-        });
-        setSaving(false);
-        setShowPostponeConfirm(false);
-        return;
-      }
-
-      const days = lessonDays.map((l: any) => l.day_of_week).sort((a: number, b: number) => a - b);
-      
-      // Shift all lessons from targetLessonNumber onwards
-      const totalLessons = trackingData.lessons_per_week * 4;
-      const newLessonDates: Record<string, string> = { ...lessonDates };
-      
-      // Start from the original date and find the next lesson date
-      let currentLessonDate = new Date(originalDate);
-      
-      for (let i = targetLessonNumber; i <= totalLessons; i++) {
-        // Find next lesson date
-        let nextDate = addDays(currentLessonDate, 1);
-        let attempts = 0;
-        while (!days.includes(nextDate.getDay()) && attempts < 14) {
-          nextDate = addDays(nextDate, 1);
-          attempts++;
-        }
-        
-        newLessonDates[i.toString()] = format(nextDate, "yyyy-MM-dd");
-        currentLessonDate = nextDate;
-      }
-
-      // Update the lesson_dates in database
-      const { error: updateError } = await supabase
-        .from("student_lesson_tracking")
-        .update({ lesson_dates: newLessonDates })
-        .eq("id", trackingData.id);
-
-      if (updateError) throw updateError;
-
-      // Also delete any existing override for this original date
-      await supabase
-        .from("lesson_overrides")
-        .delete()
-        .eq("student_id", studentId)
-        .eq("teacher_id", teacherId)
-        .eq("original_date", originalDateStr);
+      // Use the instance-based shift function
+      await shiftLessonsForward(studentId, teacherId, instanceId);
 
       toast({
         title: t("common.success"),
-        description: t("dialogs.lessonOverride.postponeSuccess", { lesson: targetLessonNumber }),
+        description: t("dialogs.lessonOverride.postponeSuccess", { lesson: "" }),
       });
       onSuccess();
       onOpenChange(false);
@@ -296,7 +189,7 @@ export function LessonOverrideDialog({
     }
   };
 
-  // Handler for "Tarihi Değiştir (1 Seferlik)" - creates/updates lesson_override
+  // One-time date/time change: update the instance directly
   const handleOneTimeChange = async () => {
     if (!newDate) {
       toast({
@@ -315,6 +208,15 @@ export function LessonOverrideDialog({
       return;
     }
 
+    if (!instanceId) {
+      toast({
+        title: t("common.error"),
+        description: "Instance ID bulunamadı.",
+        variant: "destructive",
+      });
+      return;
+    }
+
     setSaving(true);
     try {
       // Check for conflicts at the new date/time
@@ -322,7 +224,9 @@ export function LessonOverrideDialog({
         teacherId,
         format(newDate, "yyyy-MM-dd"),
         newStartTime + ":00",
-        newEndTime + ":00"
+        newEndTime + ":00",
+        instanceId,
+        studentId
       );
 
       if (conflicts.length > 0) {
@@ -341,45 +245,28 @@ export function LessonOverrideDialog({
         return;
       }
 
-      // Check if there's an existing override for this date
-      const { data: existingOverride } = await supabase
-        .from("lesson_overrides")
-        .select("id")
-        .eq("student_id", studentId)
-        .eq("teacher_id", teacherId)
-        .eq("original_date", format(originalDate, "yyyy-MM-dd"))
-        .maybeSingle();
+      // Get current instance data for original_date tracking
+      const { data: currentInstance } = await supabase
+        .from("lesson_instances")
+        .select("lesson_date, original_date, rescheduled_count")
+        .eq("id", instanceId)
+        .single();
 
-      if (existingOverride) {
-        // Update existing override
-        const { error } = await supabase
-          .from("lesson_overrides")
-          .update({
-            new_date: format(newDate, "yyyy-MM-dd"),
-            new_start_time: newStartTime + ":00",
-            new_end_time: newEndTime + ":00",
-            is_cancelled: false,
-          })
-          .eq("id", existingOverride.id);
+      const newDateStr = format(newDate, "yyyy-MM-dd");
 
-        if (error) throw error;
-      } else {
-        // Create new override
-        const { error } = await supabase.from("lesson_overrides").insert({
-          student_id: studentId,
-          teacher_id: teacherId,
-          original_date: format(originalDate, "yyyy-MM-dd"),
-          original_day_of_week: originalDayOfWeek,
-          original_start_time: originalStartTime,
-          original_end_time: originalEndTime,
-          new_date: format(newDate, "yyyy-MM-dd"),
-          new_start_time: newStartTime + ":00",
-          new_end_time: newEndTime + ":00",
-          is_cancelled: false,
-        });
+      // Update instance directly
+      const { error } = await supabase
+        .from("lesson_instances")
+        .update({
+          lesson_date: newDateStr,
+          start_time: newStartTime + ":00",
+          end_time: newEndTime + ":00",
+          original_date: currentInstance?.original_date || currentInstance?.lesson_date,
+          rescheduled_count: (currentInstance?.rescheduled_count || 0) + 1,
+        })
+        .eq("id", instanceId);
 
-        if (error) throw error;
-      }
+      if (error) throw error;
 
       toast({
         title: t("common.success"),
@@ -388,7 +275,7 @@ export function LessonOverrideDialog({
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
-      console.error("Error saving lesson override:", error);
+      console.error("Error saving lesson change:", error);
       toast({
         title: t("common.error"),
         description: error.message || t("dialogs.lessonOverride.changeError"),
@@ -399,17 +286,45 @@ export function LessonOverrideDialog({
     }
   };
 
-  // Handler for "Değişiklikleri Geri Al"
+  // Revert: restore instance to its original_date/time
   const handleRevert = async () => {
     setSaving(true);
     try {
-      // Delete the existing override record
+      if (!instanceId) {
+        throw new Error("Instance ID bulunamadı.");
+      }
+
+      // Get original values from instance
+      const { data: inst, error: fetchError } = await supabase
+        .from("lesson_instances")
+        .select("original_date, original_start_time, original_end_time")
+        .eq("id", instanceId)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      if (!inst?.original_date) {
+        toast({
+          title: t("common.info"),
+          description: t("dialogs.lessonOverride.noChangesToRevert"),
+        });
+        setSaving(false);
+        setShowRevertConfirm(false);
+        return;
+      }
+
       const { error } = await supabase
-        .from("lesson_overrides")
-        .delete()
-        .eq("student_id", studentId)
-        .eq("teacher_id", teacherId)
-        .eq("original_date", format(originalDate, "yyyy-MM-dd"));
+        .from("lesson_instances")
+        .update({
+          lesson_date: inst.original_date,
+          start_time: inst.original_start_time || originalStartTime,
+          end_time: inst.original_end_time || originalEndTime,
+          original_date: null,
+          original_start_time: null,
+          original_end_time: null,
+          rescheduled_count: 0,
+        })
+        .eq("id", instanceId);
 
       if (error) throw error;
 
@@ -420,7 +335,7 @@ export function LessonOverrideDialog({
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
-      console.error("Error reverting lesson override:", error);
+      console.error("Error reverting lesson:", error);
       toast({
         title: t("common.error"),
         description: error.message || t("dialogs.lessonOverride.revertError"),
@@ -432,7 +347,6 @@ export function LessonOverrideDialog({
     }
   };
 
-  // Handler for "Kaydet" - just saves date/time changes
   const handleSave = async () => {
     if (hasDateTimeChanges()) {
       await handleOneTimeChange();
