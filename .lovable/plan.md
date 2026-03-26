@@ -1,21 +1,25 @@
 
 
-# Fix: `notify_admin_last_lesson` Duplicate Trigger
+# Fix: İkinci Orphan Trigger — `on_last_lesson_warning`
 
 ## Sorun
-`student_lesson_tracking` tablosunda hala eski trigger `on_lesson_tracking_update_notify_admin` yaşıyor. `rpc_complete_lesson` bu tabloyu legacy compat için güncellediğinde trigger ateşleniyor ve `NEW.status` arıyor — ama bu tabloda `status` kolonu yok.
+`student_lesson_tracking` tablosunda **iki** trigger vardı, ikisi de `notify_admin_last_lesson()` fonksiyonunu çağırıyordu:
+
+1. `on_lesson_tracking_update_notify_admin` — önceki migration'da silindi ✅
+2. `on_last_lesson_warning` — hala aktif ❌
+
+`notify_admin_last_lesson()` fonksiyonu `NEW.status` alanına erişiyor. Bu alan `lesson_instances` tablosunda var ama `student_lesson_tracking` tablosunda yok. Bu yüzden `rpc_sync_student_schedule` veya herhangi bir `student_lesson_tracking` UPDATE'i bu hatayı veriyor.
 
 ## Çözüm
-Tek bir migration: eski trigger'ı ismiyle sil.
+Tek migration — orphan trigger'ı sil:
 
 ```sql
-DROP TRIGGER IF EXISTS on_lesson_tracking_update_notify_admin ON public.student_lesson_tracking;
+DROP TRIGGER IF EXISTS on_last_lesson_warning ON public.student_lesson_tracking;
 ```
 
-Bu kadar. Yeni trigger (`notify_last_lesson_trigger ON lesson_instances`) zaten doğru çalışıyor.
-
 ## Etki
-- Sıfır risk — sadece hatalı eski trigger kaldırılıyor
-- `rpc_complete_lesson` ve `rpc_undo_complete_lesson` hatasız çalışacak
-- Bildirim mantığı `lesson_instances` trigger'ından doğru şekilde devam edecek
+- Sıfır risk — sadece hatalı trigger kaldırılıyor
+- `lesson_instances` üzerindeki `notify_last_lesson_trigger` zaten doğru çalışıyor
+- Öğrenci ayarları kaydetme, ders işlendi, geri alma hepsi düzelecek
+- Phase 7 ile ilgisi yok
 
