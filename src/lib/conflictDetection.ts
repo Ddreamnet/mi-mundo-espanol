@@ -1,3 +1,9 @@
+/**
+ * Interval-based conflict detection for teacher schedules.
+ * Checks lesson_instances + trial_lessons for time overlaps.
+ * Back-to-back (endA == startB) is NOT a conflict.
+ */
+
 import { supabase } from "@/integrations/supabase/client";
 
 export interface ConflictInfo {
@@ -9,8 +15,8 @@ export interface ConflictInfo {
 }
 
 /**
- * Pure function: check if two time ranges overlap.
- * Back-to-back (endA === startB) is NOT a conflict.
+ * Core overlap check: overlap if startA < endB AND endA > startB.
+ * Back-to-back (endA == startB or endB == startA) is allowed.
  */
 export function hasTimeOverlap(
   startA: string,
@@ -22,11 +28,9 @@ export function hasTimeOverlap(
 }
 
 /**
- * Check a teacher's actual schedule for conflicts on a given date+time range.
+ * Check a teacher's ACTUAL schedule for conflicts on a given date + time range.
  * Queries lesson_instances (planned/completed) and trial_lessons.
- * 
- * @param excludeInstanceId - Exclude a specific instance (for editing that instance)
- * @param excludeStudentId - Exclude ALL instances for a student (prevents self-conflict)
+ * Optionally excludes one instance (for edits).
  */
 export async function checkTeacherConflicts(
   teacherId: string,
@@ -41,7 +45,7 @@ export async function checkTeacherConflicts(
   // 1. Check lesson_instances for that teacher on that date
   let instanceQuery = supabase
     .from("lesson_instances")
-    .select("id, student_id, lesson_date, start_time, end_time, status")
+    .select("id, student_id, start_time, end_time")
     .eq("teacher_id", teacherId)
     .eq("lesson_date", date)
     .in("status", ["planned", "completed"]);
@@ -52,33 +56,32 @@ export async function checkTeacherConflicts(
 
   const { data: instances } = await instanceQuery;
 
-  if (instances && instances.length > 0) {
-    // Filter out excluded student's instances
-    const filteredInstances = excludeStudentId
+  if (instances) {
+    const filtered = excludeStudentId
       ? instances.filter((i) => i.student_id !== excludeStudentId)
       : instances;
 
-    if (filteredInstances.length > 0) {
-      const studentIds = [...new Set(filteredInstances.map((i) => i.student_id))];
-      const { data: profiles } = await supabase
-        .from("profiles")
-        .select("user_id, full_name")
-        .in("user_id", studentIds);
+    const studentIds = [...new Set(filtered.map((i) => i.student_id))];
+    const { data: profiles } = studentIds.length > 0
+      ? await supabase
+          .from("profiles")
+          .select("user_id, full_name")
+          .in("user_id", studentIds)
+      : { data: [] };
 
-      const nameMap = new Map(
-        (profiles || []).map((p) => [p.user_id, p.full_name])
-      );
+    const nameMap = new Map(
+      (profiles || []).map((p) => [p.user_id, p.full_name])
+    );
 
-      for (const inst of filteredInstances) {
-        if (hasTimeOverlap(startTime, endTime, inst.start_time, inst.end_time)) {
-          conflicts.push({
-            studentName: nameMap.get(inst.student_id) || "Öğrenci",
-            date: inst.lesson_date,
-            timeRange: `${inst.start_time.slice(0, 5)} - ${inst.end_time.slice(0, 5)}`,
-            type: "lesson",
-            teacherId,
-          });
-        }
+    for (const inst of filtered) {
+      if (hasTimeOverlap(startTime, endTime, inst.start_time, inst.end_time)) {
+        conflicts.push({
+          studentName: nameMap.get(inst.student_id) || "Bilinmeyen Öğrenci",
+          date,
+          timeRange: `${inst.start_time.slice(0, 5)} - ${inst.end_time.slice(0, 5)}`,
+          type: "lesson",
+          teacherId,
+        });
       }
     }
   }
@@ -86,7 +89,7 @@ export async function checkTeacherConflicts(
   // 2. Check trial_lessons for that teacher on that date
   const { data: trials } = await supabase
     .from("trial_lessons")
-    .select("id, lesson_date, start_time, end_time")
+    .select("id, start_time, end_time")
     .eq("teacher_id", teacherId)
     .eq("lesson_date", date);
 
@@ -95,7 +98,7 @@ export async function checkTeacherConflicts(
       if (hasTimeOverlap(startTime, endTime, trial.start_time, trial.end_time)) {
         conflicts.push({
           studentName: "Deneme Dersi",
-          date: trial.lesson_date,
+          date,
           timeRange: `${trial.start_time.slice(0, 5)} - ${trial.end_time.slice(0, 5)}`,
           type: "trial",
           teacherId,
@@ -105,29 +108,4 @@ export async function checkTeacherConflicts(
   }
 
   return conflicts;
-}
-
-/**
- * Batch conflict check for multiple instances.
- */
-export async function checkTeacherConflictsBatch(
-  teacherId: string,
-  instances: { lessonDate: string; startTime: string; endTime: string }[],
-  excludeStudentId?: string
-): Promise<ConflictInfo[]> {
-  const allConflicts: ConflictInfo[] = [];
-
-  for (const inst of instances) {
-    const conflicts = await checkTeacherConflicts(
-      teacherId,
-      inst.lessonDate,
-      inst.startTime,
-      inst.endTime,
-      undefined,
-      excludeStudentId
-    );
-    allConflicts.push(...conflicts);
-  }
-
-  return allConflicts;
 }

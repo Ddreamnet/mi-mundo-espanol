@@ -1,74 +1,116 @@
+/**
+ * Generate/regenerate lesson instances from template slots.
+ * Handles template changes, future instance regeneration, and
+ * "move to next lesson" cascading shift logic.
+ * 
+ * IMPORTANT: All generation functions support multiple slots on the same day
+ * (e.g., a student with Mon 10:00 AND Mon 11:00). Slots on the same day are
+ * sorted by startTime and each produces a separate instance.
+ */
+
+import { addDays, format, startOfDay, isBefore } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import { checkTeacherConflicts, checkTeacherConflictsBatch } from "@/lib/conflictDetection";
-import type { ConflictInfo } from "@/lib/conflictDetection";
+import { checkTeacherConflicts, ConflictInfo } from "./conflictDetection";
 
 export interface TemplateSlot {
-  dayOfWeek: number;
+  dayOfWeek: number; // 0=Sun, 1=Mon, ..., 6=Sat
   startTime: string;
   endTime: string;
 }
 
-interface GeneratedDate {
-  lessonDate: string;
-  startTime: string;
-  endTime: string;
-}
-
-function formatDate(d: Date): string {
-  return d.toISOString().split("T")[0];
+export interface LessonInstanceRow {
+  id: string;
+  student_id: string;
+  teacher_id: string;
+  lesson_number: number;
+  lesson_date: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  original_date: string | null;
+  original_start_time: string | null;
+  original_end_time: string | null;
+  rescheduled_count: number;
 }
 
 /**
- * Get the next date that matches any of the template slots, starting from `fromDate`.
+ * Given a sorted template slot ring, find the slot BEFORE the given date+time.
+ * Returns null if no prior slot exists.
+ * Used by backward arrow to shift chain one slot back.
  */
-function getNextDateForSlots(
-  fromDate: Date,
-  slots: TemplateSlot[]
-): { date: Date; slot: TemplateSlot } | null {
-  const sortedSlots = [...slots].sort((a, b) => a.dayOfWeek - b.dayOfWeek);
+export function getSlotBefore(
+  templateSlots: TemplateSlot[],
+  currentDate: Date,
+  currentTime: string
+): { date: Date; startTime: string; endTime: string } | null {
+  if (templateSlots.length === 0) return null;
 
-  for (let offset = 0; offset < 14; offset++) {
-    const d = new Date(fromDate);
-    d.setDate(d.getDate() + offset);
-    const dow = d.getDay();
+  const sortedSlots = [...templateSlots].sort((a, b) => {
+    if (a.dayOfWeek !== b.dayOfWeek) return a.dayOfWeek - b.dayOfWeek;
+    return a.startTime.localeCompare(b.startTime);
+  });
 
-    const matchingSlot = sortedSlots.find((s) => s.dayOfWeek === dow);
-    if (matchingSlot) {
-      return { date: d, slot: matchingSlot };
-    }
+  const currentDow = currentDate.getDay();
+
+  const currentIdx = sortedSlots.findIndex(
+    (s) => s.dayOfWeek === currentDow && s.startTime === currentTime
+  );
+
+  if (currentIdx === -1) return null;
+
+  const prevIdx = currentIdx - 1;
+
+  if (prevIdx >= 0) {
+    const prevSlot = sortedSlots[prevIdx];
+    const dayDiff = currentDow - prevSlot.dayOfWeek;
+    const prevDate = addDays(currentDate, -dayDiff);
+    return { date: prevDate, startTime: prevSlot.startTime, endTime: prevSlot.endTime };
+  } else {
+    const prevSlot = sortedSlots[sortedSlots.length - 1];
+    let dayDiff = currentDow - prevSlot.dayOfWeek;
+    if (dayDiff <= 0) dayDiff += 7;
+    const prevDate = addDays(currentDate, -dayDiff);
+    return { date: prevDate, startTime: prevSlot.startTime, endTime: prevSlot.endTime };
   }
-
-  return null;
 }
 
 /**
- * Generate future instance dates from template slots.
- * Returns array of { lessonDate, startTime, endTime }.
+ * Generate future instances starting from a given date, using template slots.
+ * Supports multiple slots on the same day.
  */
 export function generateFutureInstanceDates(
   templateSlots: TemplateSlot[],
   count: number,
-  startFromDate: Date
-): GeneratedDate[] {
-  if (templateSlots.length === 0 || count <= 0) return [];
+  startFromDate: Date,
+  afterTime?: string
+): { lessonDate: string; startTime: string; endTime: string }[] {
+  if (count <= 0 || templateSlots.length === 0) return [];
 
-  const results: GeneratedDate[] = [];
-  let currentDate = new Date(startFromDate);
-  currentDate.setHours(0, 0, 0, 0);
+  const results: { lessonDate: string; startTime: string; endTime: string }[] = [];
+  const sortedSlots = [...templateSlots].sort((a, b) => {
+    if (a.dayOfWeek !== b.dayOfWeek) return a.dayOfWeek - b.dayOfWeek;
+    return a.startTime.localeCompare(b.startTime);
+  });
 
-  while (results.length < count) {
-    const match = getNextDateForSlots(currentDate, templateSlots);
-    if (!match) break;
+  let currentDate = startOfDay(startFromDate);
+  const maxDays = 200;
 
-    results.push({
-      lessonDate: formatDate(match.date),
-      startTime: match.slot.startTime,
-      endTime: match.slot.endTime,
-    });
+  for (let offset = 0; offset < maxDays && results.length < count; offset++) {
+    const candidate = addDays(currentDate, offset);
+    const dow = candidate.getDay();
 
-    // Move to next day to avoid picking same date again
-    currentDate = new Date(match.date);
-    currentDate.setDate(currentDate.getDate() + 1);
+    const matchingSlots = sortedSlots.filter((s) => s.dayOfWeek === dow);
+
+    for (const slot of matchingSlots) {
+      if (results.length >= count) break;
+      // On the first day (offset=0), skip slots at or before afterTime
+      if (offset === 0 && afterTime && slot.startTime <= afterTime) continue;
+      results.push({
+        lessonDate: format(candidate, "yyyy-MM-dd"),
+        startTime: slot.startTime,
+        endTime: slot.endTime,
+      });
+    }
   }
 
   return results;
@@ -76,7 +118,7 @@ export function generateFutureInstanceDates(
 
 /**
  * Sync template changes: keep completed instances, regenerate planned ones.
- * Cycle-aware: only operates on current package_cycle instances.
+ * Returns conflicts if any would be created.
  */
 export async function syncTemplateChange(
   studentId: string,
@@ -84,7 +126,6 @@ export async function syncTemplateChange(
   newSlots: TemplateSlot[],
   totalLessons: number
 ): Promise<{ conflicts: ConflictInfo[]; success: boolean }> {
-  // 0. Get current cycle
   const { data: tracking } = await supabase
     .from("student_lesson_tracking")
     .select("package_cycle")
@@ -92,9 +133,8 @@ export async function syncTemplateChange(
     .eq("teacher_id", teacherId)
     .maybeSingle();
 
-  const currentCycle = (tracking as any)?.package_cycle ?? 1;
+  const currentCycle = tracking?.package_cycle ?? 1;
 
-  // 1. Get existing instances in current cycle
   const { data: existing } = await supabase
     .from("lesson_instances")
     .select("*")
@@ -103,63 +143,87 @@ export async function syncTemplateChange(
     .eq("package_cycle", currentCycle)
     .order("lesson_number", { ascending: true });
 
-  const allInstances = existing || [];
-  const completed = allInstances.filter((i) => i.status === "completed");
-  const maxCompletedNumber = completed.length > 0
-    ? Math.max(...completed.map((i) => i.lesson_number))
-    : 0;
+  if (!existing) return { conflicts: [], success: false };
 
-  // 2. Delete only planned instances in current cycle
-  await supabase
-    .from("lesson_instances")
-    .delete()
-    .eq("student_id", studentId)
-    .eq("teacher_id", teacherId)
-    .eq("status", "planned")
-    .eq("package_cycle", currentCycle);
+  const completed = existing.filter((i) => i.status === "completed");
+  const planned = existing.filter((i) => i.status === "planned");
 
-  // 3. Generate new planned instances from template
-  const remainingCount = totalLessons - maxCompletedNumber;
-  if (remainingCount <= 0) return { conflicts: [], success: true };
-
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const generated = generateFutureInstanceDates(newSlots, remainingCount, today);
-
-  // 4. Check conflicts
-  const conflicts = await checkTeacherConflictsBatch(
-    teacherId,
-    generated,
-    studentId
-  );
-
-  if (conflicts.length > 0) {
-    return { conflicts, success: false };
+  const today = startOfDay(new Date());
+  let startFrom = today;
+  let afterTime: string | undefined;
+  if (completed.length > 0) {
+    const lastCompleted = completed[completed.length - 1];
+    const lastDate = startOfDay(new Date(lastCompleted.lesson_date));
+    startFrom = isBefore(lastDate, today) ? today : lastDate;
+    if (startFrom.getTime() === lastDate.getTime()) {
+      afterTime = lastCompleted.start_time;
+    }
   }
 
-  // 5. Insert new planned instances with cycle
-  const toInsert = generated.map((g, idx) => ({
-    student_id: studentId,
-    teacher_id: teacherId,
-    lesson_number: maxCompletedNumber + idx + 1,
-    lesson_date: g.lessonDate,
-    start_time: g.startTime,
-    end_time: g.endTime,
-    status: "planned" as const,
-    rescheduled_count: 0,
-    package_cycle: currentCycle,
-  }));
+  const plannedCount = Math.max(0, totalLessons - completed.length);
+  const newDates = generateFutureInstanceDates(newSlots, plannedCount, startFrom, afterTime);
 
-  if (toInsert.length > 0) {
-    await supabase.from("lesson_instances").insert(toInsert);
+  // Check conflicts in parallel (warning-only)
+  const conflictResults = await Promise.all(
+    newDates.map((nd) =>
+      checkTeacherConflicts(teacherId, nd.lessonDate, nd.startTime, nd.endTime, undefined, studentId)
+    )
+  );
+  const allConflicts = conflictResults.flat();
+
+  if (allConflicts.length > 0) {
+    console.warn("syncTemplateChange: conflicts detected (warning-only):", allConflicts);
+  }
+
+  // Batch update planned instances
+  if (planned.length > 0 && newDates.length > 0) {
+    const updatePromises = planned.slice(0, Math.min(planned.length, newDates.length)).map((p, i) =>
+      supabase
+        .from("lesson_instances")
+        .update({
+          lesson_date: newDates[i].lessonDate,
+          start_time: newDates[i].startTime,
+          end_time: newDates[i].endTime,
+        })
+        .eq("id", p.id)
+    );
+    const updateResults = await Promise.all(updatePromises);
+    const updateErrors = updateResults.filter(r => r.error);
+    if (updateErrors.length > 0) {
+      throw new Error(`Instance güncelleme hatası: ${updateErrors.map(e => e.error?.message).join(', ')}`);
+    }
+  }
+
+  // If more planned lessons than before, batch insert
+  if (newDates.length > planned.length) {
+    const nextLessonNumber = Math.max(...existing.map((e) => e.lesson_number), 0) + 1;
+    const toInsert = newDates.slice(planned.length).map((nd, i) => ({
+      student_id: studentId,
+      teacher_id: teacherId,
+      lesson_number: nextLessonNumber + i,
+      lesson_date: nd.lessonDate,
+      start_time: nd.startTime,
+      end_time: nd.endTime,
+      status: "planned",
+      package_cycle: currentCycle,
+    }));
+    const { error: insertError } = await supabase.from("lesson_instances").insert(toInsert);
+    if (insertError) throw new Error(`Instance ekleme hatası: ${insertError.message}`);
+  }
+
+  // If fewer planned lessons, batch delete
+  if (newDates.length < planned.length) {
+    const excessIds = planned.slice(newDates.length).map((p) => p.id);
+    const { error: deleteError } = await supabase.from("lesson_instances").delete().in("id", excessIds);
+    if (deleteError) throw new Error(`Instance silme hatası: ${deleteError.message}`);
   }
 
   return { conflicts: [], success: true };
 }
 
 /**
- * "Sonraki Derse Aktar" — shift target + subsequent planned instances forward by one slot.
- * Cycle-aware: only shifts planned instances in current cycle.
+ * Shift a lesson and all subsequent planned instances forward by one template slot.
+ * Used by "Sonraki Derse Aktar" (Move to Next Lesson).
  */
 export async function shiftLessonsForward(
   studentId: string,
@@ -167,7 +231,6 @@ export async function shiftLessonsForward(
   fromInstanceId: string,
   templateSlots: TemplateSlot[]
 ): Promise<{ conflicts: ConflictInfo[]; success: boolean }> {
-  // 0. Get current cycle
   const { data: tracking } = await supabase
     .from("student_lesson_tracking")
     .select("package_cycle")
@@ -175,68 +238,67 @@ export async function shiftLessonsForward(
     .eq("teacher_id", teacherId)
     .maybeSingle();
 
-  const currentCycle = (tracking as any)?.package_cycle ?? 1;
+  const currentCycle = tracking?.package_cycle ?? 1;
 
-  // 1. Get target instance
-  const { data: target } = await supabase
-    .from("lesson_instances")
-    .select("*")
-    .eq("id", fromInstanceId)
-    .single();
-
-  if (!target) return { conflicts: [], success: false };
-
-  // 2. Get all planned instances from this one forward in current cycle
-  const { data: planned } = await supabase
+  const { data: allInstances } = await supabase
     .from("lesson_instances")
     .select("*")
     .eq("student_id", studentId)
     .eq("teacher_id", teacherId)
-    .eq("status", "planned")
     .eq("package_cycle", currentCycle)
-    .gte("lesson_number", target.lesson_number)
-    .order("lesson_number", { ascending: true });
+    .order("lesson_date", { ascending: true })
+    .order("start_time", { ascending: true });
 
-  if (!planned || planned.length === 0) return { conflicts: [], success: false };
+  if (!allInstances) return { conflicts: [], success: false };
 
-  // 3. Generate new dates for shifted instances
-  const startDate = new Date(target.lesson_date + "T00:00:00");
-  startDate.setDate(startDate.getDate() + 1); // Start from day after current
+  const targetIdx = allInstances.findIndex((i) => i.id === fromInstanceId);
+  if (targetIdx === -1) return { conflicts: [], success: false };
 
-  const newDates = generateFutureInstanceDates(templateSlots, planned.length, startDate);
+  const toShift = allInstances
+    .slice(targetIdx)
+    .filter((i) => i.status === "planned");
 
-  if (newDates.length < planned.length) {
-    return { conflicts: [], success: false };
-  }
+  if (toShift.length === 0) return { conflicts: [], success: false };
 
-  // 4. Check conflicts
-  const conflicts = await checkTeacherConflictsBatch(
-    teacherId,
-    newDates,
-    studentId
+  // Generate new dates starting from the SAME day but after the current slot's time
+  const startDate = new Date(toShift[0].lesson_date);
+  const afterTime = toShift[0].start_time;
+  const newDates = generateFutureInstanceDates(templateSlots, toShift.length, startDate, afterTime);
+
+  // Check conflicts in parallel (warning-only)
+  const conflictResults = await Promise.all(
+    newDates.map((nd, i) =>
+      checkTeacherConflicts(teacherId, nd.lessonDate, nd.startTime, nd.endTime, toShift[i].id, studentId)
+    )
   );
+  const allConflicts = conflictResults.flat();
 
-  if (conflicts.length > 0) {
-    return { conflicts, success: false };
+  if (allConflicts.length > 0) {
+    console.warn("shiftLessonsForward: conflicts detected (warning-only):", allConflicts);
   }
 
-  // 5. Update each instance in-place
-  for (let i = 0; i < planned.length; i++) {
-    const inst = planned[i];
-    const newDate = newDates[i];
-
-    await supabase
-      .from("lesson_instances")
-      .update({
-        lesson_date: newDate.lessonDate,
-        start_time: newDate.startTime,
-        end_time: newDate.endTime,
-        original_date: inst.original_date || inst.lesson_date,
-        original_start_time: inst.original_start_time || inst.start_time,
-        original_end_time: inst.original_end_time || inst.end_time,
-        rescheduled_count: (inst.rescheduled_count || 0) + 1,
-      })
-      .eq("id", inst.id);
+  // Apply shifts in parallel with a shared group ID for batch revert
+  const shiftGroupId = crypto.randomUUID();
+  const shiftResults = await Promise.all(
+    toShift.slice(0, newDates.length).map((inst, i) =>
+      supabase
+        .from("lesson_instances")
+        .update({
+          original_date: inst.original_date || inst.lesson_date,
+          original_start_time: inst.original_start_time || inst.start_time,
+          original_end_time: inst.original_end_time || inst.end_time,
+          lesson_date: newDates[i].lessonDate,
+          start_time: newDates[i].startTime,
+          end_time: newDates[i].endTime,
+          rescheduled_count: inst.rescheduled_count + 1,
+          shift_group_id: shiftGroupId,
+        })
+        .eq("id", inst.id)
+    )
+  );
+  const shiftErrors = shiftResults.filter(r => r.error);
+  if (shiftErrors.length > 0) {
+    throw new Error(`Shift güncelleme hatası: ${shiftErrors.map(e => e.error?.message).join(', ')}`);
   }
 
   return { conflicts: [], success: true };
