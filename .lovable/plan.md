@@ -1,25 +1,29 @@
 
 
-# Fix: İkinci Orphan Trigger — `on_last_lesson_warning`
+# Fix: `lesson_instances` Unique Constraint — `package_cycle` Eksik
 
 ## Sorun
-`student_lesson_tracking` tablosunda **iki** trigger vardı, ikisi de `notify_admin_last_lesson()` fonksiyonunu çağırıyordu:
-
-1. `on_lesson_tracking_update_notify_admin` — önceki migration'da silindi ✅
-2. `on_last_lesson_warning` — hala aktif ❌
-
-`notify_admin_last_lesson()` fonksiyonu `NEW.status` alanına erişiyor. Bu alan `lesson_instances` tablosunda var ama `student_lesson_tracking` tablosunda yok. Bu yüzden `rpc_sync_student_schedule` veya herhangi bir `student_lesson_tracking` UPDATE'i bu hatayı veriyor.
+`lesson_instances_student_id_teacher_id_lesson_number_key` constraint'i:
+```
+UNIQUE (student_id, teacher_id, lesson_number)
+```
+Ama `rpc_reset_package` yeni cycle'da `lesson_number` 1'den başlıyor → eski cycle'daki completed kayıtlarla çakışma → **duplicate key hatası**.
 
 ## Çözüm
-Tek migration — orphan trigger'ı sil:
+Tek migration — constraint'ı `package_cycle` dahil ederek yeniden oluştur:
 
 ```sql
-DROP TRIGGER IF EXISTS on_last_lesson_warning ON public.student_lesson_tracking;
+ALTER TABLE public.lesson_instances
+  DROP CONSTRAINT lesson_instances_student_id_teacher_id_lesson_number_key;
+
+ALTER TABLE public.lesson_instances
+  ADD CONSTRAINT lesson_instances_student_teacher_lesson_cycle_key
+  UNIQUE (student_id, teacher_id, lesson_number, package_cycle);
 ```
 
 ## Etki
-- Sıfır risk — sadece hatalı trigger kaldırılıyor
-- `lesson_instances` üzerindeki `notify_last_lesson_trigger` zaten doğru çalışıyor
-- Öğrenci ayarları kaydetme, ders işlendi, geri alma hepsi düzelecek
-- Phase 7 ile ilgisi yok
+- Sıfır veri kaybı — sadece constraint değişiyor
+- `rpc_reset_package` artık hatasız çalışacak
+- Her cycle kendi lesson_number serisini bağımsız tutabilecek
+- Mevcut veriler zaten cycle bazında unique olduğu için constraint hatasız uygulanacak
 
