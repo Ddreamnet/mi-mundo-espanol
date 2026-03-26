@@ -45,7 +45,6 @@ export async function completeLesson(
 /**
  * Undo the most recent completed lesson.
  * Enforces: only the chronologically last completed in current cycle.
- * Available to both teacher and admin.
  */
 export async function undoCompleteLesson(
   instanceId: string,
@@ -163,7 +162,6 @@ export async function restoreStudent(
 
 /**
  * Manual balance adjustment (admin only).
- * Separate from lesson completion metrics.
  */
 export async function manualBalanceAdjust(
   teacherId: string,
@@ -205,21 +203,43 @@ export async function completeTrialLesson(
 }
 
 /**
+ * Undo a completed trial lesson (atomic RPC).
+ */
+export async function undoTrialLesson(
+  trialId: string,
+  teacherId: string
+): Promise<RpcResult> {
+  const { data, error } = await supabase.rpc("rpc_undo_trial_lesson", {
+    p_trial_id: trialId,
+    p_teacher_id: teacherId,
+  });
+
+  if (error) {
+    console.error("undoTrialLesson RPC error:", error);
+    return { success: false, error: error.message };
+  }
+
+  return data as unknown as RpcResult;
+}
+
+/**
  * Get the next completable instance for a student (first planned by date in current cycle).
  */
 export async function getNextCompletableInstance(
   studentId: string,
-  teacherId: string
+  teacherId: string,
+  preloadedCycle?: number
 ): Promise<{ id: string; lesson_number: number; lesson_date: string } | null> {
-  // Get current cycle
-  const { data: tracking } = await supabase
-    .from("student_lesson_tracking")
-    .select("package_cycle")
-    .eq("student_id", studentId)
-    .eq("teacher_id", teacherId)
-    .maybeSingle();
-
-  const currentCycle = tracking?.package_cycle ?? 1;
+  let currentCycle = preloadedCycle;
+  if (currentCycle === undefined) {
+    const { data: tracking } = await supabase
+      .from("student_lesson_tracking")
+      .select("package_cycle")
+      .eq("student_id", studentId)
+      .eq("teacher_id", teacherId)
+      .maybeSingle();
+    currentCycle = tracking?.package_cycle ?? 1;
+  }
 
   const { data } = await supabase
     .from("lesson_instances")
@@ -241,16 +261,19 @@ export async function getNextCompletableInstance(
  */
 export async function getLastCompletedInstance(
   studentId: string,
-  teacherId: string
+  teacherId: string,
+  preloadedCycle?: number
 ): Promise<{ id: string; lesson_number: number; lesson_date: string } | null> {
-  const { data: tracking } = await supabase
-    .from("student_lesson_tracking")
-    .select("package_cycle")
-    .eq("student_id", studentId)
-    .eq("teacher_id", teacherId)
-    .maybeSingle();
-
-  const currentCycle = tracking?.package_cycle ?? 1;
+  let currentCycle = preloadedCycle;
+  if (currentCycle === undefined) {
+    const { data: tracking } = await supabase
+      .from("student_lesson_tracking")
+      .select("package_cycle")
+      .eq("student_id", studentId)
+      .eq("teacher_id", teacherId)
+      .maybeSingle();
+    currentCycle = tracking?.package_cycle ?? 1;
+  }
 
   const { data } = await supabase
     .from("lesson_instances")
@@ -274,7 +297,6 @@ export async function getRemainingRights(
   studentId: string,
   teacherId: string
 ): Promise<{ total: number; completed: number; remaining: number; cycle: number }> {
-  // Get template count
   const { count: templateCount } = await supabase
     .from("student_lessons")
     .select("id", { count: "exact", head: true })
@@ -284,7 +306,6 @@ export async function getRemainingRights(
   const weeklyCount = templateCount ?? 0;
   const total = weeklyCount * 4;
 
-  // Get current cycle
   const { data: tracking } = await supabase
     .from("student_lesson_tracking")
     .select("package_cycle")
@@ -294,7 +315,6 @@ export async function getRemainingRights(
 
   const currentCycle = tracking?.package_cycle ?? 1;
 
-  // Count completed in current cycle
   const { count: completedCount } = await supabase
     .from("lesson_instances")
     .select("id", { count: "exact", head: true })

@@ -1,5 +1,8 @@
-// Consolidated types and utility functions for lesson tracking
+/**
+ * Shared types and utilities for lesson tracking, scheduling, and overrides.
+ */
 
+/** Full lesson instance row from the lesson_instances table */
 export interface LessonInstance {
   id: string;
   student_id: string;
@@ -8,12 +11,14 @@ export interface LessonInstance {
   lesson_date: string;
   start_time: string;
   end_time: string;
-  status: "planned" | "completed";
+  status: string; // 'planned' | 'completed'
   original_date: string | null;
   original_start_time: string | null;
   original_end_time: string | null;
   rescheduled_count: number;
   package_cycle: number;
+  is_manual_override?: boolean;
+  shift_group_id?: string | null;
   created_at?: string;
   updated_at?: string;
 }
@@ -58,7 +63,7 @@ export function calculateDurationMinutes(startTime: string, endTime: string): nu
 /**
  * Get day name from day_of_week number.
  */
-export function getDayName(dayOfWeek: number): string {
+export function getDayName(dayOfWeek?: number): string {
   const days = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
-  return days[dayOfWeek] || "";
+  return dayOfWeek !== undefined ? days[dayOfWeek] : "";
 }
