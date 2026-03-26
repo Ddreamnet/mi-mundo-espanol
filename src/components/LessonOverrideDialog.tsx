@@ -261,13 +261,13 @@ export function LessonOverrideDialog({
       // Get current instance data for original_date tracking
       const { data: currentInstance } = await supabase
         .from("lesson_instances")
-        .select("lesson_date, original_date, rescheduled_count")
+        .select("lesson_date, start_time, end_time, original_date, original_start_time, original_end_time, rescheduled_count")
         .eq("id", instanceId)
         .single();
 
       const newDateStr = format(newDate, "yyyy-MM-dd");
 
-      // Update instance directly
+      // Update instance directly with is_manual_override flag
       const { error } = await supabase
         .from("lesson_instances")
         .update({
@@ -275,7 +275,10 @@ export function LessonOverrideDialog({
           start_time: newStartTime + ":00",
           end_time: newEndTime + ":00",
           original_date: currentInstance?.original_date || currentInstance?.lesson_date,
+          original_start_time: currentInstance?.original_start_time || currentInstance?.start_time,
+          original_end_time: currentInstance?.original_end_time || currentInstance?.end_time,
           rescheduled_count: (currentInstance?.rescheduled_count || 0) + 1,
+          is_manual_override: true,
         })
         .eq("id", instanceId);
 
@@ -300,6 +303,7 @@ export function LessonOverrideDialog({
   };
 
   // Revert: restore instance to its original_date/time
+  // If the instance has a shift_group_id, batch-revert all instances in that group
   const handleRevert = async () => {
     setSaving(true);
     try {
@@ -307,16 +311,16 @@ export function LessonOverrideDialog({
         throw new Error("Instance ID bulunamadı.");
       }
 
-      // Get original values from instance
+      // Get current instance including shift_group_id
       const { data: inst, error: fetchError } = await supabase
         .from("lesson_instances")
-        .select("original_date, original_start_time, original_end_time")
+        .select("original_date, original_start_time, original_end_time, shift_group_id")
         .eq("id", instanceId)
         .single();
 
       if (fetchError) throw fetchError;
 
-      if (!inst?.original_date) {
+      if (!inst?.original_date && !inst?.shift_group_id) {
         toast({
           title: t("common.info"),
           description: t("dialogs.lessonOverride.noChangesToRevert"),
@@ -326,25 +330,62 @@ export function LessonOverrideDialog({
         return;
       }
 
-      const { error } = await supabase
-        .from("lesson_instances")
-        .update({
-          lesson_date: inst.original_date,
-          start_time: inst.original_start_time || originalStartTime,
-          end_time: inst.original_end_time || originalEndTime,
-          original_date: null,
-          original_start_time: null,
-          original_end_time: null,
-          rescheduled_count: 0,
-        })
-        .eq("id", instanceId);
+      // If this instance belongs to a shift group, batch-revert all in the group
+      if (inst?.shift_group_id) {
+        const { data: groupInstances, error: groupError } = await supabase
+          .from("lesson_instances")
+          .select("id, original_date, original_start_time, original_end_time")
+          .eq("shift_group_id", inst.shift_group_id)
+          .not("original_date", "is", null);
 
-      if (error) throw error;
+        if (groupError) throw groupError;
 
-      toast({
-        title: t("common.success"),
-        description: t("dialogs.lessonOverride.revertSuccess"),
-      });
+        // Revert each instance in the shift group
+        for (const gi of (groupInstances || [])) {
+          await supabase
+            .from("lesson_instances")
+            .update({
+              lesson_date: gi.original_date,
+              start_time: gi.original_start_time,
+              end_time: gi.original_end_time,
+              original_date: null,
+              original_start_time: null,
+              original_end_time: null,
+              rescheduled_count: 0,
+              shift_group_id: null,
+              is_manual_override: false,
+            })
+            .eq("id", gi.id);
+        }
+
+        toast({
+          title: t("common.success"),
+          description: t("dialogs.lessonOverride.revertSuccess"),
+        });
+      } else {
+        // Single instance revert
+        const { error } = await supabase
+          .from("lesson_instances")
+          .update({
+            lesson_date: inst.original_date,
+            start_time: inst.original_start_time || originalStartTime,
+            end_time: inst.original_end_time || originalEndTime,
+            original_date: null,
+            original_start_time: null,
+            original_end_time: null,
+            rescheduled_count: 0,
+            is_manual_override: false,
+          })
+          .eq("id", instanceId);
+
+        if (error) throw error;
+
+        toast({
+          title: t("common.success"),
+          description: t("dialogs.lessonOverride.revertSuccess"),
+        });
+      }
+
       onSuccess();
       onOpenChange(false);
     } catch (error: any) {
