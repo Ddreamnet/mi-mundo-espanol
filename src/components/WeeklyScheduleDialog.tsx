@@ -286,8 +286,8 @@ export function WeeklyScheduleDialog({ open, onOpenChange, teacherId }: WeeklySc
           </div>
           {!showTemplate && (
             <div className="flex items-center justify-center gap-2 mt-2">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setWeekOffset((o) => o - 1)}>
-                <ChevronLeft className="h-4 w-4" />
+              <Button variant="ghost" size="icon" className="h-8 w-8 border border-dash-border" onClick={() => setWeekOffset((o) => o - 1)}>
+                <ChevronLeft className="h-4 w-4 text-[hsl(var(--dash-primary))]" />
               </Button>
               {weekOffset !== 0 && (
                 <Button variant="outline" size="sm" className="text-xs h-7 px-2" onClick={() => setWeekOffset(0)}>
@@ -295,8 +295,8 @@ export function WeeklyScheduleDialog({ open, onOpenChange, teacherId }: WeeklySc
                 </Button>
               )}
               <span className="text-sm font-medium text-muted-foreground min-w-[140px] text-center">{weekLabel}</span>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => setWeekOffset((o) => o + 1)}>
-                <ChevronRight className="h-4 w-4" />
+              <Button variant="ghost" size="icon" className="h-8 w-8 border border-dash-border" onClick={() => setWeekOffset((o) => o + 1)}>
+                <ChevronRight className="h-4 w-4 text-[hsl(var(--dash-primary))]" />
               </Button>
             </div>
           )}
