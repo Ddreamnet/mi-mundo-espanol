@@ -1,212 +1,164 @@
 
 
-# EWD → MME Karşılaştırmalı Analiz ve Hizalama Planı
+# EWD → MME Hizalama Sonrası Detaylı Audit Raporu
 
-## 1. Genel Karşılaştırma Özeti
+## 1. Genel Audit Özeti
 
-| Alan | EWD (Kaynak) | MME (Hedef) | Fark Seviyesi |
-|---|---|---|---|
-| EditStudentDialog | Hook-tabanlı (`useEditStudentDialog.ts` + thin UI) | Monolitik 1007-satır component | **KRİTİK** |
-| instanceGeneration.ts | `afterTime` parametresi, `getSlotBefore()`, `shift_group_id`, `is_manual_override` | Basit versiyon, afterTime yok, getSlotBefore yok | **KRİTİK** |
-| lessonService.ts | `undoTrialLesson`, `preloadedCycle` parametresi | Bunlar yok | **ORTA** |
-| useScheduleGrid.ts | Hafta navigasyonu, caching (weekCache), ghost entries, batch queries | Tek hafta, N+1 queries, ghost yok | **KRİTİK** |
-| conflictDetection.ts | Tekil fonksiyon | Ekstra `checkTeacherConflictsBatch` var (gereksiz) | **DÜŞÜK** |
-| LessonOverrideDialog | `shift_group_id` batch revert, `is_manual_override` | Tekil revert, `shift_group_id` yok | **KRİTİK** |
-| teacherBalance.ts | Yok (RPC'de atomik) | Client-side balance fonksiyonları hala var | **ORTA** |
-| lessonSync.ts | EWD'de `lessonDateCalculation.ts` (richer API) | Basit toast-only `checkNonTemplateWeekday` | **DÜŞÜK** |
-| DB: `shift_group_id` column | Var | **YOK** | **KRİTİK** |
-| DB: `is_manual_override` column | Var | **YOK** | **KRİTİK** |
-| DB: `rpc_sync_student_schedule` | Var (atomic template change RPC) | **YOK** (client-side sync) | **KRİTİK** |
-| DB: `rpc_undo_trial_lesson` | Var | **YOK** (client-side balance) | **ORTA** |
-| LessonTracker.tsx | Optimistic updates, preloadedCycle | Full refetch after each action | **ORTA** |
-| AdminWeeklySchedule | Week navigation, ScheduleGridCell, RPC trial complete/undo | Current week only, client-side trial balance | **KRİTİK** |
-| WeeklyScheduleDialog | Week navigation, ghost entries, caching | Current week only, no ghost | **KRİTİK** |
-
-### Tasarımsal farklar (DOKUNULMAYACAK):
-- MME'nin i18n yapısı (react-i18next, Türkçe/İngilizce/İspanyolca)
-- Renk paleti, spacing, component stilleri
-- `LanguageContext`, `useLanguage` hook'u
-- MME'ye özel zoom linki, global topic kategorileri
-- MME'nin `BookCheck` icon kullanımı (StudentLessonTracker)
+Uygulama sonrası sistem **%85-90 eşitlenmiş** durumda. Çekirdek scheduling/balance/chain mantığı EWD ile aynı çalışıyor. Ancak **6 sorun grubu** tespit edildi — bunların çoğu dead code / hardcoded string / küçük tutarsızlık seviyesinde, ama birkaçı ileride bug riski taşıyor.
 
 ---
 
-## 2. Katman Katman Fark Analizi
+## 2. Kod Referans Audit'i — Bulunan Sorunlar
 
-### A. Frontend Component/Hook/Helper Farkları
+### Sorun 1: `syncTemplateChange()` dead code (KRİTİK DEĞİL ama temizlenmeli)
+- **Dosya**: `src/lib/instanceGeneration.ts` (satır 123-220)
+- `syncTemplateChange()` fonksiyonu hala dosyada mevcut ama **hiçbir yerden import/call edilmiyor**
+- `useEditStudentDialog` artık `rpc_sync_student_schedule` RPC kullanıyor
+- **Aksiyon**: Fonksiyonu sil (dead code)
 
-| Dosya | EWD | MME | Gerekli Değişiklik |
-|---|---|---|---|
-| `EditStudentDialog.tsx` | Thin UI wrapper, hook'tan state alıyor | 1007 satır monolitik component | Hook'a ayır (EWD pattern) |
-| `useEditStudentDialog.ts` | 929 satır: chain control (forward/backward/realign), batch date update, `rpc_sync_student_schedule`, `handleLessonsPerWeekChange` validation | **DOSYA YOK** | EWD'den oluştur, i18n ekle |
-| `instanceGeneration.ts` | `afterTime` param, `getSlotBefore()`, `shift_group_id` support, date-fns kullanıyor | Basit versiyon, afterTime yok, getSlotBefore yok, native Date | EWD versiyonunu al |
-| `useScheduleGrid.ts` | 574 satır: week cache, prefetch, ghost entries, batch queries, exported utilities | 393 satır: tek hafta, N+1 queries, renk ataması | EWD versiyonunu al, MME'nin renk array'ini koru |
-| `LessonOverrideDialog.tsx` | `shift_group_id` batch revert, `is_manual_override`, conflict display | Tekil revert, conflict block (EWD'de warning-only) | EWD versiyonunu al, i18n koru |
-| `LessonTracker.tsx` | Optimistic updates, `preloadedCycle`, `nextCompletableId`/`lastCompletedId` state | Full refetch, inline state derivation | EWD versiyonunu al, i18n koru |
-| `StudentLessonTracker.tsx` | Minimal, `LessonInstance` typed | Custom `InstanceData` interface | EWD pattern'e hizala |
-| `AdminWeeklySchedule.tsx` | Week navigation, `ScheduleGridCell`, `completeTrialLesson`/`undoTrialLesson` RPC | Tek hafta, client-side trial balance | EWD pattern'e hizala |
-| `WeeklyScheduleDialog.tsx` | Week navigation, ghost entries, caching | Tek hafta | EWD pattern'e hizala |
-| `teacherBalance.ts` | EWD'de **dosya yok** (tüm balance RPC'de) | Client-side add/subtract fonksiyonları | **SİL** (trial flow hariç, onlar da RPC'ye geçecek) |
-| `lessonSync.ts` | EWD'de `lessonDateCalculation.ts` (richer: returns `{ isNonTemplate, templateDays }`) | Toast-only boolean return | EWD API'sine hizala |
-| `lessonTypes.ts` | `is_manual_override`, `shift_group_id` fields | Bu alanlar yok | EWD versiyonuna güncelle |
-| `ScheduleGridCell.tsx` | **EWD'de VAR** (ayrı component) | **MME'de YOK** | EWD'den kopyala, i18n ekle |
-| `src/lib/types.ts` | `StudentLessonBase`, `DAYS_OF_WEEK`, diğer shared types | **MME'de YOK** (inline tanımlar) | EWD'den oluştur, i18n uyumlu |
+### Sorun 2: `DAYS_OF_WEEK` hardcoded Türkçe, hiçbir yerden kullanılmıyor
+- **Dosya**: `src/lib/types.ts` (satır 104-112)
+- `DAYS_OF_WEEK` const tanımlı ama **hiçbir component import etmiyor** (search sonucu: sadece tanım dosyasında match)
+- `EditStudentDialog` i18n `t("days.monday")` kullanıyor, `TeacherDashboard` kendi `daysOfWeek` array'ini oluşturuyor, `AdminStudentsTab` da kendi `daysOfWeek`'ünü oluşturuyor
+- **Aksiyon**: `DAYS_OF_WEEK`'i sil (dead code) veya tüm component'lerde i18n'den gelen `t("days.*")` kullanılıyorsa gereksiz
 
-### B. SQL/RPC/Function Farkları
+### Sorun 3: `getDayName()` hardcoded Türkçe, i18n ile uyumsuz
+- **Dosya**: `src/lib/lessonTypes.ts` (satır 66-69)
+- Hardcoded `["Pazar", "Pazartesi", ...]` array
+- Bu fonksiyon **doğrudan kullanılmıyor** — `TeacherDashboard` ve `AdminStudentsTab` kendi i18n versiyonlarını oluşturuyor
+- `lessonSync.ts` (satır 58-59) de aynı hardcoded Türkçe `dayNames` array kullanıyor
+- **Aksiyon**: `getDayName`'i sil (dead code). `lessonSync.ts`'deki `dayNames`'i şimdilik bırak (i18n context olmayan pure function, ama ileride i18n'e geçirilebilir)
 
-| RPC | EWD | MME | Gerekli |
-|---|---|---|---|
-| `rpc_sync_student_schedule` | Atomic: delete+regenerate planned, preserve manual overrides, update tracking | **YOK** — client-side `syncTemplateChange` | Migration ile oluştur |
-| `rpc_undo_trial_lesson` | Atomic: undo trial + balance - balance_event | **YOK** — client-side balance | Migration ile oluştur |
-| `rpc_complete_lesson` | Var, aynı | Var, aynı | OK |
-| `rpc_undo_complete_lesson` | Var, aynı | Var, aynı | OK |
-| `rpc_reset_package` | Var, aynı | Var, aynı | OK |
-| `rpc_archive_student` | Var, aynı | Var, `lesson_overrides` DELETE satırı var | Cleanup: `lesson_overrides` DELETE'i kaldır |
-| `rpc_delete_student` | Var, aynı | Var, `lesson_overrides` DELETE satırı var | Cleanup: `lesson_overrides` DELETE'i kaldır |
-| `rpc_restore_student` | Var, benzer | Var, benzer | MAX lesson_number fix kontrolü |
-| `rpc_manual_balance_adjust` | Var, aynı | Var, aynı | OK |
-| `rpc_complete_trial_lesson` | Var, aynı | Var, aynı | OK |
+### Sorun 4: Hardcoded Türkçe stringler birçok yerde
+- `useScheduleGrid.ts` satır 411: `"Bilinmeyen"` (student name fallback)
+- `AdminWeeklySchedule.tsx` satır 169: `"Bilinmeyen"`
+- `WeeklyScheduleDialog.tsx` satır 146: `"Bilinmeyen"`
+- `conflictDetection.ts` satır 79: `"Bilinmeyen Öğrenci"`
+- Bu dosyaların bazıları (useScheduleGrid, conflictDetection) pure utility olduğu için i18n context yok — ama en azından `"Unknown"` gibi dilden bağımsız bir fallback kullanılabilir veya dışarıdan parametre olarak alınabilir
+- **Aksiyon**: Düşük öncelik — fonksiyonel sorun yaratmıyor ama i18n standardına uymuyor
 
-### C. Tablo/Alan Farkları
-
-| Tablo/Alan | EWD | MME |
-|---|---|---|
-| `lesson_instances.shift_group_id` | uuid, nullable | **YOK** |
-| `lesson_instances.is_manual_override` | boolean, default false | **YOK** |
-| `lesson_overrides` tablosu | Phase 7'de DROP edilecek (kod referansı yok) | Hala var, `rpc_archive/delete_student`'da referans var |
-
-### D. RLS Policy Farkları
-
-RLS policy'ler zaten aynı görünüyor. Yeni kolonlar eklendikten sonra ek policy gerekmez.
-
-### E. Veri Akışı Farkları
-
-**EWD**: `EditStudentDialog` → `useEditStudentDialog` hook → `rpc_sync_student_schedule` (template change) veya `batchUpdateInstances` (date change) → `clearWeekCache`
-
-**MME**: `EditStudentDialog` → inline `syncTemplateChange` (client-side delete+regenerate) → sequential updates → cache yok
-
-**EWD trial complete**: `AdminWeeklySchedule` → `completeTrialLesson` RPC → atomic balance + event
-
-**MME trial complete**: `AdminWeeklySchedule` → `addTrialLessonToBalance` (client-side) → no balance_event
+### Sorun 5: `StudentLessonSchedule` type `_hasOverride`, `_originalStartTime`, `_originalEndTime` alanları
+- **Dosya**: `src/lib/types.ts` (satır 30-32)
+- Bu alanlar `AdminWeeklySchedule`'da actual→synthetic mapping için kullanılıyor (satır 190-194)
+- Fonksiyonel olarak doğru çalışıyor, sorun yok — sadece override-era isimlendirme kalıntısı
+- **Aksiyon**: Yok (fonksiyonel, isimlendirme kozmetik)
 
 ---
 
-## 3. Aynılaştırılması Gerekenler
+## 3. EWD vs MME Çekirdek Mantık Farkları
 
-### Birebir EWD'den alınacak dosyalar (i18n adaptasyonuyla):
-1. `src/lib/instanceGeneration.ts` — tam kopya (date-fns, afterTime, getSlotBefore, shift_group_id)
-2. `src/hooks/useEditStudentDialog.ts` — yeni dosya oluştur (EWD'den, i18n ekle)
-3. `src/lib/types.ts` — yeni dosya oluştur (i18n'li DAYS_OF_WEEK adaptasyonu)
+### Tamamen eşitlenmiş (sorun yok):
+- `lessonService.ts` — tüm RPC'ler (complete, undo, reset, archive, delete, restore, undoTrial, completeTrialLesson, manualBalanceAdjust)
+- `useEditStudentDialog.ts` — chain control (forward/backward/realign), batch date update, rights validation, `rpc_sync_student_schedule`
+- `LessonTracker.tsx` — optimistic updates, preloadedCycle, nextCompletableId/lastCompletedId
+- `StudentLessonTracker.tsx` — instance-based, real-time subscription, LessonInstance typed
+- `LessonOverrideDialog.tsx` — one-time change, shift forward, batch revert via shift_group_id, is_manual_override
+- `EditStudentDialog.tsx` — thin wrapper + hook pattern
+- `useScheduleGrid.ts` — week cache, ghost entries, batch queries, ensureInstancesForWeek
+- `AdminWeeklySchedule.tsx` — week navigation, actual mode, RPC trial complete/undo
+- `WeeklyScheduleDialog.tsx` — week navigation, actual mode
+- DB: `shift_group_id`, `is_manual_override` kolonları
+- DB: `rpc_sync_student_schedule`, `rpc_undo_trial_lesson`
+- `conflictDetection.ts` — interval-based overlap, `checkTeacherConflictsBatch` kaldırılmış
+- `teacherBalance.ts` — silinmiş (tüm balance RPC'de)
+- `lessonSorting.ts`, `useLessonOverrides.ts` — silinmiş
 
-### Selective merge gereken dosyalar:
-4. `src/components/EditStudentDialog.tsx` — EWD pattern: thin UI wrapper + hook (MME'nin i18n/tasarım korunur)
-5. `src/hooks/useScheduleGrid.ts` — EWD caching + ghost + batch logic (MME'nin renk array'i korunur)
-6. `src/components/LessonOverrideDialog.tsx` — shift_group_id batch revert + is_manual_override (i18n korunur)
-7. `src/components/LessonTracker.tsx` — optimistic updates + preloadedCycle (i18n korunur)
-8. `src/components/StudentLessonTracker.tsx` — LessonInstance typed (i18n korunur)
-9. `src/components/AdminWeeklySchedule.tsx` — week navigation + RPC trial (i18n korunur)
-10. `src/components/WeeklyScheduleDialog.tsx` — week navigation + ghost (i18n korunur)
-11. `src/lib/lessonService.ts` — `undoTrialLesson` + `preloadedCycle` parametresi ekle
-12. `src/lib/lessonTypes.ts` — `is_manual_override`, `shift_group_id` alanları ekle
-13. `src/lib/lessonSync.ts` — richer `checkNonTemplateWeekday` (returns object, not boolean)
-
-### Silinecek / refactor edilecek:
-14. `src/lib/teacherBalance.ts` — trial fonksiyonlar RPC'ye geçtikten sonra sil
-15. `src/lib/conflictDetection.ts` — `checkTeacherConflictsBatch` kaldır (EWD'de paralel Promise.all kullanılıyor)
-
-### SQL/RPC senkronlanacaklar:
-16. Migration: `lesson_instances` tablosuna `shift_group_id uuid DEFAULT NULL` ve `is_manual_override boolean DEFAULT false` ekle
-17. Migration: `rpc_sync_student_schedule` oluştur (EWD'den birebir)
-18. Migration: `rpc_undo_trial_lesson` oluştur (EWD'den birebir)
-19. Migration: `rpc_archive_student` güncelle — `lesson_overrides` DELETE satırını kaldır
-20. Migration: `rpc_delete_student` güncelle — `lesson_overrides` DELETE satırını kaldır
-21. Migration: `rpc_restore_student` güncelle — MAX lesson_number fix
-
-### MME'ye özel kalacak istisnalar:
-- `LanguageContext`, `useLanguage`, `useTranslation` kullanımı tüm componentlerde korunur
-- `daysOfWeek` array'i i18n'den gelir (EWD'deki hardcoded `DAYS_OF_WEEK` yerine)
-- `ScheduleGridCell.tsx` oluşturulursa i18n ile
-- Zoom link, global topic kategori özellikleri korunur
-- Tasarım farklılıkları (renkler, spacing, icons) korunur
+### Kalan minor farklar:
+1. `syncTemplateChange` dead code hala `instanceGeneration.ts`'de (EWD'de de var mı bilmiyorum ama MME'de artık kullanılmıyor)
+2. `lessonSync.ts`'deki `calculateNextLessonDate` fonksiyonu + `LessonOverrideDialog`'daki inline `calculateNextLessonDate` — iki ayrı kopya var (satır 13-31 ve satır 130-153). LessonOverrideDialog kendi inline versiyonunu kullanıyor, `lessonSync.ts`'deki hiçbir yerden import edilmiyor. **Dead code**.
 
 ---
 
-## 4. Riskler
+## 4. Performans Farkı
 
-| Risk | Seviye | Mitigation |
-|---|---|---|
-| `rpc_sync_student_schedule` olmadan template kaydetme mantığı farklı çalışıyor | Yüksek | RPC'yi DB'de oluştur, sonra frontend'i geçir |
-| `shift_group_id` kolonu olmadan `shiftLessonsForward` batch revert yapamaz | Yüksek | Önce migration, sonra frontend |
-| `teacherBalance.ts` silindikten sonra trial complete/undo akışı kırılır | Yüksek | Önce `rpc_undo_trial_lesson` oluştur, sonra sil |
-| MME'deki `WeeklyScheduleDialog` ve `AdminWeeklySchedule` haftalar arası navigasyon eklenmesi kapsamlı | Orta | EWD pattern'ini takip et |
-| `useEditStudentDialog` hook oluşturulurken MME'ye özel i18n ihtiyaçları | Düşük | EWD'den al, t() fonksiyonları ekle |
-| `lessonDateCalculation.ts` EWD'de hala var ama MME'de silinmişti — `LessonOverrideDialog` referans veriyor | Orta | EWD fonksiyonunu `lessonSync.ts`'e ekle veya ayrı dosya oluştur |
+### EWD'den geçen hızlandırmalar (tamamlanmış):
+- Week cache + stale-while-revalidate (`useScheduleGrid.ts`)
+- `prefetchWeek` — önceki/sonraki hafta prefetch
+- Batch queries (`ensureInstancesForWeek` — N+1 yok)
+- Ghost entries (cycle dolmuş öğrenciler görünür kalıyor)
+- `clearWeekCache()` mutation sonrası çağrılıyor (tüm write path'lerde)
+- LessonTracker: `preloadedCycle` ile extra query azaltma
+- Parallel Promise.all kullanımı (initializeDialog, loadData vb.)
 
----
-
-## 5. Uygulama Planı
-
-### Phase 1: DB/RPC altyapısı (önce)
-1. Migration: `shift_group_id` ve `is_manual_override` kolonlarını ekle
-2. Migration: `rpc_sync_student_schedule` oluştur
-3. Migration: `rpc_undo_trial_lesson` oluştur
-4. Migration: `rpc_archive_student` ve `rpc_delete_student` güncelle (lesson_overrides kaldır)
-5. Migration: `rpc_restore_student` MAX fix
-
-### Phase 2: Core lib dosyaları
-6. `src/lib/instanceGeneration.ts` — EWD versiyonuyla değiştir
-7. `src/lib/lessonTypes.ts` — `is_manual_override`, `shift_group_id` ekle
-8. `src/lib/lessonService.ts` — `undoTrialLesson`, `preloadedCycle` ekle
-9. `src/lib/lessonSync.ts` — richer `checkNonTemplateWeekday` + `calculateNextLessonDate` ekle
-10. `src/lib/conflictDetection.ts` — `checkTeacherConflictsBatch` kaldır
-11. `src/lib/types.ts` — oluştur (StudentLessonBase vb.)
-
-### Phase 3: Hook'lar
-12. `src/hooks/useEditStudentDialog.ts` — EWD'den oluştur (i18n ekle)
-13. `src/hooks/useScheduleGrid.ts` — EWD versiyonuyla değiştir (MME renkleri koru)
-
-### Phase 4: Component'ler
-14. `src/components/EditStudentDialog.tsx` — thin wrapper + hook pattern
-15. `src/components/LessonTracker.tsx` — optimistic updates
-16. `src/components/StudentLessonTracker.tsx` — typed instances
-17. `src/components/LessonOverrideDialog.tsx` — shift_group_id batch revert
-18. `src/components/ScheduleGridCell.tsx` — EWD'den oluştur (i18n)
-19. `src/components/AdminWeeklySchedule.tsx` — week nav + RPC trial
-20. `src/components/WeeklyScheduleDialog.tsx` — week nav + ghost
-
-### Phase 5: Cleanup
-21. `src/lib/teacherBalance.ts` — sil (artık RPC'de)
-22. Dangling import temizliği
-
-### Phase 6: Test
-- Her phase sonrası fonksiyonel test
+### Hala potansiyel darboğaz:
+- `LessonOverrideDialog` revert: `shift_group_id` batch revert **sequential** yapılıyor (satır 344-358, for loop içinde `await`). Promise.all ile paralel olabilir.
+- `AdminWeeklySchedule` template mode'da (`showTemplate=true`) actual schedule fetch edilmiyor — doğru davranış.
 
 ---
 
-## 6. Scope Kontrolü
+## 5. DB / RLS / Tablo / RPC Farkları
 
-### EWD ile birebir aynı yapılacak:
-- `instanceGeneration.ts` (afterTime, getSlotBefore, shift_group_id logic)
-- `lessonService.ts` (undoTrialLesson, preloadedCycle)
-- Tüm RPC fonksiyonları (sync, undo_trial, archive, delete, restore)
-- `useEditStudentDialog` hook mantığı (chain control, batch date update, rights validation)
-- `useScheduleGrid` (cache, ghost, batch queries)
-- LessonOverrideDialog (shift_group_id batch revert)
-- LessonTracker (optimistic updates)
-- Balance akışı (tamamen RPC-tabanlı, client-side balance kaldırılacak)
+### Tam eşitlenmiş:
+- `lesson_instances` tablosu: `shift_group_id`, `is_manual_override` mevcut
+- Tüm RPC'ler: `rpc_complete_lesson`, `rpc_undo_complete_lesson`, `rpc_reset_package`, `rpc_archive_student`, `rpc_delete_student`, `rpc_restore_student`, `rpc_complete_trial_lesson`, `rpc_undo_trial_lesson`, `rpc_sync_student_schedule`, `rpc_manual_balance_adjust`
+- RLS policy'ler: instance tablosu üzerinde teacher/student/admin erişimi doğru
+- `balance_events` tablosu: audit trail mevcut
+- `notify_admin_last_lesson` trigger: instance-based, cycle-aware
 
-### MME'ye özel kalacak:
-- Tüm i18n altyapısı (react-i18next, locale dosyaları, useTranslation)
-- `LanguageContext` ve `useLanguage` hook
-- Renk paleti ve tasarım (secondary vs primary renk kullanımı)
-- Zoom link yönetimi
-- Global topic kategorileri
-- `BookCheck` icon (StudentLessonTracker)
-- Date locale desteği (tr/en/es)
+### Kalan DB kalıntıları (Phase 7 scope):
+- `lesson_overrides` tablosu: DB'de hala var, `types.ts`'de (auto-generated) referansı var — bu beklenen, Phase 7'de DROP edilecek
+- `student_lesson_tracking.completed_lessons` ve `lesson_dates` alanları: hala var, RPC'ler legacy compat olarak güncelliyor — Phase 7'de kaldırılacak
 
-### Tasarım farklarına dokunulmayacak:
-- Component stilleri, spacing, border radius
-- Icon seçimleri
-- Card/layout yapısı
-- Renk şeması (MME'nin `secondary` kullanımı vs EWD'nin `primary`)
+---
+
+## 6. Truth Source / Koordinasyon Analizi
+
+### Tek truth source (doğru):
+- Ders durumu → `lesson_instances.status`
+- Ders tarihi/saati → `lesson_instances.lesson_date` + `start_time`
+- Cycle → `student_lesson_tracking.package_cycle`
+- Template → `student_lessons` tablosu
+- Balance → `teacher_balance` + `balance_events` (RPC atomik)
+
+### Potansiyel koordinasyon riski:
+- `EditStudentDialog` hook'u `rpc_sync_student_schedule` çağrısı sırasında `clearWeekCache()` yapıyor — doğru
+- `LessonOverrideDialog` one-time change sonrası `onSuccess()` callback ile parent refresh tetikliyor ama `clearWeekCache()` çağırmıyor. Parent (`AdminWeeklySchedule`) `handleOverrideSuccess`'te schedule'ı yeniden fetch ediyor ama cache temizliği parent'ta mı yapılıyor?
+
+---
+
+## 7. Cleanup / Eşitleme Planı
+
+### Yüksek Öncelik (dead code temizliği):
+1. **`instanceGeneration.ts`**: `syncTemplateChange()` fonksiyonunu sil — artık kullanılmıyor, `rpc_sync_student_schedule` yerini aldı
+2. **`lessonSync.ts`**: `calculateNextLessonDate()` fonksiyonunu sil — `LessonOverrideDialog` kendi inline versiyonunu kullanıyor
+3. **`lessonTypes.ts`**: `getDayName()` fonksiyonunu sil — hiçbir yerden kullanılmıyor
+4. **`types.ts`**: `DAYS_OF_WEEK` const'u sil — hiçbir yerden import edilmiyor
+
+### Düşük Öncelik (i18n standardizasyonu):
+5. `useScheduleGrid.ts`, `AdminWeeklySchedule.tsx`, `WeeklyScheduleDialog.tsx`, `conflictDetection.ts`: `"Bilinmeyen"` / `"Bilinmeyen Öğrenci"` hardcoded string'leri — fonksiyonel sorun yok ama i18n standardına uymuyor
+
+### Mikro Optimizasyon:
+6. `LessonOverrideDialog.tsx` satır 344-358: Shift group batch revert sequential → parallel (`Promise.all`)
+
+---
+
+## 8. Son Karar
+
+### Tam eşitlenmiş ve güvenli:
+- Ders işlendi / geri alma (RPC)
+- Balance / balance_events / teacher_balance (tamamen RPC-tabanlı)
+- Shift / revert / next lesson / one-time change / shift_group_id batch revert
+- Reset package / restore / archive / delete
+- Template sync (rpc_sync_student_schedule)
+- Planned/completed instance mantığı
+- Chain control (forward/backward/realign)
+- Ghost / schedule grid / week navigation / caching
+- EditStudentDialog + hook pattern
+- LessonTracker + StudentLessonTracker
+- Tüm DB RPC'ler ve RLS policy'ler
+
+### Kısmen eşitlenmiş (cleanup gerekli ama fonksiyonel sorun yok):
+- Dead code: `syncTemplateChange`, `calculateNextLessonDate` (lessonSync), `getDayName`, `DAYS_OF_WEEK`
+- Hardcoded Türkçe fallback stringler (i18n dışı)
+- `LessonOverrideDialog` batch revert sequential (performans mikro-issue)
+
+### Phase 7 scope (bilinçli olarak bekletiliyor):
+- `lesson_overrides` tablosu DROP
+- `completed_lessons[]` ve `lesson_dates{}` legacy alanları DROP
+- `types.ts` auto-generated referanslar otomatik temizlenecek
+
+### Öncelikli sonraki adımlar:
+1. Dead code temizliği (4 fonksiyon/const silme — 5 dakika, sıfır risk)
+2. `LessonOverrideDialog` batch revert parallelization (mikro optimizasyon)
+3. Phase 7 Legacy DROP (stabil olduğu doğrulandıktan sonra)
 
