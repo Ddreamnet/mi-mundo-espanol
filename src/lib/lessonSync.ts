@@ -3,32 +3,7 @@
  * Aligned with EWD's lessonDateCalculation.ts.
  */
 
-import { addDays } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-
-/**
- * Finds the next lesson date after a given date, based on the student's weekly pattern.
- * Used by LessonOverrideDialog for "Sonraki Derse Aktar" preview.
- */
-export function calculateNextLessonDate(
-  currentDate: Date,
-  lessonDays: number[]
-): Date | null {
-  if (lessonDays.length === 0) return null;
-
-  let nextDate = new Date(currentDate);
-  nextDate.setHours(0, 0, 0, 0);
-  nextDate = addDays(nextDate, 1);
-
-  let attempts = 0;
-  while (!lessonDays.includes(nextDate.getDay()) && attempts < 14) {
-    nextDate = addDays(nextDate, 1);
-    attempts++;
-  }
-
-  if (attempts >= 14) return null;
-  return nextDate;
-}
 
 /**
  * Checks if a given date falls on a weekday present in the student's template slots.

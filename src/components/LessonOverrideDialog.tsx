@@ -340,9 +340,9 @@ export function LessonOverrideDialog({
 
         if (groupError) throw groupError;
 
-        // Revert each instance in the shift group
-        for (const gi of (groupInstances || [])) {
-          await supabase
+        // Revert all instances in the shift group in parallel
+        await Promise.all((groupInstances || []).map(gi =>
+          supabase
             .from("lesson_instances")
             .update({
               lesson_date: gi.original_date,
@@ -355,8 +355,8 @@ export function LessonOverrideDialog({
               shift_group_id: null,
               is_manual_override: false,
             })
-            .eq("id", gi.id);
-        }
+            .eq("id", gi.id)
+        ));
 
         toast({
           title: t("common.success"),
