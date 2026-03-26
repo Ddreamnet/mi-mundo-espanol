@@ -390,54 +390,6 @@ export type Database = {
         }
         Relationships: []
       }
-      lesson_overrides: {
-        Row: {
-          created_at: string
-          id: string
-          is_cancelled: boolean
-          new_date: string | null
-          new_end_time: string | null
-          new_start_time: string | null
-          original_date: string
-          original_day_of_week: number
-          original_end_time: string
-          original_start_time: string
-          student_id: string
-          teacher_id: string
-          updated_at: string
-        }
-        Insert: {
-          created_at?: string
-          id?: string
-          is_cancelled?: boolean
-          new_date?: string | null
-          new_end_time?: string | null
-          new_start_time?: string | null
-          original_date: string
-          original_day_of_week: number
-          original_end_time: string
-          original_start_time: string
-          student_id: string
-          teacher_id: string
-          updated_at?: string
-        }
-        Update: {
-          created_at?: string
-          id?: string
-          is_cancelled?: boolean
-          new_date?: string | null
-          new_end_time?: string | null
-          new_start_time?: string | null
-          original_date?: string
-          original_day_of_week?: number
-          original_end_time?: string
-          original_start_time?: string
-          student_id?: string
-          teacher_id?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
       notifications: {
         Row: {
           created_at: string
@@ -618,36 +570,27 @@ export type Database = {
       }
       student_lesson_tracking: {
         Row: {
-          completed_lessons: number[] | null
           created_at: string | null
           id: string
-          lesson_dates: Json | null
           lessons_per_week: number
-          month_start_date: string
           package_cycle: number
           student_id: string
           teacher_id: string
           updated_at: string | null
         }
         Insert: {
-          completed_lessons?: number[] | null
           created_at?: string | null
           id?: string
-          lesson_dates?: Json | null
           lessons_per_week: number
-          month_start_date?: string
           package_cycle?: number
           student_id: string
           teacher_id: string
           updated_at?: string | null
         }
         Update: {
-          completed_lessons?: number[] | null
           created_at?: string | null
           id?: string
-          lesson_dates?: Json | null
           lessons_per_week?: number
-          month_start_date?: string
           package_cycle?: number
           student_id?: string
           teacher_id?: string

@@ -170,8 +170,6 @@ serve(async (req) => {
         student_id: authData.user.id,
         teacher_id: teacherId,
         lessons_per_week: lessonsPerWeek,
-        completed_lessons: [],
-        lesson_dates: {},
         package_cycle: 1
       })
 
