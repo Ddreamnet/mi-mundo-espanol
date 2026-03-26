@@ -1,20 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { supabase } from "@/integrations/supabase/client";
 import { BookCheck } from "lucide-react";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
-import { getRowConfig } from "@/lib/lessonTypes";
-
-interface InstanceData {
-  id: string;
-  lesson_number: number;
-  lesson_date: string;
-  start_time: string;
-  end_time: string;
-  status: string;
-  original_date: string | null;
-}
+import { LessonInstance, getRowConfig } from "@/lib/lessonTypes";
 
 interface StudentLessonTrackerProps {
   studentId: string;
@@ -22,43 +12,15 @@ interface StudentLessonTrackerProps {
 
 export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
   const { t } = useTranslation();
-  const [lessonsPerWeek, setLessonsPerWeek] = useState<number>(1);
-  const [instances, setInstances] = useState<InstanceData[]>([]);
+  const [instances, setInstances] = useState<LessonInstance[]>([]);
+  const [templateCount, setTemplateCount] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  const getTeacherId = useCallback(async (): Promise<string | null> => {
-    try {
-      const { data, error } = await supabase
-        .from("students")
-        .select("teacher_id")
-        .eq("student_id", studentId)
-        .single();
-      if (error) throw error;
-      return data.teacher_id;
-    } catch (error) {
-      console.error("Failed to fetch teacher_id:", error);
-      return null;
-    }
-  }, [studentId]);
-
   useEffect(() => {
-    const loadData = async () => {
-      const teacherId = await getTeacherId();
-      if (!teacherId) {
-        setLoading(false);
-        return;
-      }
-      await Promise.all([
-        fetchInstances(teacherId),
-        fetchLiveLessonsPerWeek(teacherId),
-      ]);
-      setLoading(false);
-    };
     loadData();
 
-    // Real-time subscription on lesson_instances
     const channel = supabase
-      .channel("student-lesson-instances")
+      .channel("student-instance-changes")
       .on(
         "postgres_changes",
         {
@@ -67,67 +29,79 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
           table: "lesson_instances",
           filter: `student_id=eq.${studentId}`,
         },
-        async () => {
-          const teacherId = await getTeacherId();
-          if (teacherId) {
-            await fetchInstances(teacherId);
-          }
-        },
+        () => { fetchInstances(); },
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [studentId, getTeacherId]);
+    return () => { supabase.removeChannel(channel); };
+  }, [studentId]);
 
-  const fetchInstances = async (teacherId: string) => {
+  const loadData = async () => {
+    setLoading(true);
+    await Promise.all([fetchInstances(), fetchTemplateCount()]);
+    setLoading(false);
+  };
+
+  const fetchInstances = async () => {
     try {
-      // Get current cycle
+      const { data: studentData, error: studentError } = await supabase
+        .from("students")
+        .select("teacher_id")
+        .eq("student_id", studentId)
+        .single();
+
+      if (studentError) throw studentError;
+
       const { data: tracking } = await supabase
         .from("student_lesson_tracking")
         .select("package_cycle")
         .eq("student_id", studentId)
-        .eq("teacher_id", teacherId)
+        .eq("teacher_id", studentData.teacher_id)
         .maybeSingle();
 
       const currentCycle = tracking?.package_cycle ?? 1;
 
       const { data, error } = await supabase
         .from("lesson_instances")
-        .select("id, lesson_number, lesson_date, start_time, end_time, status, original_date")
+        .select("*")
         .eq("student_id", studentId)
-        .eq("teacher_id", teacherId)
+        .eq("teacher_id", studentData.teacher_id)
         .eq("package_cycle", currentCycle)
+        .in("status", ["planned", "completed"])
         .order("lesson_date", { ascending: true })
         .order("start_time", { ascending: true });
 
       if (error) throw error;
-      setInstances(data || []);
+      setInstances((data as LessonInstance[]) || []);
     } catch (error: any) {
       console.error("Failed to fetch lesson instances:", error);
     }
   };
 
-  const fetchLiveLessonsPerWeek = async (teacherId: string) => {
+  const fetchTemplateCount = async () => {
     try {
-      const { data, error } = await supabase
-        .from("student_lessons")
-        .select("id")
+      const { data: studentData, error: studentError } = await supabase
+        .from("students")
+        .select("teacher_id")
         .eq("student_id", studentId)
-        .eq("teacher_id", teacherId);
+        .single();
 
-      if (error) throw error;
-      if (data && data.length > 0) {
-        setLessonsPerWeek(data.length);
-      }
+      if (studentError) throw studentError;
+
+      const { count } = await supabase
+        .from("student_lessons")
+        .select("id", { count: "exact", head: true })
+        .eq("student_id", studentId)
+        .eq("teacher_id", studentData.teacher_id);
+
+      setTemplateCount(count ?? 0);
     } catch (error: any) {
-      console.error("Failed to fetch live lessons per week:", error);
+      console.error("Failed to fetch template count:", error);
     }
   };
 
-  const totalLessonsPerMonth = lessonsPerWeek * 4;
-  const rowConfig = getRowConfig(lessonsPerWeek);
+  const totalLessonsPerMonth = templateCount * 4;
+  const rowConfig = getRowConfig(templateCount);
   const completedCount = instances.filter(i => i.status === "completed").length;
 
   if (loading) {
@@ -157,36 +131,40 @@ export function StudentLessonTracker({ studentId }: StudentLessonTrackerProps) {
             {Array.from({ length: rowConfig.rows }, (_, rowIndex) => (
               <div key={rowIndex} className="flex gap-1.5">
                 {Array.from({ length: rowConfig.buttonsPerRow }, (_, colIndex) => {
-                  const displayPosition = rowIndex * rowConfig.buttonsPerRow + colIndex + 1;
-                  if (displayPosition > totalLessonsPerMonth) return null;
+                  const displayPosition = rowIndex * rowConfig.buttonsPerRow + colIndex;
+                  if (displayPosition >= totalLessonsPerMonth) return null;
 
-                  const instance = instances[displayPosition - 1];
-                  const isCompleted = instance?.status === "completed";
-                  const isOverridden = instance?.original_date != null;
-                  const displayDate = instance?.lesson_date;
+                  const inst = instances[displayPosition];
+                  if (!inst) return null;
+
+                  const isCompleted = inst.status === "completed";
+                  const isRescheduled = inst.original_date !== null;
 
                   return (
-                    <div key={displayPosition} className="flex flex-col items-center gap-0.5">
+                    <div key={inst.id} className="flex flex-col items-center gap-0.5">
                       <div
                         className={`
-                        h-8 w-8 rounded-lg border-2 transition-all duration-200
-                        flex items-center justify-center text-xs font-semibold shadow-sm
-                        ${
-                          isCompleted
-                            ? "bg-secondary text-secondary-foreground border-secondary scale-95 shadow-md"
-                            : "bg-muted/50 border-border/50"
-                        }
-                      `}
+                          h-8 w-8 rounded-lg border-2 transition-all duration-200
+                          flex items-center justify-center text-xs font-semibold shadow-sm
+                          ${
+                            isCompleted
+                              ? "bg-secondary text-secondary-foreground border-secondary scale-95 shadow-md"
+                              : "bg-muted/50 border-border/50"
+                          }
+                        `}
+                        title={`${t("lessonTracker.lesson", { number: displayPosition + 1 })}`}
                       >
-                        {displayPosition}
+                        {displayPosition + 1}
                       </div>
-                      {displayDate && (
-                        <span className={`text-[10px] whitespace-nowrap ${
-                          isOverridden ? "font-semibold" : "opacity-70"
-                        }`}>
-                          {format(new Date(displayDate + "T00:00:00"), "dd.MM")}
-                        </span>
-                      )}
+                      <span
+                        className={`text-[10px] whitespace-nowrap ${
+                          isRescheduled
+                            ? "text-amber-600 dark:text-amber-400 font-medium"
+                            : "text-muted-foreground"
+                        }`}
+                      >
+                        {format(new Date(inst.lesson_date), "dd.MM")}
+                      </span>
                     </div>
                   );
                 })}

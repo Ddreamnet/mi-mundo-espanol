@@ -1,58 +1,146 @@
-import { useEffect, useState, useCallback } from "react";
+/**
+ * Shared schedule grid logic for AdminWeeklySchedule and WeeklyScheduleDialog.
+ * Supports both Template mode (student_lessons) and Actual mode (lesson_instances).
+ * Aligned with EWD: week cache, ghost entries, batch queries.
+ */
+
+import { format, startOfWeek, addDays } from "date-fns";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfWeek, addDays, format } from "date-fns";
-import type { StudentLesson, TrialLesson } from "@/types/lessons";
 
-const STUDENT_COLORS = [
-  "schedule-color-1",
-  "schedule-color-2",
-  "schedule-color-3",
-  "schedule-color-4",
-  "schedule-color-5",
-  "schedule-color-6",
-  "schedule-color-7",
-  "schedule-color-8",
-  "schedule-color-9",
-  "schedule-color-10",
-];
-
-interface UseScheduleGridOptions {
-  teacherId: string;
-  autoFetch?: boolean;
-  channelSuffix?: string;
+/** Helper to calculate the date for a lesson based on day_of_week for current week */
+export function getLessonDateForCurrentWeek(dayOfWeek: number): Date {
+  const today = new Date();
+  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
+  const daysFromMonday = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+  return addDays(weekStart, daysFromMonday);
 }
 
-interface UseScheduleGridResult {
-  lessons: StudentLesson[];
-  trialLessons: TrialLesson[];
-  studentColors: Record<string, string>;
-  loading: boolean;
-  refetch: () => Promise<void>;
-  getDateForDayIndex: (dayIndex: number) => Date;
-  getTrialLessonForDayAndTime: (dayIndex: number, timeSlot: string) => TrialLesson | undefined;
-  mode: "template" | "actual";
-  setMode: (mode: "template" | "actual") => void;
-  actualLessons: StudentLesson[];
+interface BaseLessonInfo {
+  id: string;
+  student_id: string;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+}
+
+interface TrialLessonInfo {
+  id: string;
+  day_of_week: number;
+  start_time: string;
+  end_time: string;
+  lesson_date: string;
+}
+
+/** Actual-mode lesson from lesson_instances */
+export interface ActualLesson {
+  id: string;
+  student_id: string;
+  student_name: string;
+  lesson_number: number;
+  lesson_date: string;
+  start_time: string;
+  end_time: string;
+  status: string;
+  original_date: string | null;
+  original_start_time: string | null;
+  original_end_time: string | null;
+  rescheduled_count: number;
+  is_manual_override: boolean;
+  isGhost?: boolean;
+}
+
+// ─── Week Cache ───────────────────────────────────────────────
+const weekCache = new Map<string, { data: ActualLesson[]; ts: number }>();
+const CACHE_TTL = 60_000;
+
+const ensuredWeeks = new Set<string>();
+
+function getCacheKey(teacherId: string, weekStartStr: string): string {
+  return `${teacherId}-${weekStartStr}`;
+}
+
+/** Clear all cached weeks + ensured set — call after mutations. */
+export function clearWeekCache(): void {
+  weekCache.clear();
+  ensuredWeeks.clear();
+}
+
+/** Prefetch a specific week in the background. */
+export function prefetchWeek(teacherId: string, weekStart: Date): void {
+  const key = getCacheKey(teacherId, format(weekStart, "yyyy-MM-dd"));
+  const cached = weekCache.get(key);
+  if (cached && Date.now() - cached.ts < CACHE_TTL) return;
+  fetchActualLessonsForWeekCore(teacherId, weekStart).then((data) => {
+    weekCache.set(key, { data, ts: Date.now() });
+  }).catch(() => {});
+}
+
+export function getWeekStartForOffset(offset: number): Date {
+  const today = new Date();
+  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
+  return addDays(weekStart, offset * 7);
+}
+
+export function getDateForDayIndex(dayIndex: number, weekStart?: Date): Date {
+  const ws = weekStart || startOfWeek(new Date(), { weekStartsOn: 1 });
+  return addDays(ws, dayIndex);
+}
+
+export function dayIndexToDbDayOfWeek(dayIndex: number): number {
+  return dayIndex === 6 ? 0 : dayIndex + 1;
+}
+
+export function getAllTimeSlots(
+  lessons: BaseLessonInfo[],
+  trialLessons: TrialLessonInfo[]
+): string[] {
+  const allTimes = new Set<string>();
+  lessons.forEach((l) => allTimes.add(l.start_time));
+  trialLessons.forEach((l) => allTimes.add(l.start_time));
+  return Array.from(allTimes).sort();
+}
+
+export function getAllTimeSlotsActual(
+  actualLessons: ActualLesson[],
+  trialLessons: TrialLessonInfo[]
+): string[] {
+  const allTimes = new Set<string>();
+  actualLessons.forEach((l) => allTimes.add(l.start_time));
+  trialLessons.forEach((l) => allTimes.add(l.start_time));
+  return Array.from(allTimes).sort();
+}
+
+export function getTrialLessonForDayAndTime<T extends TrialLessonInfo>(
+  trialLessons: T[],
+  dayIndex: number,
+  timeSlot: string,
+  weekStart?: Date
+): T | undefined {
+  const dbDayOfWeek = dayIndexToDbDayOfWeek(dayIndex);
+  const dateForDay = getDateForDayIndex(dayIndex, weekStart);
+  const dateStr = format(dateForDay, "yyyy-MM-dd");
+  return trialLessons.find(
+    (l) => l.day_of_week === dbDayOfWeek && l.start_time === timeSlot && l.lesson_date === dateStr
+  );
 }
 
 /**
- * Lazy-generate lesson_instances for a given teacher + week.
- * Cycle-aware: respects totalRights = lpw * 4 cap per student.
+ * Ensure lesson_instances exist for all active template students for a given week.
+ * OPTIMIZED: Uses batch queries instead of per-student N+1 loops.
  */
-async function ensureInstancesForWeek(teacherId: string, ws: Date) {
-  const weekStart = new Date(ws);
-  weekStart.setHours(0, 0, 0, 0);
-  const weekEnd = addDays(weekStart, 6);
+async function ensureInstancesForWeek(teacherId: string, ws: Date): Promise<void> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
+  const weekEnd = addDays(ws, 6);
 
-  // Skip fully past weeks
   if (weekEnd < today) return;
 
-  const weekStartStr = format(weekStart, "yyyy-MM-dd");
-  const weekEndStr = format(weekEnd, "yyyy-MM-dd");
+  const startStr = format(ws, "yyyy-MM-dd");
+  const endStr = format(weekEnd, "yyyy-MM-dd");
 
-  // 1. Get template slots for this teacher
+  const ensureKey = `${teacherId}-${startStr}`;
+  if (ensuredWeeks.has(ensureKey)) return;
+
   const { data: templates } = await supabase
     .from("student_lessons")
     .select("student_id, day_of_week, start_time, end_time")
@@ -60,334 +148,372 @@ async function ensureInstancesForWeek(teacherId: string, ws: Date) {
 
   if (!templates || templates.length === 0) return;
 
-  // 2. Get active (non-archived) students
+  const templateStudentIds = [...new Set(templates.map((t) => t.student_id))];
   const { data: activeStudents } = await supabase
     .from("students")
     .select("student_id")
     .eq("teacher_id", teacherId)
-    .eq("is_archived", false);
+    .eq("is_archived", false)
+    .in("student_id", templateStudentIds);
 
-  const activeIds = new Set((activeStudents || []).map((s) => s.student_id));
+  if (!activeStudents || activeStudents.length === 0) return;
+  const activeStudentIds = new Set(activeStudents.map((s) => s.student_id));
 
-  // 3. Get tracking data for cycle and lpw info
-  const { data: trackingData } = await supabase
-    .from("student_lesson_tracking")
-    .select("student_id, package_cycle, lessons_per_week")
-    .eq("teacher_id", teacherId);
-
-  const trackingMap = new Map<string, { cycle: number; lpw: number }>();
-  (trackingData || []).forEach((t: any) => {
-    trackingMap.set(t.student_id, {
-      cycle: t.package_cycle ?? 1,
-      lpw: t.lessons_per_week,
-    });
-  });
-
-  // 4. Check existing instances for this week
   const { data: existingInstances } = await supabase
     .from("lesson_instances")
-    .select("student_id, lesson_date")
+    .select("student_id")
     .eq("teacher_id", teacherId)
-    .gte("lesson_date", weekStartStr)
-    .lte("lesson_date", weekEndStr);
+    .gte("lesson_date", startStr)
+    .lte("lesson_date", endStr);
 
-  // Build set of "student_id:lesson_date" for quick lookup
-  const existingSet = new Set(
-    (existingInstances || []).map((i) => `${i.student_id}:${i.lesson_date}`)
-  );
+  const studentsWithInstances = new Set((existingInstances || []).map((i) => i.student_id));
+  const missingStudents = [...activeStudentIds].filter((id) => !studentsWithInstances.has(id));
+  if (missingStudents.length === 0) return;
 
-  // 5. Group templates by student
-  const templatesByStudent = new Map<string, typeof templates>();
-  for (const t of templates) {
-    if (!activeIds.has(t.student_id)) continue;
-    const arr = templatesByStudent.get(t.student_id) || [];
-    arr.push(t);
-    templatesByStudent.set(t.student_id, arr);
-  }
+  const [trackingResult, maxLessonsResult, cycleInstancesResult] = await Promise.all([
+    supabase
+      .from("student_lesson_tracking")
+      .select("student_id, package_cycle, lessons_per_week")
+      .eq("teacher_id", teacherId)
+      .in("student_id", missingStudents),
+    supabase
+      .from("lesson_instances")
+      .select("student_id, lesson_number")
+      .eq("teacher_id", teacherId)
+      .in("student_id", missingStudents)
+      .order("lesson_number", { ascending: false }),
+    supabase
+      .from("lesson_instances")
+      .select("student_id, package_cycle, status, lesson_date")
+      .eq("teacher_id", teacherId)
+      .in("student_id", missingStudents),
+  ]);
 
-  // 6. Find missing students who need instances for this week
-  const toInsert: any[] = [];
-  const studentsNeedingInstances: string[] = [];
+  const trackingMap = new Map<string, { cycle: number; lpw: number }>();
+  (trackingResult.data || []).forEach((t) => {
+    trackingMap.set(t.student_id, { cycle: t.package_cycle, lpw: t.lessons_per_week });
+  });
 
-  for (const [studentId, slots] of templatesByStudent) {
-    for (const slot of slots) {
-      const dayOffset = slot.day_of_week === 0 ? 6 : slot.day_of_week - 1;
-      const slotDate = format(addDays(weekStart, dayOffset), "yyyy-MM-dd");
+  const maxLessonMap = new Map<string, number>();
+  (maxLessonsResult.data || []).forEach((row) => {
+    if (!maxLessonMap.has(row.student_id)) {
+      maxLessonMap.set(row.student_id, row.lesson_number);
+    }
+  });
 
-      if (slotDate < format(today, "yyyy-MM-dd")) continue;
-      if (existingSet.has(`${studentId}:${slotDate}`)) continue;
-
-      if (!studentsNeedingInstances.includes(studentId)) {
-        studentsNeedingInstances.push(studentId);
+  const cycleCountMap = new Map<string, number>();
+  const maxCompletedDateMap = new Map<string, string>();
+  (cycleInstancesResult.data || []).forEach((row) => {
+    const tracking = trackingMap.get(row.student_id);
+    if (!tracking || row.package_cycle !== tracking.cycle) return;
+    cycleCountMap.set(row.student_id, (cycleCountMap.get(row.student_id) || 0) + 1);
+    if (row.status === "completed") {
+      const current = maxCompletedDateMap.get(row.student_id);
+      if (!current || row.lesson_date > current) {
+        maxCompletedDateMap.set(row.student_id, row.lesson_date);
       }
     }
-  }
+  });
 
-  if (studentsNeedingInstances.length === 0) return;
+  const instancesToInsert: Array<{
+    student_id: string;
+    teacher_id: string;
+    lesson_number: number;
+    lesson_date: string;
+    start_time: string;
+    end_time: string;
+    status: string;
+    package_cycle: number;
+  }> = [];
 
-  // 7. Get instance counts per student in current cycle (for cap enforcement)
-  const instanceCountMap = new Map<string, number>();
-  const maxLessonMap = new Map<string, number>();
-
-  for (const sid of studentsNeedingInstances) {
-    const tracking = trackingMap.get(sid);
-    const currentCycle = tracking?.cycle ?? 1;
-
-    // Count existing instances in current cycle
-    const { count } = await supabase
-      .from("lesson_instances")
-      .select("id", { count: "exact", head: true })
-      .eq("student_id", sid)
-      .eq("teacher_id", teacherId)
-      .eq("package_cycle", currentCycle);
-
-    instanceCountMap.set(sid, count ?? 0);
-
-    // Get max lesson_number
-    const { data: maxData } = await supabase
-      .from("lesson_instances")
-      .select("lesson_number")
-      .eq("student_id", sid)
-      .eq("teacher_id", teacherId)
-      .order("lesson_number", { ascending: false })
-      .limit(1);
-
-    maxLessonMap.set(sid, maxData && maxData.length > 0 ? maxData[0].lesson_number : 0);
-  }
-
-  // 8. Generate instances with cap enforcement
-  for (const [studentId, slots] of templatesByStudent) {
-    if (!studentsNeedingInstances.includes(studentId)) continue;
-
+  for (const studentId of missingStudents) {
     const tracking = trackingMap.get(studentId);
-    const totalRights = (tracking?.lpw ?? slots.length) * 4;
-    const currentCycle = tracking?.cycle ?? 1;
-    let existingInCycle = instanceCountMap.get(studentId) ?? 0;
-    let nextNumber = (maxLessonMap.get(studentId) || 0) + 1;
+    if (!tracking) continue;
 
-    for (const slot of slots) {
-      // Cap check: don't generate beyond totalRights
-      if (existingInCycle >= totalRights) break;
+    const totalRights = tracking.lpw * 4;
+    const currentCycle = tracking.cycle;
+    const existingInCycle = cycleCountMap.get(studentId) || 0;
+    if (existingInCycle >= totalRights) continue;
 
-      const dayOffset = slot.day_of_week === 0 ? 6 : slot.day_of_week - 1;
-      const slotDate = format(addDays(weekStart, dayOffset), "yyyy-MM-dd");
+    const remainingSlots = totalRights - existingInCycle;
+    const studentTemplates = templates.filter((t) => t.student_id === studentId);
+    let nextNum = (maxLessonMap.get(studentId) || 0) + 1;
+    let generated = 0;
+    const lastCompletedDate = maxCompletedDateMap.get(studentId);
 
-      if (slotDate < format(today, "yyyy-MM-dd")) continue;
-      if (existingSet.has(`${studentId}:${slotDate}`)) continue;
+    for (const tmpl of studentTemplates) {
+      if (generated >= remainingSlots) break;
 
-      toInsert.push({
+      const dayIndex = tmpl.day_of_week === 0 ? 6 : tmpl.day_of_week - 1;
+      const lessonDate = addDays(ws, dayIndex);
+      const dateStr = format(lessonDate, "yyyy-MM-dd");
+
+      if (lastCompletedDate && dateStr <= lastCompletedDate) continue;
+
+      instancesToInsert.push({
         student_id: studentId,
         teacher_id: teacherId,
-        lesson_number: nextNumber++,
-        lesson_date: slotDate,
-        start_time: slot.start_time,
-        end_time: slot.end_time,
+        lesson_number: nextNum++,
+        lesson_date: dateStr,
+        start_time: tmpl.start_time,
+        end_time: tmpl.end_time,
         status: "planned",
-        rescheduled_count: 0,
         package_cycle: currentCycle,
       });
-      existingInCycle++;
+      generated++;
     }
   }
 
-  if (toInsert.length > 0) {
-    await supabase.from("lesson_instances").insert(toInsert);
+  if (instancesToInsert.length > 0) {
+    await supabase.from("lesson_instances").insert(instancesToInsert);
   }
+
+  ensuredWeeks.add(ensureKey);
 }
 
-export function useScheduleGrid({
-  teacherId,
-  autoFetch = true,
-  channelSuffix = "default",
-}: UseScheduleGridOptions): UseScheduleGridResult {
-  const [lessons, setLessons] = useState<StudentLesson[]>([]);
-  const [actualLessons, setActualLessons] = useState<StudentLesson[]>([]);
-  const [trialLessons, setTrialLessons] = useState<TrialLesson[]>([]);
-  const [studentColors, setStudentColors] = useState<Record<string, string>>({});
-  const [loading, setLoading] = useState(true);
-  const [mode, setMode] = useState<"template" | "actual">("actual");
+/**
+ * Core fetch logic — no caching, used by both cached fetch and prefetch.
+ */
+async function fetchActualLessonsForWeekCore(
+  teacherId: string,
+  weekStart?: Date
+): Promise<ActualLesson[]> {
+  const ws = weekStart || startOfWeek(new Date(), { weekStartsOn: 1 });
+  const weekEnd = addDays(ws, 6);
+  const startStr = format(ws, "yyyy-MM-dd");
+  const endStr = format(weekEnd, "yyyy-MM-dd");
 
-  const fetchSchedule = useCallback(async () => {
-    try {
-      setLoading(true);
+  await ensureInstancesForWeek(teacherId, ws);
 
-      const { data: activeStudents, error: studentsError } = await supabase
-        .from("students")
-        .select("student_id")
-        .eq("teacher_id", teacherId)
-        .eq("is_archived", false);
+  const [instancesResult, activeStudentsResult] = await Promise.all([
+    supabase
+      .from("lesson_instances")
+      .select("id, student_id, lesson_number, lesson_date, start_time, end_time, status, original_date, original_start_time, original_end_time, rescheduled_count, is_manual_override")
+      .eq("teacher_id", teacherId)
+      .gte("lesson_date", startStr)
+      .lte("lesson_date", endStr)
+      .in("status", ["planned", "completed"])
+      .order("lesson_date")
+      .order("start_time"),
+    supabase
+      .from("students")
+      .select("student_id")
+      .eq("teacher_id", teacherId)
+      .eq("is_archived", false),
+  ]);
 
-      if (studentsError) throw studentsError;
+  const realInstances = instancesResult.data || [];
+  const allActiveStudentIds = new Set((activeStudentsResult.data || []).map((s) => s.student_id));
 
-      const activeStudentIds = (activeStudents || []).map((s) => s.student_id);
+  const filteredInstances = realInstances.filter((i) => allActiveStudentIds.has(i.student_id));
 
-      // Always fetch template lessons
-      const { data: lessonsData, error: lessonsError } = await supabase
+  const instanceSlotKeys = new Set<string>();
+  filteredInstances.forEach((inst) => {
+    const d = new Date(inst.lesson_date + "T00:00:00");
+    const dow = d.getDay();
+    instanceSlotKeys.add(`${inst.student_id}-${dow}-${inst.start_time}`);
+  });
+
+  // Generate ghost entries
+  const ghostEntries: ActualLesson[] = [];
+  const allActiveIds = [...allActiveStudentIds];
+
+  if (allActiveIds.length > 0) {
+    const [templatesResult, trackingResult] = await Promise.all([
+      supabase
         .from("student_lessons")
-        .select("id, student_id, day_of_week, start_time, end_time, is_completed, note")
+        .select("student_id, day_of_week, start_time, end_time")
         .eq("teacher_id", teacherId)
-        .in("student_id", activeStudentIds.length > 0 ? activeStudentIds : ["no-students"])
-        .order("start_time", { ascending: true });
-
-      if (lessonsError) throw lessonsError;
-
-      // Fetch trial lessons
-      const { data: trialLessonsData, error: trialLessonsError } = await supabase
-        .from("trial_lessons")
-        .select("id, day_of_week, start_time, end_time, is_completed")
+        .in("student_id", allActiveIds),
+      supabase
+        .from("student_lesson_tracking")
+        .select("student_id, package_cycle, lessons_per_week")
         .eq("teacher_id", teacherId)
-        .order("start_time", { ascending: true });
+        .in("student_id", allActiveIds),
+    ]);
 
-      if (trialLessonsError) throw trialLessonsError;
-      setTrialLessons(trialLessonsData || []);
+    const templates = templatesResult.data || [];
+    const trackingData = trackingResult.data || [];
 
-      // Fetch student names
-      const studentIds = Array.from(new Set((lessonsData || []).map((l) => l.student_id)));
-      const { data: profilesData, error: profilesError } = await supabase
-        .from("profiles")
-        .select("user_id, full_name")
-        .in("user_id", studentIds.length > 0 ? studentIds : ["no-students"]);
-
-      if (profilesError) throw profilesError;
-
-      const studentNameMap: Record<string, string> = {};
-      (profilesData || []).forEach((profile) => {
-        studentNameMap[profile.user_id] = profile.full_name;
+    if (templates.length > 0 && trackingData.length > 0) {
+      const trackingMap = new Map<string, { cycle: number; lpw: number }>();
+      trackingData.forEach((t) => {
+        trackingMap.set(t.student_id, { cycle: t.package_cycle, lpw: t.lessons_per_week });
       });
 
-      const formattedLessons: StudentLesson[] = (lessonsData || []).map((lesson) => ({
-        id: lesson.id,
-        student_id: lesson.student_id,
-        day_of_week: lesson.day_of_week,
-        start_time: lesson.start_time,
-        end_time: lesson.end_time,
-        student_name: studentNameMap[lesson.student_id] || "Bilinmeyen",
-        is_completed: lesson.is_completed,
-        note: lesson.note,
-      }));
-      setLessons(formattedLessons);
+      const templateStudentIds = [...new Set(templates.map((t) => t.student_id))];
 
-      // Ensure instances exist for current week, then fetch
-      const today = new Date();
-      const weekStart = startOfWeek(today, { weekStartsOn: 1 });
-      await ensureInstancesForWeek(teacherId, weekStart);
-
-      const weekEnd = addDays(weekStart, 6);
-      const weekStartStr = format(weekStart, "yyyy-MM-dd");
-      const weekEndStr = format(weekEnd, "yyyy-MM-dd");
-
-      const { data: instancesData, error: instancesError } = await supabase
+      const { data: allCycleInstances } = await supabase
         .from("lesson_instances")
-        .select("id, student_id, lesson_date, start_time, end_time, status, lesson_number")
+        .select("student_id, package_cycle")
         .eq("teacher_id", teacherId)
-        .in("student_id", activeStudentIds.length > 0 ? activeStudentIds : ["no-students"])
-        .gte("lesson_date", weekStartStr)
-        .lte("lesson_date", weekEndStr)
-        .in("status", ["planned", "completed"])
-        .order("start_time", { ascending: true });
+        .in("student_id", templateStudentIds);
 
-      if (instancesError) throw instancesError;
-
-      // Also fetch names for any instance students not in template
-      const instanceStudentIds = Array.from(
-        new Set((instancesData || []).map((i) => i.student_id))
-      );
-      const missingNameIds = instanceStudentIds.filter((id) => !studentNameMap[id]);
-      if (missingNameIds.length > 0) {
-        const { data: extraProfiles } = await supabase
-          .from("profiles")
-          .select("user_id, full_name")
-          .in("user_id", missingNameIds);
-        (extraProfiles || []).forEach((p) => {
-          studentNameMap[p.user_id] = p.full_name;
-        });
-      }
-
-      const actualFormatted: StudentLesson[] = (instancesData || []).map((inst) => {
-        const instDate = new Date(inst.lesson_date + "T00:00:00");
-        const dayOfWeek = instDate.getDay();
-        return {
-          id: inst.id,
-          student_id: inst.student_id,
-          day_of_week: dayOfWeek,
-          start_time: inst.start_time,
-          end_time: inst.end_time,
-          student_name: studentNameMap[inst.student_id] || "Bilinmeyen",
-          is_completed: inst.status === "completed",
-          note: undefined,
-        };
+      const cycleCountMap = new Map<string, number>();
+      (allCycleInstances || []).forEach((row) => {
+        const tracking = trackingMap.get(row.student_id);
+        if (!tracking || row.package_cycle !== tracking.cycle) return;
+        cycleCountMap.set(row.student_id, (cycleCountMap.get(row.student_id) || 0) + 1);
       });
-      setActualLessons(actualFormatted);
 
-      // Assign colors
-      const allStudentIds = new Set([
-        ...formattedLessons.map((l) => l.student_id),
-        ...actualFormatted.map((l) => l.student_id),
-      ]);
-      const colors: Record<string, string> = {};
-      Array.from(allStudentIds).forEach((sid, index) => {
-        colors[sid] = STUDENT_COLORS[index % STUDENT_COLORS.length];
-      });
-      setStudentColors(colors);
-    } finally {
-      setLoading(false);
-    }
-  }, [teacherId]);
+      for (const studentId of templateStudentIds) {
+        const tracking = trackingMap.get(studentId);
+        if (!tracking) continue;
 
-  useEffect(() => {
-    if (autoFetch && teacherId) {
-      fetchSchedule();
-    }
-  }, [teacherId, autoFetch, fetchSchedule]);
+        const totalRights = tracking.lpw * 4;
+        const existingInCycle = cycleCountMap.get(studentId) || 0;
+        if (existingInCycle < totalRights) continue;
 
-  useEffect(() => {
-    if (!teacherId) return;
+        const studentTemplates = templates.filter((t) => t.student_id === studentId);
+        for (const tmpl of studentTemplates) {
+          const slotKey = `${studentId}-${tmpl.day_of_week}-${tmpl.start_time}`;
+          if (instanceSlotKeys.has(slotKey)) continue;
 
-    const channel = supabase
-      .channel(`trial-lessons-${channelSuffix}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "UPDATE",
-          schema: "public",
-          table: "trial_lessons",
-          filter: `teacher_id=eq.${teacherId}`,
-        },
-        () => {
-          fetchSchedule();
+          const dayIndex = tmpl.day_of_week === 0 ? 6 : tmpl.day_of_week - 1;
+          const lessonDate = addDays(ws, dayIndex);
+          const dateStr = format(lessonDate, "yyyy-MM-dd");
+
+          ghostEntries.push({
+            id: `ghost-${studentId}-${dateStr}-${tmpl.start_time}`,
+            student_id: studentId,
+            student_name: "",
+            lesson_number: 0,
+            lesson_date: dateStr,
+            start_time: tmpl.start_time,
+            end_time: tmpl.end_time,
+            status: "planned",
+            original_date: null,
+            original_start_time: null,
+            original_end_time: null,
+            rescheduled_count: 0,
+            is_manual_override: false,
+            isGhost: true,
+          });
         }
-      )
-      .subscribe();
+      }
+    }
+  }
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [teacherId, channelSuffix, fetchSchedule]);
+  const allResults = [...filteredInstances.map((inst) => ({ ...inst, isGhost: false })), ...ghostEntries];
 
-  const getDateForDayIndex = useCallback((dayIndex: number): Date => {
-    const today = new Date();
-    const weekStart = startOfWeek(today, { weekStartsOn: 1 });
-    return addDays(weekStart, dayIndex);
-  }, []);
+  const allStudentIds = [...new Set(allResults.map((i) => i.student_id))];
+  if (allStudentIds.length === 0) return [];
 
-  const getTrialLessonForDayAndTime = useCallback(
-    (dayIndex: number, timeSlot: string): TrialLesson | undefined => {
-      const dbDayOfWeek = dayIndex === 6 ? 0 : dayIndex + 1;
-      return trialLessons.find((l) => l.day_of_week === dbDayOfWeek && l.start_time === timeSlot);
-    },
-    [trialLessons]
+  const { data: profiles } = await supabase
+    .from("profiles")
+    .select("user_id, full_name")
+    .in("user_id", allStudentIds);
+
+  const nameMap = new Map((profiles || []).map((p) => [p.user_id, p.full_name]));
+
+  return allResults.map((inst) => ({
+    ...inst,
+    student_name: nameMap.get(inst.student_id) || "Bilinmeyen",
+  }));
+}
+
+/**
+ * Fetch actual lessons with stale-while-revalidate caching.
+ */
+export async function fetchActualLessonsForWeek(
+  teacherId: string,
+  weekStart?: Date
+): Promise<ActualLesson[]> {
+  const ws = weekStart || startOfWeek(new Date(), { weekStartsOn: 1 });
+  const key = getCacheKey(teacherId, format(ws, "yyyy-MM-dd"));
+  const cached = weekCache.get(key);
+
+  if (cached && Date.now() - cached.ts < CACHE_TTL) {
+    return cached.data;
+  }
+
+  const data = await fetchActualLessonsForWeekCore(teacherId, ws);
+  weekCache.set(key, { data, ts: Date.now() });
+  return data;
+}
+
+/**
+ * Get ALL actual lessons for a specific day and time slot.
+ */
+export function getActualLessonsForDayAndTime(
+  actualLessons: ActualLesson[],
+  dayIndex: number,
+  timeSlot: string,
+  weekStart?: Date
+): ActualLesson[] {
+  const dateForDay = getDateForDayIndex(dayIndex, weekStart);
+  const dateStr = format(dateForDay, "yyyy-MM-dd");
+  return actualLessons.filter(
+    (l) => l.lesson_date === dateStr && l.start_time === timeSlot
   );
+}
 
-  return {
-    lessons,
-    trialLessons,
-    studentColors,
-    loading,
-    refetch: fetchSchedule,
-    getDateForDayIndex,
-    getTrialLessonForDayAndTime,
-    mode,
-    setMode,
-    actualLessons,
-  };
+/**
+ * Detect back-to-back lesson groups for a specific day.
+ */
+export function getBackToBackGroups(
+  actualLessons: ActualLesson[],
+  dayIndex: number,
+  weekStart?: Date
+): ActualLesson[][] {
+  const dateForDay = getDateForDayIndex(dayIndex, weekStart);
+  const dateStr = format(dateForDay, "yyyy-MM-dd");
+  
+  const dayLessons = actualLessons
+    .filter((l) => l.lesson_date === dateStr)
+    .sort((a, b) => a.start_time.localeCompare(b.start_time));
+
+  const groups: ActualLesson[][] = [];
+  const processed = new Set<string>();
+
+  for (let i = 0; i < dayLessons.length; i++) {
+    if (processed.has(dayLessons[i].id)) continue;
+
+    const group: ActualLesson[] = [dayLessons[i]];
+    processed.add(dayLessons[i].id);
+
+    let current = dayLessons[i];
+    for (let j = i + 1; j < dayLessons.length; j++) {
+      if (processed.has(dayLessons[j].id)) continue;
+      if (
+        dayLessons[j].student_id === current.student_id &&
+        dayLessons[j].start_time === current.end_time
+      ) {
+        group.push(dayLessons[j]);
+        processed.add(dayLessons[j].id);
+        current = dayLessons[j];
+      }
+    }
+
+    if (group.length > 1) {
+      groups.push(group);
+    }
+  }
+
+  return groups;
+}
+
+export function isSecondaryInBackToBack(
+  actualLessons: ActualLesson[],
+  dayIndex: number,
+  lessonId: string,
+  weekStart?: Date
+): boolean {
+  const groups = getBackToBackGroups(actualLessons, dayIndex, weekStart);
+  return groups.some(
+    (group) => group.length > 1 && group.findIndex((l) => l.id === lessonId) > 0
+  );
+}
+
+export function getBackToBackGroupForLesson(
+  actualLessons: ActualLesson[],
+  dayIndex: number,
+  lessonId: string,
+  weekStart?: Date
+): ActualLesson[] | null {
+  const groups = getBackToBackGroups(actualLessons, dayIndex, weekStart);
+  const group = groups.find(
+    (g) => g.length > 1 && g[0].id === lessonId
+  );
+  return group || null;
 }

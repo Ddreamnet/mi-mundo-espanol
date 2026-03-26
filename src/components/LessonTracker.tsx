@@ -1,30 +1,18 @@
 import { useState, useEffect } from "react";
 import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
+  AlertDialog, AlertDialogAction, AlertDialogCancel,
+  AlertDialogContent, AlertDialogDescription, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { format } from "date-fns";
 import { useTranslation } from "react-i18next";
-import { getRowConfig } from "@/lib/lessonTypes";
-import { completeLesson, undoCompleteLesson } from "@/lib/lessonService";
-
-interface InstanceData {
-  id: string;
-  lesson_number: number;
-  lesson_date: string;
-  start_time: string;
-  end_time: string;
-  status: string;
-  original_date: string | null;
-}
+import { LessonInstance, getRowConfig } from "@/lib/lessonTypes";
+import {
+  completeLesson, undoCompleteLesson,
+  getNextCompletableInstance, getLastCompletedInstance,
+} from "@/lib/lessonService";
 
 interface LessonTrackerProps {
   studentId: string;
@@ -34,142 +22,134 @@ interface LessonTrackerProps {
 
 export function LessonTracker({ studentId, studentName, teacherId }: LessonTrackerProps) {
   const { t } = useTranslation();
-  const [instances, setInstances] = useState<InstanceData[]>([]);
-  const [lessonsPerWeek, setLessonsPerWeek] = useState<number>(1);
+  const [instances, setInstances] = useState<LessonInstance[]>([]);
+  const [templateCount, setTemplateCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [pendingInstance, setPendingInstance] = useState<InstanceData | null>(null);
-  const [confirmMode, setConfirmMode] = useState<"complete" | "undo">("complete");
+  const [showUndoConfirm, setShowUndoConfirm] = useState(false);
+  const [pendingInstanceId, setPendingInstanceId] = useState<string | null>(null);
+  const [undoInstanceId, setUndoInstanceId] = useState<string | null>(null);
+  const [nextCompletableId, setNextCompletableId] = useState<string | null>(null);
+  const [lastCompletedId, setLastCompletedId] = useState<string | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!studentId || !teacherId) {
-      setLoading(false);
-      return;
-    }
+    if (!studentId || !teacherId) { setLoading(false); return; }
     loadData();
   }, [studentId, teacherId]);
 
   const loadData = async () => {
     setLoading(true);
-    await Promise.all([fetchInstances(), fetchLessonsPerWeek()]);
-    setLoading(false);
-  };
+    const { data: tracking } = await supabase
+      .from("student_lesson_tracking")
+      .select("package_cycle")
+      .eq("student_id", studentId)
+      .eq("teacher_id", teacherId)
+      .maybeSingle();
+    const currentCycle = tracking?.package_cycle ?? 1;
 
-  const fetchInstances = async () => {
-    try {
-      // Get current cycle
-      const { data: tracking } = await supabase
-        .from("student_lesson_tracking")
-        .select("package_cycle")
-        .eq("student_id", studentId)
-        .eq("teacher_id", teacherId)
-        .maybeSingle();
-
-      const currentCycle = tracking?.package_cycle ?? 1;
-
-      const { data, error } = await supabase
+    const [instancesResult, templateResult, nextResult, lastResult] = await Promise.all([
+      supabase
         .from("lesson_instances")
-        .select("id, lesson_number, lesson_date, start_time, end_time, status, original_date")
+        .select("*")
         .eq("student_id", studentId)
         .eq("teacher_id", teacherId)
         .eq("package_cycle", currentCycle)
+        .in("status", ["planned", "completed"])
         .order("lesson_date", { ascending: true })
-        .order("start_time", { ascending: true });
-
-      if (error) throw error;
-      setInstances(data || []);
-    } catch (error: any) {
-      console.error("Failed to fetch lesson instances:", error);
-    }
-  };
-
-  const fetchLessonsPerWeek = async () => {
-    try {
-      const { data, error } = await supabase
+        .order("start_time", { ascending: true }),
+      supabase
         .from("student_lessons")
-        .select("id")
+        .select("id", { count: "exact", head: true })
         .eq("student_id", studentId)
-        .eq("teacher_id", teacherId);
+        .eq("teacher_id", teacherId),
+      getNextCompletableInstance(studentId, teacherId, currentCycle),
+      getLastCompletedInstance(studentId, teacherId, currentCycle),
+    ]);
 
-      if (error) throw error;
-      setLessonsPerWeek(data?.length || 1);
-    } catch (error: any) {
-      console.error("Failed to fetch lessons per week:", error);
+    if (!instancesResult.error) {
+      setInstances((instancesResult.data as LessonInstance[]) || []);
+    }
+    setTemplateCount(templateResult.count ?? 0);
+    setNextCompletableId(nextResult?.id ?? null);
+    setLastCompletedId(lastResult?.id ?? null);
+    setLoading(false);
+  };
+
+  const handleLessonClick = (instanceId: string, isCompleted: boolean) => {
+    if (isCompleted) {
+      if (instanceId !== lastCompletedId) return;
+      setUndoInstanceId(instanceId);
+      setShowUndoConfirm(true);
+    } else {
+      if (instanceId !== nextCompletableId) return;
+      setPendingInstanceId(instanceId);
+      setShowConfirm(true);
     }
   };
 
-  const handleLessonClick = (instance: InstanceData) => {
-    if (instance.status === "completed") {
-      // Check if this is the last completed (undoable)
-      const completedInstances = instances.filter(i => i.status === "completed");
-      const lastCompleted = completedInstances[completedInstances.length - 1];
-      if (lastCompleted && lastCompleted.id === instance.id) {
-        setPendingInstance(instance);
-        setConfirmMode("undo");
-        setShowConfirm(true);
-      }
-      return;
-    }
-
-    // Check if this is the next completable (first planned)
-    const firstPlanned = instances.find(i => i.status === "planned");
-    if (!firstPlanned || firstPlanned.id !== instance.id) return;
-
-    setPendingInstance(instance);
-    setConfirmMode("complete");
-    setShowConfirm(true);
-  };
-
-  const confirmAction = async () => {
-    if (!pendingInstance) return;
-
+  const confirmLessonComplete = async () => {
+    if (!pendingInstanceId) return;
     try {
-      if (confirmMode === "complete") {
-        const result = await completeLesson(pendingInstance.id, teacherId, studentId);
-        if (!result.success) {
-          throw new Error(result.error || "Failed to complete lesson");
-        }
-        toast({
-          title: t("common.success"),
-          description: t("lessonTracker.lessonMarked", { number: pendingInstance.lesson_number }),
-        });
-      } else {
-        const result = await undoCompleteLesson(pendingInstance.id, teacherId, studentId);
-        if (!result.success) {
-          throw new Error(result.error || "Failed to undo lesson");
-        }
-        toast({
-          title: t("common.success"),
-          description: t("lessonTracker.lessonUndone", { number: pendingInstance.lesson_number }),
-        });
+      const result = await completeLesson(pendingInstanceId, teacherId, studentId);
+      if (!result.success) {
+        toast({ title: t("common.error"), description: result.error || t("lessonTracker.markError"), variant: "destructive" });
+        return;
       }
+      // Optimistic update
+      setInstances(prev => prev.map(i =>
+        i.id === pendingInstanceId ? { ...i, status: 'completed' } : i
+      ));
+      const sortedPlanned = instances
+        .filter(i => i.status === 'planned' && i.id !== pendingInstanceId)
+        .sort((a, b) => a.lesson_date.localeCompare(b.lesson_date) || a.start_time.localeCompare(b.start_time));
+      setNextCompletableId(sortedPlanned[0]?.id ?? null);
+      setLastCompletedId(pendingInstanceId);
 
-      // Refresh instances
-      await fetchInstances();
-    } catch (error: any) {
+      const inst = instances.find((i) => i.id === pendingInstanceId);
       toast({
-        title: t("common.error"),
-        description: error.message,
-        variant: "destructive",
+        title: t("common.success"),
+        description: t("lessonTracker.lessonMarked", { number: inst?.lesson_number }) +
+          (inst ? ` (${format(new Date(inst.lesson_date), "dd.MM")})` : ""),
       });
+    } catch (error: any) {
+      toast({ title: t("common.error"), description: error.message, variant: "destructive" });
     } finally {
       setShowConfirm(false);
-      setPendingInstance(null);
+      setPendingInstanceId(null);
     }
   };
 
-  const totalLessonsPerMonth = lessonsPerWeek * 4;
-  const rowConfig = getRowConfig(lessonsPerWeek);
+  const confirmUndo = async () => {
+    if (!undoInstanceId) return;
+    try {
+      const result = await undoCompleteLesson(undoInstanceId, teacherId, studentId);
+      if (!result.success) {
+        toast({ title: t("common.error"), description: result.error || t("lessonTracker.undoError"), variant: "destructive" });
+        return;
+      }
+      // Optimistic update
+      setInstances(prev => prev.map(i =>
+        i.id === undoInstanceId ? { ...i, status: 'planned' } : i
+      ));
+      setNextCompletableId(undoInstanceId);
+      const remaining = instances
+        .filter(i => i.status === 'completed' && i.id !== undoInstanceId)
+        .sort((a, b) => b.lesson_date.localeCompare(a.lesson_date) || b.start_time.localeCompare(a.start_time));
+      setLastCompletedId(remaining[0]?.id ?? null);
 
-  // Derive completed count from instances
-  const completedCount = instances.filter(i => i.status === "completed").length;
+      toast({ title: t("common.success"), description: t("lessonTracker.lessonUndone") });
+    } catch (error: any) {
+      toast({ title: t("common.error"), description: error.message, variant: "destructive" });
+    } finally {
+      setShowUndoConfirm(false);
+      setUndoInstanceId(null);
+    }
+  };
 
-  // Find first planned for highlighting
-  const firstPlannedId = instances.find(i => i.status === "planned")?.id;
-  // Find last completed for undo highlighting
-  const completedInstances = instances.filter(i => i.status === "completed");
-  const lastCompletedId = completedInstances.length > 0 ? completedInstances[completedInstances.length - 1].id : null;
+  const totalLessonsPerMonth = templateCount * 4;
+  const rowConfig = getRowConfig(templateCount);
+  const displayInstances = instances;
 
   if (loading) {
     return <div className="animate-pulse h-40 bg-muted rounded-lg"></div>;
@@ -177,58 +157,50 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
 
   return (
     <>
-      <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 border-2 border-border rounded-xl p-2.5 bg-secondary/20 shadow-sm">
-          <div className="flex flex-col gap-1.5">
+      <div className="flex items-center justify-center w-full">
+        <div className="flex items-center border-2 border-border rounded-xl p-2 sm:p-2.5 bg-secondary/20 shadow-sm mx-auto">
+          <div className="flex flex-col gap-2 sm:gap-2.5 md:gap-2">
             {Array.from({ length: rowConfig.rows }, (_, rowIndex) => (
-              <div key={rowIndex} className="flex gap-1.5">
+              <div key={rowIndex} className="flex gap-2 sm:gap-2.5 justify-center">
                 {Array.from({ length: rowConfig.buttonsPerRow }, (_, colIndex) => {
-                  const displayPosition = rowIndex * rowConfig.buttonsPerRow + colIndex + 1;
-                  if (displayPosition > totalLessonsPerMonth) return null;
+                  const displayPosition = rowIndex * rowConfig.buttonsPerRow + colIndex;
+                  if (displayPosition >= totalLessonsPerMonth) return null;
 
-                  // Map display position to instance
-                  const instance = instances[displayPosition - 1];
-                  const isCompleted = instance?.status === "completed";
-                  const isNextCompletable = instance?.id === firstPlannedId;
-                  const isUndoable = instance?.id === lastCompletedId;
-                  const isOverridden = instance?.original_date != null;
-                  const displayDate = instance?.lesson_date;
+                  const inst = displayInstances[displayPosition];
+                  if (!inst) return null;
+
+                  const isCompleted = inst.status === "completed";
+                  const isNextCompletable = inst.id === nextCompletableId;
+                  const isUndoable = isCompleted && inst.id === lastCompletedId;
+                  const timeInfo = `${inst.start_time.slice(0, 5)} - ${inst.end_time.slice(0, 5)}`;
 
                   return (
-                    <div key={displayPosition} className="flex flex-col items-center gap-0.5">
+                    <div key={inst.id} className="flex flex-col items-center gap-0.5">
                       <button
-                        onClick={() => instance && handleLessonClick(instance)}
-                        disabled={!instance || (instance.status === "planned" && instance.id !== firstPlannedId)}
+                        onClick={() => handleLessonClick(inst.id, isCompleted)}
+                        disabled={!isNextCompletable && !isUndoable}
                         className={`
-                          h-8 w-8 rounded-lg border-2 transition-all duration-200 font-semibold text-xs
+                          h-8 w-8 sm:h-9 sm:w-9 rounded-lg border-2 transition-all duration-200 font-semibold text-xs
                           flex items-center justify-center shadow-sm relative
                           ${
                             isCompleted
                               ? isUndoable
-                                ? "bg-secondary text-secondary-foreground border-secondary scale-95 shadow-md cursor-pointer hover:bg-destructive/20 hover:border-destructive"
-                                : "bg-secondary text-secondary-foreground border-secondary scale-95 shadow-md"
+                                ? "bg-secondary text-secondary-foreground border-secondary scale-95 shadow-md hover:bg-destructive/20 hover:border-destructive cursor-pointer"
+                                : "bg-secondary text-secondary-foreground border-secondary scale-95 shadow-md cursor-default"
                               : isNextCompletable
-                                ? "bg-muted/50 border-primary/50 hover:bg-primary/10 hover:scale-105 hover:shadow-md cursor-pointer hover:border-primary ring-2 ring-primary/20"
-                                : "bg-muted/50 border-border/50 opacity-60"
+                                ? "bg-background border-primary hover:bg-primary/10 hover:scale-105 hover:shadow-md cursor-pointer"
+                                : "bg-background border-primary/30 opacity-60 cursor-not-allowed"
                           }
                         `}
-                        title={
-                          isCompleted
-                            ? isUndoable
-                              ? t("lessonTracker.clickToUndo", { number: displayPosition })
-                              : t("lessonTracker.lessonCompleted", { number: displayPosition })
-                            : t("lessonTracker.lesson", { number: displayPosition })
-                        }
+                        title={isUndoable ? t("lessonTracker.clickToUndo", { number: displayPosition + 1 }) : `${t("lessonTracker.lesson", { number: displayPosition + 1 })} - ${timeInfo}`}
                       >
-                        {displayPosition}
+                        {displayPosition + 1}
                       </button>
-                      {displayDate && (
-                        <span className={`text-[10px] whitespace-nowrap ${
-                          isOverridden ? "font-semibold" : "opacity-70"
-                        }`}>
-                          {format(new Date(displayDate + "T00:00:00"), "dd.MM")}
-                        </span>
-                      )}
+                      <span className={`text-[10px] whitespace-nowrap ${
+                        inst.original_date && inst.is_manual_override ? "text-amber-600 dark:text-amber-400 font-medium" : "text-muted-foreground"
+                      }`}>
+                        {format(new Date(inst.lesson_date), "dd.MM")}
+                      </span>
                     </div>
                   );
                 })}
@@ -241,34 +213,32 @@ export function LessonTracker({ studentId, studentName, teacherId }: LessonTrack
       <AlertDialog open={showConfirm} onOpenChange={setShowConfirm}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>
-              {confirmMode === "complete"
-                ? t("lessonTracker.markLessonTitle")
-                : t("lessonTracker.undoLessonTitle", { defaultValue: "Dersi Geri Al" })}
-            </AlertDialogTitle>
+            <AlertDialogTitle>{t("lessonTracker.markLessonTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {confirmMode === "complete"
-                ? t("lessonTracker.markLessonDescription", { name: studentName, number: pendingInstance?.lesson_number })
-                : t("lessonTracker.undoLessonDescription", {
-                    defaultValue: `${studentName} için ${pendingInstance?.lesson_number}. dersi geri almak istediğinize emin misiniz?`,
-                    name: studentName,
-                    number: pendingInstance?.lesson_number,
-                  })}
+              {t("lessonTracker.markLessonDescription", { name: studentName })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel
-              onClick={() => setPendingInstance(null)}
-              className="border-2 border-muted-foreground/30 bg-transparent text-card-foreground hover:bg-muted hover:border-muted-foreground/40"
-            >
-              {t("common.cancel")}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={confirmAction}
-              className={confirmMode === "undo" ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : ""}
-            >
-              {t("common.confirm")}
-            </AlertDialogAction>
+            <AlertDialogCancel onClick={() => setPendingInstanceId(null)}>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmLessonComplete}>{t("common.confirm")}</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={showUndoConfirm} onOpenChange={setShowUndoConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{t("lessonTracker.undoLessonTitle", { defaultValue: "Dersi Geri Al" })}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {t("lessonTracker.undoLessonDescription", {
+                defaultValue: `${studentName} için son işlenen dersi geri almak istiyor musunuz?`,
+                name: studentName,
+              })}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setUndoInstanceId(null)}>{t("common.cancel")}</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmUndo}>{t("common.confirm")}</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
