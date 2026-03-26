@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS on_last_lesson_warning ON public.student_lesson_tracking;
