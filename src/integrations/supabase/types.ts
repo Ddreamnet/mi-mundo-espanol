@@ -293,6 +293,7 @@ export type Database = {
           created_at: string | null
           end_time: string
           id: string
+          is_manual_override: boolean | null
           lesson_date: string
           lesson_number: number
           original_date: string | null
@@ -300,6 +301,7 @@ export type Database = {
           original_start_time: string | null
           package_cycle: number
           rescheduled_count: number
+          shift_group_id: string | null
           start_time: string
           status: string
           student_id: string
@@ -310,6 +312,7 @@ export type Database = {
           created_at?: string | null
           end_time: string
           id?: string
+          is_manual_override?: boolean | null
           lesson_date: string
           lesson_number: number
           original_date?: string | null
@@ -317,6 +320,7 @@ export type Database = {
           original_start_time?: string | null
           package_cycle?: number
           rescheduled_count?: number
+          shift_group_id?: string | null
           start_time: string
           status?: string
           student_id: string
@@ -327,6 +331,7 @@ export type Database = {
           created_at?: string | null
           end_time?: string
           id?: string
+          is_manual_override?: boolean | null
           lesson_date?: string
           lesson_number?: number
           original_date?: string | null
@@ -334,6 +339,7 @@ export type Database = {
           original_start_time?: string | null
           package_cycle?: number
           rescheduled_count?: number
+          shift_group_id?: string | null
           start_time?: string
           status?: string
           student_id?: string
@@ -1053,8 +1059,21 @@ export type Database = {
         }
         Returns: Json
       }
+      rpc_sync_student_schedule: {
+        Args: {
+          p_lessons_per_week: number
+          p_slots: Json
+          p_student_id: string
+          p_teacher_id: string
+        }
+        Returns: Json
+      }
       rpc_undo_complete_lesson: {
         Args: { p_instance_id: string; p_teacher_id: string }
+        Returns: Json
+      }
+      rpc_undo_trial_lesson: {
+        Args: { p_teacher_id: string; p_trial_id: string }
         Returns: Json
       }
       sync_missing_profiles: { Args: never; Returns: Json }
