@@ -60,10 +60,3 @@ export function calculateDurationMinutes(startTime: string, endTime: string): nu
   return Math.round((end.getTime() - start.getTime()) / 60000);
 }
 
-/**
- * Get day name from day_of_week number.
- */
-export function getDayName(dayOfWeek?: number): string {
-  const days = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
-  return dayOfWeek !== undefined ? days[dayOfWeek] : "";
-}
