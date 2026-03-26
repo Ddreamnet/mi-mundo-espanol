@@ -1,0 +1,1 @@
+DROP TRIGGER IF EXISTS on_lesson_tracking_update_notify_admin ON public.student_lesson_tracking;
