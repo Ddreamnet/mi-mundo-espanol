@@ -179,6 +179,31 @@ serve(async (req) => {
       // Tracking can be created later when teacher accesses the panel
     }
 
+    // Generate lesson instances with dates using the sync RPC
+    if (lessons && lessons.length > 0) {
+      const slots = lessons.map((lesson: any) => ({
+        dayOfWeek: lesson.day_of_week,
+        startTime: lesson.start_time,
+        endTime: lesson.end_time
+      }));
+
+      const { data: syncResult, error: syncError } = await supabaseAdmin.rpc(
+        'rpc_sync_student_schedule',
+        {
+          p_student_id: authData.user.id,
+          p_teacher_id: teacherId,
+          p_slots: slots,
+          p_lessons_per_week: lessonsPerWeek
+        }
+      );
+
+      if (syncError) {
+        console.error('Sync error:', syncError);
+      } else {
+        console.log('Sync result:', syncResult);
+      }
+    }
+
     return new Response(
       JSON.stringify({ 
         success: true, 
