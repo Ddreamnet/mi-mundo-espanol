@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2, Trash2, UserCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { clearWeekCache } from "@/hooks/useScheduleGrid";
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useTranslation } from "react-i18next";
@@ -135,63 +136,33 @@ export function EditTeacherDialog({
 
     setTransferLoading(true);
     try {
-      // Get student info
       const student = students.find((s) => s.id === selectedStudent);
       if (!student) throw new Error(t("dialogs.editTeacher.studentNotFound"));
 
-      const studentUserId = student.profiles.user_id;
+      // One atomic RPC rather than a chain of client-side UPDATEs: every table
+      // that keys off (student_id, teacher_id) has to move together, and a
+      // half-finished move leaves the student without a schedule.
+      const { data, error } = await supabase.rpc("rpc_transfer_student", {
+        p_student_record_id: selectedStudent,
+        p_to_teacher_id: selectedTeacher,
+      });
 
-      // Update students table
-      const { error: studentsError } = await supabase
-        .from("students")
-        .update({ teacher_id: selectedTeacher })
-        .eq("id", selectedStudent);
+      if (error) throw error;
 
-      if (studentsError) throw studentsError;
-
-      // Update topics table
-      await supabase
-        .from("topics")
-        .update({ teacher_id: selectedTeacher })
-        .eq("student_id", studentUserId)
-        .eq("teacher_id", teacherId);
-
-      // Update student_lessons table
-      await supabase
-        .from("student_lessons")
-        .update({ teacher_id: selectedTeacher })
-        .eq("student_id", studentUserId)
-        .eq("teacher_id", teacherId);
-
-      // Update student_lesson_tracking table
-      await supabase
-        .from("student_lesson_tracking")
-        .update({ teacher_id: selectedTeacher })
-        .eq("student_id", studentUserId)
-        .eq("teacher_id", teacherId);
-
-      // Update homework_submissions table
-      await supabase
-        .from("homework_submissions")
-        .update({ teacher_id: selectedTeacher })
-        .eq("student_id", studentUserId)
-        .eq("teacher_id", teacherId);
-
-      // Update notifications table
-      await supabase
-        .from("notifications")
-        .update({ teacher_id: selectedTeacher })
-        .eq("student_id", studentUserId)
-        .eq("teacher_id", teacherId);
+      const result = data as unknown as { success: boolean; error?: string };
+      if (!result?.success) {
+        throw new Error(result?.error || t("dialogs.editTeacher.transferError"));
+      }
 
       toast({
         title: t("common.success"),
         description: t("dialogs.editTeacher.transferSuccess", { name: student.profiles.full_name }),
       });
 
-      fetchStudents();
       setSelectedStudent("");
       setSelectedTeacher("");
+      clearWeekCache();
+      await fetchStudents();
       onTeacherUpdated();
     } catch (error: any) {
       toast({

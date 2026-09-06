@@ -1,5 +1,5 @@
 -- ============================================================================
--- ENGLISH WITH DILARA - İLK ADMIN KULLANICI KURULUMU
+-- MI MUNDO ESPAÑOL - İLK ADMIN KULLANICI KURULUMU
 -- Bu SQL, admin kullanıcısı oluşturduktan SONRA çalıştırılmalıdır
 -- ============================================================================
 -- 

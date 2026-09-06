@@ -1,5 +1,5 @@
 -- ============================================================================
--- ENGLISH WITH DILARA - TEMİZ VERITABANI ŞEMASI
+-- MI MUNDO ESPAÑOL - TEMİZ VERITABANI ŞEMASI
 -- Bu SQL yeni Supabase projesinde çalıştırılmalıdır
 -- ============================================================================
 -- ÖNEMLİ: Bu dosya tek seferde çalıştırılabilir. Doğru sıralama yapılmıştır.

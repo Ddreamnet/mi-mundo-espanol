@@ -49,15 +49,6 @@
     "lesson": "clase",
     "lessonsCount": "clases"
   },
-  "blog": {
-    "pageTitle": "Blog",
-    "pageSubtitle": "Contenido para ayudarte en tu viaje de aprendizaje de español",
-    "readMore": "Leer más",
-    "noPosts": "No hay publicaciones de blog todavía.",
-    "backToBlog": "Volver al Blog",
-    "notFound": "Publicación no encontrada",
-    "minRead": "min de lectura"
-  },
   "privacy": {
     "pageTitle": "Política de Privacidad",
     "pageSubtitle": "Proteger tus datos personales es importante para nosotros"
@@ -371,6 +362,8 @@
       "resetSuccess": "Todas las clases restablecidas (Saldo del profesor preservado)",
       "resetError": "Error al restablecer clases",
       "datesUpdated": "Fechas de clases actualizadas",
+      "conflictFound": "Conflicto detectado",
+      "datesConflictBlocked": "Las fechas no se actualizaron por un conflicto",
       "datesUpdateError": "Error al actualizar fechas",
       "updateDatesTitle": "Actualizar Fechas de Clases",
       "updateDatesDescription": "¿Estás seguro de que quieres actualizar las fechas de las clases?",
@@ -641,7 +634,14 @@
     },
     "pageSettings": "Configuración de Página"
   },
-"blog": {
+  "blog": {
+    "pageTitle": "Blog",
+    "pageSubtitle": "Contenido para ayudarte en tu viaje de aprendizaje de español",
+    "readMore": "Leer más",
+    "noPosts": "No hay publicaciones de blog todavía.",
+    "backToBlog": "Volver al Blog",
+    "notFound": "Publicación no encontrada",
+    "minRead": "min de lectura",
     "title": "Publicaciones de Blog",
     "description": "Administrar publicaciones en la página del blog",
     "newPost": "Nueva Publicación",

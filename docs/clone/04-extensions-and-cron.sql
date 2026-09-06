@@ -1,5 +1,5 @@
 -- ============================================================================
--- ENGLISH WITH DILARA - EXTENSIONS VE CRON JOB
+-- MI MUNDO ESPAÑOL - EXTENSIONS VE CRON JOB
 -- Bu SQL, 03-storage-setup.sql'den SONRA çalıştırılmalıdır
 -- ============================================================================
 

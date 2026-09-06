@@ -1,5 +1,5 @@
 -- ============================================================================
--- ENGLISH WITH DILARA - STORAGE BUCKET VE POLİTİKALARI
+-- MI MUNDO ESPAÑOL - STORAGE BUCKET VE POLİTİKALARI
 -- Bu SQL, 02-rls-policies.sql'den SONRA çalıştırılmalıdır
 -- ============================================================================
 

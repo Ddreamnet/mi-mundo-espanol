@@ -21,7 +21,7 @@ interface MultiLangHeroContent {
   es: HeroContent;
 }
 
-const defaultImageUrl = "/lovable-uploads/2da228c0-e8c3-4d4d-ae77-9eeca2c98996.png";
+const defaultImageUrl = "/images/hero-default.jpg";
 
 function isMultiLangFormat(data: unknown): data is MultiLangHeroContent {
   if (!data || typeof data !== "object") return false;

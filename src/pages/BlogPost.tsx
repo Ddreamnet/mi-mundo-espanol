@@ -15,6 +15,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { useLanguage, Language } from "@/contexts/LanguageContext";
 import { OptimizedImage } from "@/components/ui/optimized-image";
+import { Seo } from "@/components/Seo";
+import { SITE_NAME, SITE_URL, absoluteUrl } from "@/lib/seo.config";
 interface BlogPostData {
   id: string;
   title: string;
@@ -119,6 +121,36 @@ export default function BlogPost() {
       FORBID_ATTR: ['onerror', 'onclick', 'onload', 'onmouseover', 'onfocus', 'onblur']
     });
   }, [localized?.content]);
+  // Yazının kendi başlığı/açıklaması ve Article yapısal verisi.
+  // Arama sonucunda ve paylaşımlarda site geneli metin yerine yazı bilgisi çıksın.
+  const seoDescription = useMemo(() => {
+    if (!localized) return undefined;
+    const raw = localized.excerpt || localized.content.replace(/<[^>]*>/g, " ");
+    const clean = raw.replace(/\s+/g, " ").trim();
+    return clean.length > 160 ? `${clean.slice(0, 157).trimEnd()}...` : clean;
+  }, [localized]);
+
+  const articleJsonLd = useMemo(() => {
+    if (!post || !localized) return null;
+    const published = post.published_at || post.created_at;
+    return {
+      "@context": "https://schema.org",
+      "@type": "BlogPosting",
+      headline: localized.title,
+      description: seoDescription,
+      image: post.cover_image_url ? [absoluteUrl(post.cover_image_url)] : undefined,
+      datePublished: published,
+      dateModified: published,
+      inLanguage: language,
+      mainEntityOfPage: {
+        "@type": "WebPage",
+        "@id": absoluteUrl(`/blog/${post.slug}`),
+      },
+      author: { "@type": "Organization", name: SITE_NAME, url: SITE_URL },
+      publisher: { "@id": `${SITE_URL}/#organization` },
+    };
+  }, [post, localized, seoDescription, language]);
+
   const formatDate = (dateString: string) => {
     return format(new Date(dateString), "d MMMM yyyy", {
       locale: localeMap[language] || tr
@@ -174,6 +206,7 @@ export default function BlogPost() {
   };
   if (error) {
     return <div className="min-h-screen bg-background">
+        <Seo title={`${t("blog.notFound")} | ${SITE_NAME}`} noindex />
         <LandingHeader />
         <div className="pt-32 pb-16 text-center">
           <div className="text-6xl mb-4">😕</div>
@@ -190,6 +223,7 @@ export default function BlogPost() {
       </div>;
   }
   return <div className="min-h-screen bg-background">
+      {post && localized && <Seo type="article" title={`${localized.title} | ${SITE_NAME}`} description={seoDescription} image={post.cover_image_url || undefined} publishedTime={post.published_at || post.created_at} modifiedTime={post.published_at || post.created_at} jsonLd={articleJsonLd} />}
       <LandingHeader />
 
       {isLoading ? <article className="pt-24 lg:pt-32 pb-16">

@@ -1,3 +1,4 @@
+import { useMemo } from "react";
 import { LandingHeader } from "@/components/landing/LandingHeader";
 import { LandingFooter } from "@/components/landing/LandingFooter";
 import { useTranslation } from "react-i18next";
@@ -6,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { HelpCircle } from "lucide-react";
+import { Seo } from "@/components/Seo";
 
 interface FAQItem {
   question: string;
@@ -64,8 +66,27 @@ export default function SSS() {
     }
   }
 
+  // Google'ın SSS zengin sonucu için: yalnızca sayfada gerçekten görünen
+  // soru-cevapları yapısal veriye aktar.
+  const faqJsonLd = useMemo(() => {
+    if (!content.items.length) return null;
+    return {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: content.items.map((item) => ({
+        "@type": "Question",
+        name: item.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: item.answer,
+        },
+      })),
+    };
+  }, [content.items]);
+
   return (
     <div className="min-h-screen bg-background">
+      <Seo jsonLd={faqJsonLd} />
       <LandingHeader />
       <main className="pt-24 lg:pt-28 pb-16">
         <div className="container mx-auto px-4 lg:px-8 max-w-4xl">

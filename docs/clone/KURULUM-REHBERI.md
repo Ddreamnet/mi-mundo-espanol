@@ -1,4 +1,4 @@
-# 🚀 English with Dilara - Proje Klonlama Rehberi
+# 🚀 Mi Mundo Español - Proje Klonlama Rehberi
 
 Bu rehber, projeyi sıfırdan yeni bir Supabase projesine nasıl kuracağınızı adım adım açıklar.
 
@@ -7,8 +7,8 @@ Bu rehber, projeyi sıfırdan yeni bir Supabase projesine nasıl kuracağınız�
 ## 📋 Gereksinimler
 
 - Supabase hesabı
-- GitHub hesabı (opsiyonel, Lovable ile çalışıyorsanız gerekli değil)
-- Lovable hesabı (opsiyonel)
+- GitHub hesabı
+- Node.js 18+ ve npm
 
 ---
 
@@ -18,7 +18,7 @@ Bu rehber, projeyi sıfırdan yeni bir Supabase projesine nasıl kuracağınız�
 2. **New Project** butonuna tıklayın
 3. Proje bilgilerini girin:
    - **Organization**: Organizasyonunuzu seçin
-   - **Name**: Proje adı (örn: "english-with-dilara-clone")
+   - **Name**: Proje adı (örn: "mi-mundo-espanol-clone")
    - **Database Password**: Güçlü bir şifre oluşturun (kaydedin!)
    - **Region**: Size en yakın bölgeyi seçin
 4. **Create new project** butonuna tıklayın
@@ -84,13 +84,9 @@ WHERE user_id = 'KULLANICI_UUID_BURAYA';
 
 ## 📦 AŞAMA 4: Kodu Klonlama
 
-### Seçenek A: Lovable ile
-1. Mevcut projenizde **Project Settings** → **Remix this project** seçeneğini kullanın
-2. Yeni projede dosyaları düzenleyin (aşağıya bakın)
-
-### Seçenek B: GitHub ile
 1. GitHub'dan projeyi fork/clone yapın
-2. Yeni bir Lovable projesi oluşturun ve repo'yu bağlayın
+2. `npm install` ile bağımlılıkları kurun
+3. Aşağıdaki dosyaları yeni Supabase projenize göre düzenleyin
 
 ### Düzenlenmesi Gereken Dosyalar
 

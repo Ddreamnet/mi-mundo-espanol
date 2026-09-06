@@ -49,15 +49,6 @@
     "lesson": "lesson",
     "lessonsCount": "lessons"
   },
-  "blog": {
-    "pageTitle": "Blog",
-    "pageSubtitle": "Content to help you on your Spanish learning journey",
-    "readMore": "Read More",
-    "noPosts": "No blog posts yet.",
-    "backToBlog": "Back to Blog",
-    "notFound": "Blog post not found",
-    "minRead": "min read"
-  },
   "privacy": {
     "pageTitle": "Privacy Policy",
     "pageSubtitle": "Protecting your personal data is important to us"
@@ -369,6 +360,8 @@
       "resetSuccess": "All lessons reset (Teacher balance preserved)",
       "resetError": "Failed to reset lessons",
       "datesUpdated": "Lesson dates updated",
+      "conflictFound": "Conflict detected",
+      "datesConflictBlocked": "Dates were not updated because of a conflict",
       "datesUpdateError": "Failed to update dates",
       "updateDatesTitle": "Update Lesson Dates",
       "updateDatesDescription": "Are you sure you want to update the lesson dates?",
@@ -639,7 +632,14 @@
     },
     "pageSettings": "Page Settings"
   },
-"blog": {
+  "blog": {
+    "pageTitle": "Blog",
+    "pageSubtitle": "Content to help you on your Spanish learning journey",
+    "readMore": "Read More",
+    "noPosts": "No blog posts yet.",
+    "backToBlog": "Back to Blog",
+    "notFound": "Blog post not found",
+    "minRead": "min read",
     "title": "Blog Posts",
     "description": "Manage blog posts on the blog page",
     "newPost": "New Post",

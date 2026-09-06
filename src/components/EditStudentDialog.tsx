@@ -88,7 +88,9 @@ export function EditStudentDialog(props: EditStudentDialogProps) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                {[1, 2, 3, 4, 5, 6, 7].map((num) => (
+                {/* Six is the ceiling the validate_max_lessons_per_week trigger
+                    enforces; offering seven only ever produced a failed save. */}
+                {[1, 2, 3, 4, 5, 6].map((num) => (
                   <SelectItem key={num} value={num.toString()}>
                     {num} {t("dialogs.editStudent.lessonsUnit")}
                   </SelectItem>
@@ -252,8 +254,9 @@ export function EditStudentDialog(props: EditStudentDialogProps) {
                     </Label>
                     <Input
                       type="date"
-                      value={lessonDates[lesson.lessonNumber.toString()] || lesson.effectiveDate || ""}
+                      value={lesson.exists ? lessonDates[lesson.lessonNumber.toString()] ?? lesson.effectiveDate : ""}
                       onChange={(e) => updateLessonDate(lesson.lessonNumber, e.target.value)}
+                      disabled={!lesson.exists}
                       className={`w-full sm:w-40 ${lesson.isOverridden ? "border-amber-500" : ""}`}
                     />
                   </div>

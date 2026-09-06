@@ -33,7 +33,7 @@ interface CTAContent {
 const defaultHero: HeroContent = {
   mainTitle: "Mi Mundo Español",
   subtitle: "Senin İspanyolca Dünyan",
-  imageUrl: "/lovable-uploads/2da228c0-e8c3-4d4d-ae77-9eeca2c98996.png",
+  imageUrl: "/images/hero-default.jpg",
   primaryButtonText: "Hemen Başla",
   primaryButtonLink: "/iletisim",
   secondaryButtonText: "Dersler Hakkında",

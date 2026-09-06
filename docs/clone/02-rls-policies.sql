@@ -1,5 +1,5 @@
 -- ============================================================================
--- ENGLISH WITH DILARA - RLS POLİTİKALARI
+-- MI MUNDO ESPAÑOL - RLS POLİTİKALARI
 -- Bu SQL, 01-clean-schema.sql'den SONRA çalıştırılmalıdır
 -- ============================================================================
 

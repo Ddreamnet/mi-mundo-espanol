@@ -1011,6 +1011,10 @@ export type Database = {
         }
         Returns: Json
       }
+      rpc_transfer_student: {
+        Args: { p_student_record_id: string; p_to_teacher_id: string }
+        Returns: Json
+      }
       rpc_undo_complete_lesson: {
         Args: { p_instance_id: string; p_teacher_id: string }
         Returns: Json

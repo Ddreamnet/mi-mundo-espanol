@@ -49,15 +49,6 @@
     "lesson": "ders",
     "lessonsCount": "ders"
   },
-  "blog": {
-    "pageTitle": "Blog",
-    "pageSubtitle": "İspanyolca öğrenme yolculuğunuzda size yardımcı olacak içerikler",
-    "readMore": "Devamını Oku",
-    "noPosts": "Henüz blog yazısı yok.",
-    "backToBlog": "Blog'a Dön",
-    "notFound": "Blog yazısı bulunamadı",
-    "minRead": "dk okuma"
-  },
   "privacy": {
     "pageTitle": "Gizlilik Politikası",
     "pageSubtitle": "Kişisel verilerinizin korunması bizim için önemlidir"
@@ -371,6 +362,8 @@
       "resetSuccess": "Tüm dersler sıfırlandı (Öğretmen bakiyesi korundu)",
       "resetError": "Dersler sıfırlanamadı",
       "datesUpdated": "Ders tarihleri güncellendi",
+      "conflictFound": "Çakışma tespit edildi",
+      "datesConflictBlocked": "Çakışma nedeniyle tarihler güncellenmedi",
       "datesUpdateError": "Tarihler güncellenemedi",
       "updateDatesTitle": "Ders Tarihlerini Güncelle",
       "updateDatesDescription": "Ders tarihlerini güncellemek istediğinize emin misiniz?",
@@ -641,7 +634,14 @@
     },
     "pageSettings": "Sayfa Ayarları"
   },
-"blog": {
+  "blog": {
+    "pageTitle": "Blog",
+    "pageSubtitle": "İspanyolca öğrenme yolculuğunuzda size yardımcı olacak içerikler",
+    "readMore": "Devamını Oku",
+    "noPosts": "Henüz blog yazısı yok.",
+    "backToBlog": "Blog'a Dön",
+    "notFound": "Blog yazısı bulunamadı",
+    "minRead": "dk okuma",
     "title": "Blog Yazıları",
     "description": "Blog sayfasındaki yazıları yönetin",
     "newPost": "Yeni Yazı",

@@ -1,73 +1,99 @@
-# Welcome to your Lovable project
+# Mi Mundo Español
 
-## Project info
+Online İspanyolca dersleri için tanıtım sitesi ve ders yönetim paneli.
+Ziyaretçiye tanıtım sayfaları, blog ve iletişim; öğrenci, eğitmen ve yöneticiye
+kendi paneli sunulur.
 
-**URL**: https://lovable.dev/projects/62e18515-e696-45ea-b179-36f540b9f09d
+## Teknolojiler
 
-## How can I edit this code?
+| Katman | Kullanılan |
+|---|---|
+| Derleme | Vite + TypeScript |
+| Arayüz | React 18, Tailwind CSS, shadcn/ui (Radix) |
+| Veri | Supabase (PostgreSQL, Auth, Storage) |
+| Sunucu durumu | TanStack Query |
+| Yönlendirme | React Router |
+| Dil desteği | i18next (tr / en / es) |
 
-There are several ways of editing your application.
+## Kurulum
 
-**Use Lovable**
-
-Simply visit the [Lovable Project](https://lovable.dev/projects/62e18515-e696-45ea-b179-36f540b9f09d) and start prompting.
-
-Changes made via Lovable will be committed automatically to this repo.
-
-**Use your preferred IDE**
-
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+Node.js 18+ ve npm gerekir.
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
-
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
-
-# Step 3: Install the necessary dependencies.
-npm i
-
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
+npm install
+npm run dev          # http://localhost:8080
 ```
 
-**Edit a file directly in GitHub**
+Ortam değişkenleri `.env` dosyasında tutulur:
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+```
+VITE_SUPABASE_URL=...
+VITE_SUPABASE_PROJECT_ID=...
+VITE_SUPABASE_PUBLISHABLE_KEY=...
+```
 
-**Use GitHub Codespaces**
+## Komutlar
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```sh
+npm run dev          # geliştirme sunucusu
+npm run build        # üretim derlemesi (+ statik SEO sayfaları, sitemap, robots)
+npm run preview      # derlenmiş çıktıyı yerelde sun
+npm run lint         # ESLint
+```
 
-## What technologies are used for this project?
+## SEO
 
-This project is built with:
+Sitenin arama motoru davranışı tek bir dosyadan yönetilir:
+**`src/lib/seo.config.ts`**
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+- `SITE_URL` — canonical adres. Domain değişirse **sadece burası** güncellenir;
+  canonical etiketleri, `og:url`, `sitemap.xml` ve `robots.txt` bu değerden üretilir.
+  `public/.htaccess` içindeki yönlendirme adresi de aynı olmalı.
+- `PAGE_SEO` — her rotanın başlığı, açıklaması ve sitemap önceliği (tr/en/es).
 
-## How can I deploy this project?
+Uygulama bir SPA olduğu için sunucudan gelen HTML normalde her rotada aynıdır.
+`vite.config.ts` içindeki **`staticSeoPages`** eklentisi bunu çözer: `npm run build`
+sonunda her rota için ayrı bir `dist/<rota>/index.html` üretir. Her dosya kendi
+`<title>`, `description`, `canonical`, Open Graph ve schema.org verisini taşır;
+böylece Google ve JavaScript çalıştırmayan WhatsApp/Facebook önizlemeleri doğru
+bilgiyi görür. Tarayıcıda React yüklendikten sonra `src/components/Seo.tsx`
+gezinme sırasında aynı etiketleri günceller.
 
-Simply open [Lovable](https://lovable.dev/projects/62e18515-e696-45ea-b179-36f540b9f09d) and click on Share -> Publish.
+Yeni bir sayfa eklerken rotayı `PAGE_SEO` içine de eklemek gerekir; aksi halde
+sayfa `sitemap.xml`'e ve statik üretime dahil olmaz.
 
-## Can I connect a custom domain to my Lovable project?
+Görseller `public/` altındadır: `og-image.png` (1200×630 paylaşım kartı),
+`icon-192.png` / `icon-512.png` / `icon-maskable-512.png` (PWA ikonları).
 
-Yes, you can!
+## Yayına alma
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+`npm run build` çıktısı `dist/` klasöründedir; statik olarak sunulur.
+`public/.htaccess` Apache için hazırdır ve şunları yapar: http → https ve
+www'suz → www 301 yönlendirmesi, ön-üretilmiş sayfaların yönlendirmesiz
+sunulması, kalan rotaların SPA'ya devri, sıkıştırma, önbellek ve güvenlik
+başlıkları.
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+Yayına aldıktan sonra:
+
+1. Google Search Console'da mülkü doğrulayın.
+2. `https://www.mimundoespanol.com/sitemap.xml` adresini gönderin.
+3. Yapısal veriyi [Rich Results Test](https://search.google.com/test/rich-results)
+   ile kontrol edin.
+
+## Proje yapısı
+
+```
+src/
+  components/
+    landing/        tanıtım sayfası bölümleri
+    admin/          yönetim paneli düzenleyicileri
+    ui/             shadcn/ui bileşenleri
+    Seo.tsx         rota bazlı <head> yönetimi
+  pages/            Dersler, SSS, Blog, İletişim, Gizlilik, 404
+  contexts/         dil yönetimi
+  integrations/     Supabase istemcisi ve tipleri
+  locales/          tr / en / es çevirileri
+  lib/seo.config.ts SEO tek kaynağı
+docs/clone/         yeni bir Supabase projesine kurulum rehberi ve SQL'ler
+supabase/           edge fonksiyonları ve migration'lar
+```
