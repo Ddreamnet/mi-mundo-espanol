@@ -557,6 +557,7 @@
       "createBtn": "Hesap Oluştur",
       "fillAllFields": "Lütfen tüm alanları doldurun",
       "fillSchedule": "Tüm ders programı alanlarını doldurun",
+      "passwordMinLength": "Şifre en az 6 karakter olmalıdır",
       "successMessage": "Öğrenci hesabı başarıyla oluşturuldu! Geçici şifre: {{password}}",
       "createError": "Öğrenci hesabı oluşturulamadı"
     },

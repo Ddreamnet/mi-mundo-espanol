@@ -557,6 +557,7 @@
       "createBtn": "Crear Cuenta",
       "fillAllFields": "Por favor complete todos los campos",
       "fillSchedule": "Complete todos los campos del horario",
+      "passwordMinLength": "La contraseña debe tener al menos 6 caracteres",
       "successMessage": "¡Cuenta de estudiante creada exitosamente! Contraseña temporal: {{password}}",
       "createError": "Error al crear cuenta de estudiante"
     },

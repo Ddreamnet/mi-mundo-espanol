@@ -64,6 +64,15 @@ export function CreateStudentDialog({ open, onOpenChange, onStudentCreated, teac
       return;
     }
 
+    if (tempPassword.length < 6) {
+      toast({
+        title: t("common.error"),
+        description: t("dialogs.createStudent.passwordMinLength"),
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!lessons.every((lesson) => lesson.dayOfWeek !== undefined && lesson.startTime && lesson.endTime)) {
       toast({
         title: t("common.error"),
@@ -90,7 +99,11 @@ export function CreateStudentDialog({ open, onOpenChange, onStudentCreated, teac
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        // Non-2xx responses only carry a generic message; the real reason is in the response body
+        const body = await error.context?.json?.().catch(() => null);
+        throw new Error(body?.error || error.message);
+      }
 
       const result = data as any;
       if (result?.error) {

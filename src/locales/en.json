@@ -555,6 +555,7 @@
       "createBtn": "Create Account",
       "fillAllFields": "Please fill all fields",
       "fillSchedule": "Fill all lesson schedule fields",
+      "passwordMinLength": "Password must be at least 6 characters",
       "successMessage": "Student account created successfully! Temporary password: {{password}}",
       "createError": "Failed to create student account"
     },

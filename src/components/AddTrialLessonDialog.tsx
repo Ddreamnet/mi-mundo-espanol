@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { format } from "date-fns";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -43,7 +44,8 @@ export function AddTrialLessonDialog({ open, onOpenChange, teacherId, onSuccess 
     }
     const targetDate = new Date(today);
     targetDate.setDate(today.getDate() + daysUntilTarget);
-    return targetDate.toISOString().split("T")[0];
+    // Local date — toISOString() is UTC and shifts the day back between 00:00–03:00 in Turkey
+    return format(targetDate, "yyyy-MM-dd");
   };
 
   const handleSubmit = async () => {

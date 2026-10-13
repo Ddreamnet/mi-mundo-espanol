@@ -222,13 +222,28 @@ export default defineConfig({
         // kodunu ayrı ve uzun süre önbelleklenebilir parçalara böl.
         manualChunks(id) {
           if (!id.includes("node_modules")) return;
-          if (/[\\/]node_modules[\\/](react|react-dom|react-router|react-router-dom|scheduler)[\\/]/.test(id))
+          // Windows'ta yollar ters bölü ile gelir; tek biçime indir.
+          const p = id.replace(/\\/g, "/");
+
+          // react-vendor bir YAPRAK chunk olmalı: başka hiçbir chunk'tan import
+          // etmemeli. Aksi halde vendor <-> react-vendor döngüsü oluşur, vendor
+          // önce çalışır ve içindeki lucide-react gibi paketler React'i
+          // undefined görüp "Cannot read properties of undefined (reading
+          // 'forwardRef')" ile patlar. Bu yalnızca build'de görülür; dev
+          // sunucusu chunk bölmediği için localhost'ta sorun çıkmaz.
+          // @remix-run/router, react-router'ın bağımlılığı — dışarıda kalırsa
+          // döngüyü tam olarak o kurar.
+          if (
+            /\/node_modules\/(react|react-dom|react-router|react-router-dom|scheduler)\//.test(p) ||
+            p.includes("/node_modules/@remix-run/router/")
+          )
             return "react-vendor";
-          if (id.includes("@supabase")) return "supabase";
-          if (id.includes("@tiptap") || id.includes("prosemirror")) return "editor";
-          if (id.includes("recharts") || id.includes("d3-")) return "charts";
-          if (id.includes("@dnd-kit")) return "dnd";
-          if (id.includes("@radix-ui")) return "radix";
+
+          if (p.includes("@supabase")) return "supabase";
+          if (p.includes("@tiptap") || p.includes("prosemirror")) return "editor";
+          if (p.includes("recharts") || p.includes("d3-")) return "charts";
+          if (p.includes("@dnd-kit")) return "dnd";
+          if (p.includes("@radix-ui")) return "radix";
           return "vendor";
         },
       },
